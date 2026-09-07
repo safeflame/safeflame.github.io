@@ -1,0 +1,1818 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SafeFlame </title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
+
+  /* ================================================================
+     THEMES — each defines a background wash + three ambient "light"
+     colors the blurred blobs are made of, plus a glass tint tuned
+     to sit legibly on top of that light.
+  ================================================================ */
+  :root[data-theme="midnight"]{--bg:#08080d;--blob1:#6c63ff;--blob2:#3f2fb8;--blob3:#1a1030;--glass:rgba(255,255,255,.055);--glass-hi:rgba(255,255,255,.12);--border:rgba(255,255,255,.13);--specular:rgba(255,255,255,.4);--accent:#8b7bff;--accent2:#c084fc;--green:#33e19a;--yellow:#ffd23f;--red:#ff5470;--text:#eef0fb;--text2:#9498bb;--shadow:rgba(0,0,0,.5);--sheen:255,255,255}
+  :root[data-theme="ember"]{--bg:#120b07;--blob1:#ff7a45;--blob2:#c2410c;--blob3:#3d1a0a;--glass:rgba(255,225,205,.05);--glass-hi:rgba(255,220,190,.1);--border:rgba(255,180,130,.16);--specular:rgba(255,214,180,.4);--accent:#ff8a4c;--accent2:#ffb703;--green:#3ddc84;--yellow:#ffcf4d;--red:#ff5252;--text:#fbeee4;--text2:#b6987f;--shadow:rgba(20,5,0,.55);--sheen:255,225,205}
+  :root[data-theme="arctic"]{--bg:#e9f1f8;--blob1:#8ecdf0;--blob2:#c6e6ff;--blob3:#eef8ff;--glass:rgba(255,255,255,.5);--glass-hi:rgba(255,255,255,.75);--border:rgba(255,255,255,.8);--specular:rgba(255,255,255,.95);--accent:#0891b2;--accent2:#2dd4bf;--green:#0d9488;--yellow:#b45309;--red:#dc2626;--text:#132436;--text2:#5c7186;--shadow:rgba(30,70,100,.14);--sheen:255,255,255}
+  :root[data-theme="aurora"]{--bg:#05130f;--blob1:#22d3ee;--blob2:#10b981;--blob3:#052e2b;--glass:rgba(200,255,240,.05);--glass-hi:rgba(180,255,235,.1);--border:rgba(150,255,230,.15);--specular:rgba(200,255,240,.4);--accent:#2dd4bf;--accent2:#22d3ee;--green:#34e28a;--yellow:#f2d24b;--red:#ff6161;--text:#e3fff5;--text2:#7fb3a7;--shadow:rgba(0,20,15,.55);--sheen:200,255,240}
+  :root[data-theme="nebula"]{--bg:#0e0715;--blob1:#d946ef;--blob2:#7c3aed;--blob3:#2c0f3d;--glass:rgba(255,220,255,.05);--glass-hi:rgba(240,210,255,.1);--border:rgba(230,180,255,.16);--specular:rgba(240,210,255,.42);--accent:#e264f5;--accent2:#818cf8;--green:#4ade80;--yellow:#facc15;--red:#fb6f92;--text:#f4e9ff;--text2:#a289c2;--shadow:rgba(15,0,25,.55);--sheen:240,210,255}
+  :root[data-theme="dawn"]{--bg:#fbf1e6;--blob1:#ffb08a;--blob2:#ffd8a8;--blob3:#fff1e0;--glass:rgba(255,255,255,.48);--glass-hi:rgba(255,255,255,.7);--border:rgba(255,255,255,.75);--specular:rgba(255,255,255,.9);--accent:#f2600c;--accent2:#f59e0b;--green:#15803d;--yellow:#b45309;--red:#c2410c;--text:#3a2418;--text2:#8a6a58;--shadow:rgba(90,50,20,.16);--sheen:255,255,255}
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;min-height:100vh;padding:24px 16px 40px;position:relative;overflow-x:hidden;transition:background .5s,color .5s}
+  h1,.header-text h1,.card-value,.valve-state-text,.welcome-name,.modal-title{font-family:'Outfit',system-ui,sans-serif}
+
+  /* ---- Ambient light field (the "liquid" the glass floats on) ---- */
+  #bg-blobs{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+  #bg-blobs span{position:absolute;border-radius:50%;filter:blur(70px);opacity:.55;transition:background .6s}
+  #bg-blobs span.b1{width:46vw;height:46vw;top:-14vw;left:-10vw;background:var(--blob1);animation:driftA 22s ease-in-out infinite}
+  #bg-blobs span.b2{width:38vw;height:38vw;bottom:-12vw;right:-8vw;background:var(--blob2);animation:driftB 26s ease-in-out infinite}
+  #bg-blobs span.b3{width:30vw;height:30vw;top:38%;left:58%;background:var(--blob3);animation:driftC 30s ease-in-out infinite}
+  @keyframes driftA{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(6vw,8vw) scale(1.12)}}
+  @keyframes driftB{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-7vw,-5vw) scale(1.08)}}
+  @keyframes driftC{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-5vw,6vw) scale(1.15)}}
+
+  /* ================================================================
+     LIQUID GLASS — shared recipe applied directly to surfaces so no
+     markup changes are needed: translucent tint + blur + a thin
+     specular line along the top edge, like light catching a lens.
+  ================================================================ */
+  .top-bar,.card,.section,.fan-card,.alert-banner,.night-banner,.ip-badge,.btn-gear,.btn-account,.btn-logout,.modal-box,.welcome-box{
+    background:linear-gradient(165deg,rgba(var(--sheen),.10),rgba(var(--sheen),.02) 55%),var(--glass);
+    -webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);
+    border:1px solid var(--border);
+  }
+  .card,.section,.fan-card,.modal-box,.welcome-box{position:relative}
+  .card::after,.section::after,.fan-card::after,.modal-box::after,.welcome-box::after{
+    content:'';position:absolute;top:0;left:9%;right:9%;height:1px;
+    background:linear-gradient(90deg,transparent,var(--specular),transparent);
+  }
+
+  /* ---- Top bar ---- */
+  .top-bar{max-width:960px;margin:0 auto 20px;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 18px;border-radius:22px;box-shadow:0 8px 28px var(--shadow)}
+  .header-text h1{font-size:22px;font-weight:700;color:var(--text);letter-spacing:-.02em}
+  .header-text p{font-size:13px;color:var(--text2);margin-top:2px}
+  .top-right{display:flex;align-items:center;gap:8px}
+
+  .btn-account{display:flex;align-items:center;gap:6px;border-radius:30px;padding:7px 14px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2);box-shadow:0 2px 10px var(--shadow);transition:all .2s}
+  .btn-account:hover{border-color:var(--accent);color:var(--accent)}
+  .btn-logout{display:flex;align-items:center;gap:6px;border-radius:30px;padding:7px 14px;cursor:pointer;font-size:12px;font-weight:700;color:var(--text2);box-shadow:0 2px 10px var(--shadow);transition:all .2s}
+  .btn-logout:hover{border-color:var(--red);color:var(--red)}
+
+  /* ---- IP / Refresh ---- */
+  .ip-row{max-width:960px;margin:0 auto 14px;display:flex;justify-content:center}
+  .ip-badge{display:inline-block;border-radius:20px;padding:5px 16px;font-size:12px;color:var(--accent);font-family:monospace;box-shadow:0 2px 10px var(--shadow)}
+  .refresh-bar{max-width:960px;margin:0 auto 14px;display:flex;align-items:center;justify-content:space-between}
+  .refresh-info{font-size:11px;color:var(--text2);font-weight:600}
+  .live-dot{width:6px;height:6px;background:var(--green);border-radius:50%;display:inline-block;margin-right:5px;animation:pulse 2s infinite}
+
+  /* ---- Alert banner ---- */
+  .alert-banner{max-width:960px;margin:0 auto 16px;padding:14px 20px;border-radius:18px;font-size:13px;font-weight:700;display:none;align-items:center;gap:10px;box-shadow:0 4px 20px var(--shadow)}
+  .alert-banner.show{display:flex}
+  .alert-banner.danger{border-color:var(--red);color:var(--red);box-shadow:0 4px 24px rgba(255,60,80,.25),0 0 0 1px var(--red) inset}
+  .dot{width:8px;height:8px;border-radius:50%;background:currentColor;flex-shrink:0;animation:pulse 1s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+  /* ---- Sensor cards ---- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;max-width:960px;margin:0 auto 20px}
+  .card{border-radius:22px;padding:20px 16px;overflow:hidden;box-shadow:0 8px 26px var(--shadow);transition:transform .25s,box-shadow .25s}
+  .card:hover{transform:translateY(-3px)}
+  .card.alert{box-shadow:0 8px 30px rgba(255,60,80,.28),0 0 0 1px var(--red) inset}
+  .card.warn{box-shadow:0 8px 30px rgba(255,205,60,.2),0 0 0 1px var(--yellow) inset}
+  .card.ok{box-shadow:0 8px 26px var(--shadow),0 0 0 1px rgba(var(--sheen),.06) inset}
+  .card-label{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--text2);margin-bottom:10px;font-weight:600}
+  .card-value{font-size:30px;font-weight:700;color:var(--text)}
+  .card-unit{font-size:12px;color:var(--text2);margin-top:3px}
+  .badge{font-size:11px;font-weight:700;margin-top:10px;padding:4px 11px;border-radius:20px;display:inline-block}
+  .badge-safe{background:rgba(22,163,74,.15);color:var(--green)}.badge-warn{background:rgba(202,138,4,.15);color:var(--yellow)}.badge-danger{background:rgba(220,38,38,.15);color:var(--red)}.badge-info{background:rgba(90,82,224,.15);color:var(--accent)}
+
+  /* ---- Sections ---- */
+  .section{max-width:960px;margin:0 auto 18px;border-radius:24px;padding:22px;box-shadow:0 8px 26px var(--shadow)}
+  .section-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.08em;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+  .away-toggle{display:flex;align-items:center;gap:8px;text-transform:none;letter-spacing:normal;cursor:pointer}
+  .away-toggle .away-label{font-size:12px;font-weight:700;color:var(--text2)}
+  .mode-pills{display:flex;gap:8px;margin-bottom:18px}
+  .pill{flex:1;padding:10px;border-radius:12px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;text-align:center}
+  .pill.active{background:linear-gradient(135deg,var(--accent),var(--accent2));border-color:transparent;color:#fff;box-shadow:0 4px 16px rgba(0,0,0,.25)}
+  .fan-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+  .fan-card{border-radius:16px;padding:16px;display:flex;align-items:center;justify-content:space-between;transition:box-shadow .3s}
+  .fan-card.on{box-shadow:0 0 0 1px var(--green) inset,0 6px 18px rgba(51,225,154,.15)}
+  .fan-name{font-size:14px;font-weight:700;color:var(--text)}.fan-state{font-size:11px;font-weight:700;margin-top:3px}.fan-state.on{color:var(--green)}.fan-state.off{color:var(--text2)}
+  .toggle-wrap{position:relative;width:50px;height:28px;display:inline-block}
+  .toggle-wrap input{opacity:0;width:0;height:0}
+  .toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:14px;cursor:pointer;transition:.25s}
+  .toggle-slider:before{content:'';position:absolute;width:20px;height:20px;left:4px;bottom:4px;background:#fff;border-radius:50%;transition:.25s;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+  input:checked+.toggle-slider{background:var(--green)}
+  input:checked+.toggle-slider:before{transform:translateX(22px)}
+  .toggle-wrap.disabled{opacity:.4;pointer-events:none}
+  .btn{width:100%;padding:13px;border-radius:14px;border:1px solid var(--border);background:rgba(var(--sheen),.04);color:var(--text);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;margin-bottom:8px;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+  .btn:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+  .btn.active-green{border-color:var(--green);color:var(--green);background:rgba(51,225,154,.1)}
+  .btn.active-red{border-color:var(--red);color:var(--red);background:rgba(255,84,112,.1)}
+  .btn:disabled{opacity:.35;cursor:not-allowed;transform:none}
+  .btn:last-child{margin-bottom:0}
+  .valve-display{display:flex;align-items:center;gap:18px;margin-bottom:16px}
+  .valve-icon{font-size:42px;transition:transform .4s}
+  .valve-icon.closed{transform:rotate(90deg)}
+  .valve-info{flex:1}
+  .valve-state-text{font-size:21px;font-weight:700;color:var(--text)}
+  .valve-sub{font-size:12px;color:var(--text2);margin-top:3px}
+  .valve-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .pbar-wrap{background:rgba(var(--sheen),.08);border-radius:8px;height:9px;overflow:hidden;margin-top:8px}
+  .pbar{height:100%;border-radius:8px;transition:width .5s,background .3s}
+  .footer{text-align:center;font-size:11px;color:var(--text2);margin-top:16px}
+
+  /* ================================================================
+     WELCOME SCREEN OVERLAY
+  ================================================================ */
+  #welcome-overlay{
+    position:fixed;inset:0;z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.35);
+    -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+    opacity:1;transition:opacity .6s ease;
+  }
+  #welcome-overlay.fade-out{opacity:0;pointer-events:none}
+  .welcome-box{
+    text-align:center;padding:40px 32px;max-width:420px;width:90%;
+    border-radius:30px;
+    box-shadow:0 24px 80px var(--shadow);
+    animation:popIn .45s cubic-bezier(.175,.885,.32,1.275);
+  }
+  @keyframes popIn{from{transform:scale(0.85);opacity:0}to{transform:scale(1);opacity:1}}
+  .welcome-flame{font-size:60px;margin-bottom:16px;display:block;animation:flameBob 2.5s ease-in-out infinite}
+  @keyframes flameBob{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-10px) scale(1.07)}}
+  .welcome-greeting{font-size:14px;color:var(--text2);font-weight:600;letter-spacing:.05em;text-transform:uppercase;margin-bottom:8px}
+  .welcome-name{
+    font-size:36px;font-weight:800;letter-spacing:-1px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    margin-bottom:12px;
+  }
+  .welcome-sub{font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:28px}
+  .welcome-status{
+    display:inline-flex;align-items:center;gap:8px;
+    background:rgba(var(--sheen),.08);border:1px solid var(--border);
+    border-radius:20px;padding:8px 18px;
+    font-size:12px;font-weight:700;color:var(--accent);margin-bottom:28px;
+  }
+  .welcome-dot{width:7px;height:7px;background:var(--green);border-radius:50%;animation:pulse 1.5s infinite}
+  .welcome-btn{
+    width:100%;padding:15px;border:none;border-radius:16px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff;font-size:15px;font-weight:800;cursor:pointer;
+    box-shadow:0 8px 24px var(--shadow);
+    transition:all .2s;letter-spacing:.02em;
+  }
+  .welcome-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px var(--shadow)}
+  .welcome-btn:active{transform:translateY(0)}
+
+  /* ================================================================
+     ACCOUNT SETTINGS MODAL
+  ================================================================ */
+  #account-modal{
+    position:fixed;inset:0;z-index:9000;
+    display:none;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.3);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    animation:fadeIn .2s ease;
+  }
+  #account-modal.open{display:flex}
+  #health-modal{
+    position:fixed;inset:0;z-index:9000;
+    display:none;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.3);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);
+    animation:fadeIn .2s ease;
+  }
+  #health-modal.open{display:flex}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+  /* ---- Settings: full-page menu, not a popup ---- */
+  #settings-modal{
+    position:fixed;inset:0;z-index:9500;
+    display:none;overflow-y:auto;overflow-x:hidden;
+    background:rgba(0,0,0,0.4);
+    -webkit-backdrop-filter:blur(20px) saturate(140%);backdrop-filter:blur(20px) saturate(140%);
+    animation:fadeIn .2s ease;
+  }
+  #settings-modal.open{display:block}
+  #settings-modal .modal-box.wide{
+    max-width:680px;margin:0 auto;min-height:100vh;max-height:none;
+    border-radius:0;
+    background:linear-gradient(165deg,rgba(var(--sheen),.09),rgba(var(--sheen),.02) 45%);
+    border-left:1px solid var(--border);border-right:1px solid var(--border);
+    box-shadow:0 0 70px rgba(0,0,0,.3);
+    -webkit-backdrop-filter:none;backdrop-filter:none;
+    padding:20px 20px 80px;overflow-y:visible;
+  }
+  #settings-modal .modal-box.wide::-webkit-scrollbar{display:none}
+  .settings-page-header{
+    position:sticky;top:0;z-index:10;margin:-20px -20px 20px;padding:16px 20px;
+    display:flex;align-items:center;gap:14px;
+    background:linear-gradient(165deg,rgba(var(--sheen),.16),rgba(var(--sheen),.05) 55%),var(--glass);
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border-bottom:1px solid var(--border);
+    box-shadow:0 4px 20px rgba(0,0,0,.15);
+  }
+  .settings-back-btn{
+    width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:rgba(var(--sheen),.06);
+    color:var(--text);font-size:18px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+    transition:all .2s;
+  }
+  .settings-back-btn:hover{border-color:var(--accent);color:var(--accent);transform:translateX(-2px)}
+
+  /* ---- Range sliders — replace raw OS defaults with themed ones ---- */
+  input[type="range"]{
+    -webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:6px;
+    background:rgba(var(--sheen),.15);outline:none;margin:6px 0;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer;
+    box-shadow:0 2px 10px rgba(0,0,0,.35);border:2px solid #fff;
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:18px;height:18px;border-radius:50%;border:2px solid #fff;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));cursor:pointer;
+  }
+  input:disabled,select:disabled{opacity:.4;cursor:not-allowed}
+
+  .modal-box{
+    border-radius:26px;
+    padding:32px 28px;width:90%;max-width:420px;
+    box-shadow:0 20px 60px var(--shadow);
+    animation:popIn .3s cubic-bezier(.175,.885,.32,1.275);
+  }
+  .modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
+  .modal-title{font-size:17px;font-weight:700;color:var(--text)}
+  .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--text2);transition:color .2s;line-height:1}
+  .modal-close:hover{color:var(--text)}
+  .user-info-row{
+    display:flex;align-items:center;gap:14px;
+    background:rgba(var(--sheen),.06);border:1px solid var(--border);
+    border-radius:16px;padding:16px;margin-bottom:20px;
+  }
+  .avatar{
+    width:48px;height:48px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;
+    font-size:20px;font-weight:800;color:#fff;flex-shrink:0;
+  }
+  .user-info-text .uname{font-size:15px;font-weight:800;color:var(--text)}
+  .user-info-text .urole{font-size:11px;color:var(--text2);margin-top:3px;font-weight:600}
+  .modal-divider{height:1px;background:var(--border);margin:20px 0}
+  .modal-section-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:12px}
+  .modal-btn{
+    width:100%;padding:12px 16px;border-radius:14px;border:1px solid var(--border);
+    background:rgba(var(--sheen),.05);color:var(--text);font-size:13px;font-weight:700;
+    cursor:pointer;transition:all .2s;margin-bottom:10px;
+    display:flex;align-items:center;gap:10px;text-align:left;
+  }
+  .modal-btn:hover{border-color:var(--accent);color:var(--accent)}
+  .modal-btn:last-child{margin-bottom:0}
+  .modal-btn.danger{border-color:rgba(255,84,112,.3);background:rgba(255,84,112,.08);color:var(--red)}
+  .modal-btn.danger:hover{border-color:var(--red);background:rgba(255,84,112,.14)}
+  .modal-btn .btn-icon{font-size:16px}
+
+  /* ---- Delete confirmation step ---- */
+  #delete-confirm{display:none;margin-top:16px}
+  #delete-confirm.show{display:block}
+  .danger-box{
+    background:rgba(255,84,112,.08);border:1px solid rgba(255,84,112,.3);
+    border-radius:16px;padding:18px;margin-bottom:14px;
+  }
+  .danger-title{font-size:14px;font-weight:800;color:var(--red);margin-bottom:6px;display:flex;align-items:center;gap:8px}
+  .danger-desc{font-size:12px;color:var(--text2);line-height:1.6}
+  .modal-field{margin-bottom:14px}
+  .modal-field label{display:block;font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+  .modal-field input{width:100%;padding:11px 14px;background:rgba(var(--sheen),.04);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;outline:none;transition:border-color .2s}
+  .modal-field input:focus{border-color:var(--red)}
+  .modal-field input::placeholder{color:var(--text2);opacity:.6}
+  .btn-delete-confirm{width:100%;padding:13px;border:none;border-radius:14px;background:linear-gradient(135deg,#e2244a,var(--red));color:#fff;font-size:14px;font-weight:800;cursor:pointer;box-shadow:0 4px 16px rgba(255,84,112,.35);transition:all .2s;margin-bottom:10px}
+  .btn-delete-confirm:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(255,84,112,.5)}
+  .btn-cancel-delete{width:100%;padding:12px;border:1px solid var(--border);border-radius:14px;background:transparent;color:var(--text2);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s}
+  .btn-cancel-delete:hover{border-color:var(--text2);color:var(--text)}
+  .modal-msg{margin-top:12px;padding:10px 14px;border-radius:10px;font-size:13px;font-weight:600;display:none;text-align:center}
+  .modal-msg.error{background:rgba(255,84,112,.1);border:1px solid var(--red);color:var(--red)}
+  .modal-msg.success{background:rgba(51,225,154,.1);border:1px solid var(--green);color:var(--green)}
+
+  /* ================================================================
+     SETTINGS MODAL EXTRAS
+  ================================================================ */
+  .modal-box.wide{max-width:460px;max-height:86vh;overflow-y:auto}
+  .modal-box.wide::-webkit-scrollbar{width:6px}
+  .modal-box.wide::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+  .settings-theme-row{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+  .settings-swatch{width:34px;height:34px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .2s,border-color .2s;position:relative}
+  .settings-swatch:hover{transform:scale(1.1)}
+  .settings-swatch.active{border-color:var(--text)}
+  .settings-swatch.active::after{content:'✓';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:900;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+  .settings-swatch[data-t="midnight"]{background:linear-gradient(135deg,#6c63ff,#1a1030)}
+  .settings-swatch[data-t="ember"]{background:linear-gradient(135deg,#ff8a4c,#3d1a0a)}
+  .settings-swatch[data-t="aurora"]{background:linear-gradient(135deg,#22d3ee,#052e2b)}
+  .settings-swatch[data-t="nebula"]{background:linear-gradient(135deg,#d946ef,#2c0f3d)}
+  .settings-swatch[data-t="arctic"]{background:linear-gradient(135deg,#8ecdf0,#ffffff)}
+  .settings-swatch[data-t="dawn"]{background:linear-gradient(135deg,#ffb08a,#fff1e0)}
+
+  .field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .modal-field select{width:100%;padding:11px 14px;background:rgba(var(--sheen),.04);border:1px solid var(--border);border-radius:12px;color:var(--text);font-size:14px;outline:none;appearance:none;cursor:pointer}
+  .modal-field select:focus{border-color:var(--accent)}
+  .modal-field input:focus{border-color:var(--accent)}
+
+  .setting-toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .notif-grid{display:grid;grid-template-columns:1fr auto auto;gap:10px 14px;align-items:center;margin-bottom:6px}
+  .notif-col-label{font-size:10px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;text-align:center}
+  .notif-row-label{font-size:13px;font-weight:600;color:var(--text)}
+  .setting-toggle-row .stl{font-size:13px;font-weight:700;color:var(--text)}
+  .setting-toggle-row .sts{font-size:11px;color:var(--text2);margin-top:2px}
+
+  .btn-save{width:100%;padding:13px;border:none;border-radius:14px;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 6px 20px var(--shadow);transition:all .2s;margin-top:4px}
+  .btn-save:hover{transform:translateY(-1px)}
+
+  .info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;font-size:13px;border-bottom:1px solid var(--border)}
+  .info-row:last-child{border-bottom:none}
+  .info-row .ik{color:var(--text2);font-weight:600}
+  .info-row .iv{color:var(--text);font-weight:700;font-family:monospace;font-size:12px}
+  .version-pill{display:inline-block;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;font-size:10px;font-weight:800;padding:2px 9px;border-radius:20px;letter-spacing:.03em}
+
+  .calib-box{background:rgba(var(--sheen),.05);border:1px solid var(--border);border-radius:16px;padding:16px;margin-bottom:14px}
+  .calib-current{font-size:12px;color:var(--text2);margin-bottom:10px}
+  .calib-current b{color:var(--accent);font-family:monospace}
+
+  .btn-gear{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:15px;transition:all .2s;box-shadow:0 2px 10px var(--shadow)}
+  .btn-gear:hover{border-color:var(--accent);transform:rotate(35deg)}
+
+  /* ---- Radial gauge (Gas / Pressure cards) ---- */
+  .gauge-wrap{position:relative;width:80px;height:80px;margin:2px auto 8px}
+  .gauge-ring{width:100%;height:100%;border-radius:50%;background:conic-gradient(var(--ring-color,var(--green)) calc(var(--pct,0)*1%), rgba(var(--sheen),.10) 0);display:flex;align-items:center;justify-content:center;transition:background .7s ease}
+  .gauge-hole{width:70%;height:70%;border-radius:50%;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:inset 0 1px 3px rgba(0,0,0,.2)}
+  .gauge-hole .gv{font-size:19px;font-weight:800;color:var(--text);font-family:'Outfit',sans-serif;line-height:1}
+  .gauge-hole .gu{font-size:9px;color:var(--text2);margin-top:2px;font-weight:600}
+
+  /* ---- Sparkline ---- */
+  .spark-wrap{margin-top:8px;height:28px}
+  .spark-wrap svg{width:100%;height:100%;display:block}
+  .spark-wrap polyline{fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+
+  /* ---- WiFi signal ---- */
+  .wifi-indicator{display:inline-flex;align-items:flex-end;gap:2px;height:12px;margin-right:6px;vertical-align:middle}
+  .wifi-indicator span{width:3px;background:var(--text2);border-radius:1px;opacity:.3;transition:opacity .3s,background .3s}
+  .wifi-indicator span:nth-child(1){height:4px}
+  .wifi-indicator span:nth-child(2){height:7px}
+  .wifi-indicator span:nth-child(3){height:10px}
+  .wifi-indicator span:nth-child(4){height:13px}
+  .wifi-indicator.s1 span:nth-child(1){opacity:1;background:var(--red)}
+  .wifi-indicator.s2 span:nth-child(1),.wifi-indicator.s2 span:nth-child(2){opacity:1;background:var(--yellow)}
+  .wifi-indicator.s3 span:nth-child(1),.wifi-indicator.s3 span:nth-child(2),.wifi-indicator.s3 span:nth-child(3){opacity:1;background:var(--green)}
+  .wifi-indicator.s4 span{opacity:1;background:var(--green)}
+
+  /* ---- Night lock badge ---- */
+  .night-banner{max-width:960px;margin:0 auto 16px;padding:12px 20px;border-radius:16px;font-size:13px;font-weight:700;display:none;align-items:center;gap:10px;color:var(--accent2);box-shadow:0 4px 16px var(--shadow)}
+  .night-banner.show{display:flex}
+
+  /* ---- Toasts ---- */
+  #toast-stack{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none}
+  .toast{
+    background:linear-gradient(165deg,rgba(var(--sheen),.14),rgba(var(--sheen),.04) 55%),var(--glass);
+    -webkit-backdrop-filter:blur(20px) saturate(160%);backdrop-filter:blur(20px) saturate(160%);
+    border:1px solid var(--border);color:var(--text);font-size:13px;font-weight:700;
+    padding:11px 20px;border-radius:30px;box-shadow:0 10px 30px var(--shadow);
+    animation:toastIn .25s ease, toastOut .3s ease 2.4s forwards;
+    display:flex;align-items:center;gap:8px;white-space:nowrap;
+  }
+  .toast.success{color:var(--green)}
+  .toast.error{color:var(--red)}
+  @keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes toastOut{to{opacity:0;transform:translateY(-6px)}}
+
+  /* ---- Live clock (top bar) ---- */
+  .clock-widget{font-family:'Outfit',sans-serif;text-align:right;line-height:1.2;margin-right:4px}
+  .clock-time{font-size:16px;font-weight:700;color:var(--text)}
+  .clock-date{font-size:10px;color:var(--text2);font-weight:600}
+
+  /* ---- Safe-to-leave badge ---- */
+  .safe-badge{
+    max-width:960px;margin:0 auto 16px;padding:20px 24px;border-radius:24px;
+    display:flex;align-items:center;gap:16px;
+    background:linear-gradient(165deg,rgba(var(--sheen),.12),rgba(var(--sheen),.03) 55%),var(--glass);
+    -webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);
+    border:1px solid var(--border);box-shadow:0 10px 32px var(--shadow);
+    transition:box-shadow .4s;position:relative;
+  }
+  .safe-badge::after{content:'';position:absolute;top:0;left:9%;right:9%;height:1px;background:linear-gradient(90deg,transparent,var(--specular),transparent)}
+  .safe-badge .sb-icon{font-size:38px;line-height:1;flex-shrink:0}
+  .safe-badge .sb-text{flex:1}
+  .safe-badge .sb-title{font-family:'Outfit',sans-serif;font-size:19px;font-weight:800;letter-spacing:-.01em}
+  .safe-badge .sb-sub{font-size:12px;color:var(--text2);margin-top:3px}
+  .safe-badge.safe{box-shadow:0 10px 32px var(--shadow),0 0 0 1px var(--green) inset}
+  .safe-badge.safe .sb-title{color:var(--green)}
+  .safe-badge.warn{box-shadow:0 10px 32px var(--shadow),0 0 0 1px var(--yellow) inset}
+  .safe-badge.warn .sb-title{color:var(--yellow)}
+  .safe-badge.danger{box-shadow:0 10px 36px rgba(255,60,80,.28),0 0 0 1px var(--red) inset}
+  .safe-badge.danger .sb-title{color:var(--red)}
+
+  /* ---- AI-style status strip ---- */
+  .status-strip{
+    max-width:960px;margin:0 auto 16px;padding:10px 18px;border-radius:20px;
+    font-size:12px;font-weight:600;color:var(--text2);text-align:center;
+    background:linear-gradient(165deg,rgba(var(--sheen),.08),rgba(var(--sheen),.02) 55%),var(--glass);
+    -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+    border:1px solid var(--border);
+  }
+  .status-strip b{color:var(--text);font-weight:700}
+
+  /* ---- Stats row ---- */
+  .stats-row{max-width:960px;margin:0 auto 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .stat-chip{
+    padding:14px 10px;border-radius:18px;text-align:center;
+    background:linear-gradient(165deg,rgba(var(--sheen),.09),rgba(var(--sheen),.02) 55%),var(--glass);
+    -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);
+    border:1px solid var(--border);box-shadow:0 4px 16px var(--shadow);
+  }
+  .stat-val{font-family:'Outfit',sans-serif;font-size:20px;font-weight:800;color:var(--accent)}
+  .stat-label{font-size:10px;color:var(--text2);font-weight:600;margin-top:3px;text-transform:uppercase;letter-spacing:.05em}
+
+  /* ---- Countdown ring (night-lock reopen) ---- */
+  .countdown-wrap{display:flex;align-items:center;gap:10px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+  .countdown-ring{width:36px;height:36px;border-radius:50%;background:conic-gradient(var(--accent2) calc(var(--pct,0)*1%), rgba(var(--sheen),.1) 0);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .countdown-hole{width:70%;height:70%;border-radius:50%;background:var(--bg);display:flex;align-items:center;justify-content:center;font-size:13px}
+  .countdown-text{font-size:12px;color:var(--text2)}
+  .countdown-text b{color:var(--text)}
+
+  /* ---- Event timeline ---- */
+  .event-list{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+  .event-list::-webkit-scrollbar{width:6px}
+  .event-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+  .event-item{display:flex;gap:10px;padding:9px 4px;font-size:12.5px;border-bottom:1px solid var(--border)}
+  .event-item:last-child{border-bottom:none}
+  .event-time{color:var(--text2);flex-shrink:0;font-family:monospace;font-size:11px;width:50px}
+  .event-text{color:var(--text)}
+  .event-empty{text-align:center;color:var(--text2);font-size:12px;padding:20px 0}
+
+  /* ---- QR share modal ---- */
+  #qr-modal{position:fixed;inset:0;z-index:9200;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.3);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px)}
+  #qr-modal.open{display:flex}
+  .qr-box{padding:28px;border-radius:24px;text-align:center;box-shadow:0 20px 60px var(--shadow)}
+  .qr-box img{width:200px;height:200px;border-radius:14px;background:#fff;padding:10px;margin-bottom:14px}
+  .qr-box .qr-url{font-size:11px;color:var(--text2);word-break:break-all;font-family:monospace;margin-bottom:14px}
+  .qr-timer{
+    font-family:'Outfit',sans-serif;font-size:34px;font-weight:800;letter-spacing:.03em;
+    color:var(--accent);margin-bottom:14px;font-variant-numeric:tabular-nums;
+    transition:color .3s;
+  }
+  .qr-timer.urgent{color:var(--red)}
+
+  /* ---- Drag-to-reorder ---- */
+  .card[draggable="true"]{cursor:grab}
+  .card.dragging{opacity:.4;cursor:grabbing}
+  .card.drag-over{box-shadow:0 0 0 2px var(--accent) inset}
+
+  /* ---- Sensor Health Center ---- */
+  .health-item{
+    border-radius:16px;padding:14px 16px;margin-bottom:10px;
+    background:rgba(var(--sheen),.05);border:1px solid var(--border);
+  }
+  .health-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+  .health-name{font-size:14px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
+  .health-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0}
+  .health-dot.ok{background:var(--green);box-shadow:0 0 8px var(--green)}
+  .health-dot.warn{background:var(--yellow);box-shadow:0 0 8px var(--yellow)}
+  .health-dot.bad{background:var(--red);box-shadow:0 0 8px var(--red)}
+  .health-status{font-size:11px;font-weight:700}
+  .health-status.ok{color:var(--green)}
+  .health-status.warn{color:var(--yellow)}
+  .health-status.bad{color:var(--red)}
+  .health-meta{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:11px;color:var(--text2)}
+  .health-meta b{color:var(--text);font-weight:600}
+  .health-calib-badge{display:inline-block;background:rgba(255,205,60,.15);color:var(--yellow);font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;margin-top:6px}
+  .health-note{font-size:10.5px;color:var(--text2);font-style:italic;margin-top:6px;line-height:1.4}
+
+  /* ---- AI Safety Assistant ---- */
+  #chat-bubble{
+    position:fixed;bottom:22px;right:22px;z-index:9100;
+    width:56px;height:56px;border-radius:50%;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    display:flex;align-items:center;justify-content:center;font-size:24px;
+    cursor:pointer;box-shadow:0 8px 24px var(--shadow);transition:transform .2s;
+    border:1px solid var(--border);
+  }
+  #chat-bubble:hover{transform:scale(1.08)}
+  #chat-panel{
+    position:fixed;bottom:90px;right:22px;z-index:9100;width:320px;max-width:88vw;
+    max-height:70vh;display:none;flex-direction:column;border-radius:22px;overflow:hidden;
+    background:linear-gradient(165deg,rgba(var(--sheen),.12),rgba(var(--sheen),.03) 55%),var(--glass);
+    -webkit-backdrop-filter:blur(24px) saturate(160%);backdrop-filter:blur(24px) saturate(160%);
+    border:1px solid var(--border);box-shadow:0 20px 60px var(--shadow);
+  }
+  #chat-panel.open{display:flex}
+  .chat-header{padding:16px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+  .chat-header-text .ch-title{font-size:14px;font-weight:800;color:var(--text)}
+  .chat-header-text .ch-sub{font-size:11px;color:var(--text2);margin-top:2px}
+  .chat-messages{flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px;min-height:120px}
+  .chat-messages::-webkit-scrollbar{width:5px}
+  .chat-messages::-webkit-scrollbar-thumb{background:var(--border);border-radius:6px}
+  .chat-msg{font-size:12.5px;line-height:1.5;padding:9px 13px;border-radius:14px;max-width:88%}
+  .chat-msg.bot{background:rgba(var(--sheen),.08);color:var(--text);align-self:flex-start;border-bottom-left-radius:4px}
+  .chat-msg.user{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+  .chat-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 16px 12px}
+  .chat-chip{font-size:10.5px;font-weight:600;padding:6px 11px;border-radius:14px;background:rgba(var(--sheen),.06);border:1px solid var(--border);color:var(--text2);cursor:pointer;transition:all .2s}
+  .chat-chip:hover{border-color:var(--accent);color:var(--accent)}
+  .chat-input-row{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--border)}
+  .chat-input-row input{flex:1;padding:10px 14px;border-radius:20px;border:1px solid var(--border);background:rgba(var(--sheen),.05);color:var(--text);font-size:12.5px;outline:none}
+  .chat-input-row input:focus{border-color:var(--accent)}
+  .chat-send{width:38px;height:38px;border-radius:50%;border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;cursor:pointer;font-size:15px;flex-shrink:0}
+</style>
+</head>
+<body>
+
+<div id="bg-blobs"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+
+<!-- ================================================================
+     WELCOME OVERLAY
+================================================================ -->
+<div id="welcome-overlay">
+  <div class="welcome-box">
+    <span class="welcome-flame">🔥</span>
+    <div class="welcome-greeting" id="wc-greeting">Good Morning</div>
+    <div class="welcome-name" id="wc-name">...</div>
+    <div class="welcome-sub">Your kitchen safety system is active and monitoring.<br>All sensors are online.</div>
+    <div class="welcome-status"><span class="welcome-dot"></span> System Online &bull; All Clear</div>
+    <button class="welcome-btn" onclick="dismissWelcome()">Enter Dashboard →</button>
+  </div>
+</div>
+
+<!-- ================================================================
+     ACCOUNT SETTINGS MODAL
+================================================================ -->
+<div id="account-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div class="modal-title">👤 Account Settings</div>
+      <button class="modal-close" onclick="closeAccountModal()">✕</button>
+    </div>
+
+    <!-- User info row -->
+    <div class="user-info-row">
+      <div class="avatar" id="modal-avatar">?</div>
+      <div class="user-info-text">
+        <div class="uname" id="modal-uname">Loading...</div>
+        <div class="urole" id="modal-username-sub">SafeFlame Member</div>
+      </div>
+    </div>
+
+    <!-- Default options -->
+    <div id="account-options">
+      <div class="modal-section-label">Profile</div>
+      <div class="modal-field"><input type="text" id="acc-name-input" placeholder="Display name" maxlength="40"></div>
+      <button class="modal-btn" onclick="updateDisplayName()"><span class="btn-icon">✏️</span> Update Name</button>
+
+      <div class="modal-divider"></div>
+      <div class="modal-section-label">Password</div>
+      <div class="modal-field"><input type="password" id="acc-cur-pass" placeholder="Current password"></div>
+      <div class="modal-field"><input type="password" id="acc-new-pass" placeholder="New password (min 6 chars)"></div>
+      <button class="modal-btn" onclick="changePassword()"><span class="btn-icon">🔒</span> Change Password</button>
+      <div class="modal-msg" id="acc-msg"></div>
+
+      <div class="modal-divider"></div>
+      <div class="modal-section-label">Session</div>
+      <button class="modal-btn" onclick="doLogout()">
+        <span class="btn-icon">⏻</span> Sign Out
+      </button>
+
+      <div class="modal-divider"></div>
+      <div class="modal-section-label">Danger Zone</div>
+      <button class="modal-btn danger" onclick="showDeleteConfirm()">
+        <span class="btn-icon">🗑️</span> Remove My Account
+      </button>
+
+      <!-- Delete confirmation (hidden by default) -->
+      <div id="delete-confirm">
+        <div class="danger-box">
+          <div class="danger-title">⚠️ This cannot be undone</div>
+          <div class="danger-desc">Your account and all credentials will be permanently deleted from the device. You will be signed out immediately.</div>
+        </div>
+        <div class="modal-field">
+          <label>Confirm your password</label>
+          <input type="password" id="del-pass" placeholder="Enter current password">
+        </div>
+        <button class="btn-delete-confirm" onclick="doDeleteAccount()">Delete My Account Forever</button>
+        <button class="btn-cancel-delete" onclick="hideDeleteConfirm()">Cancel</button>
+        <div class="modal-msg" id="del-msg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     SETTINGS MODAL
+================================================================ -->
+<div id="settings-modal">
+  <div class="modal-box wide">
+    <div class="settings-page-header">
+      <div class="settings-back-btn" onclick="closeSettingsModal()">←</div>
+      <div class="modal-title">⚙️ Settings</div>
+    </div>
+
+    <div class="modal-section-label">Appearance</div>
+    <div class="settings-theme-row" id="settings-theme-row">
+      <div class="settings-swatch" data-t="midnight" onclick="applyTheme('midnight')" title="Midnight"></div>
+      <div class="settings-swatch" data-t="ember"    onclick="applyTheme('ember')"    title="Ember"></div>
+      <div class="settings-swatch" data-t="aurora"   onclick="applyTheme('aurora')"   title="Aurora"></div>
+      <div class="settings-swatch" data-t="nebula"   onclick="applyTheme('nebula')"   title="Nebula"></div>
+      <div class="settings-swatch" data-t="arctic"   onclick="applyTheme('arctic')"   title="Arctic"></div>
+      <div class="settings-swatch" data-t="dawn"     onclick="applyTheme('dawn')"     title="Dawn"></div>
+    </div>
+    <button class="modal-btn" onclick="closeSettingsModal();toggleEditMode(true)"><span class="btn-icon">✏️</span> Edit Homepage Layout</button>
+
+    <div class="modal-divider"></div>
+    <div class="modal-section-label">Safety Thresholds</div>
+    <div class="field-row">
+      <div class="modal-field">
+        <label>Warn at (ppm)</label>
+        <input type="number" id="set-warn-ppm" min="50" step="10">
+      </div>
+      <div class="modal-field">
+        <label>Danger at (ppm)</label>
+        <input type="number" id="set-danger-ppm" min="100" step="10">
+      </div>
+    </div>
+    <div class="modal-field">
+      <label>Pressure warning (kPa)</label>
+      <input type="number" id="set-pressure-kpa" min="0.1" step="0.1">
+    </div>
+
+    <div class="modal-divider"></div>
+    <div class="modal-section-label">Night Valve Schedule</div>
+    <div class="setting-toggle-row">
+      <div>
+        <div class="stl">Auto-close valve at night</div>
+        <div class="sts">Forces valve shut during the hours below, every night</div>
+      </div>
+      <label class="toggle-wrap"><input type="checkbox" id="set-night-enabled"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="field-row">
+      <div class="modal-field">
+        <label>Close at</label>
+        <select id="set-night-start"></select>
+      </div>
+      <div class="modal-field">
+        <label>Reopen at</label>
+        <select id="set-night-end"></select>
+      </div>
+    </div>
+    <div class="sts" id="night-time-note" style="margin-bottom:14px"></div>
+
+    <button class="btn-save" onclick="saveSettingsForm()">Save Settings</button>
+    <div class="modal-msg" id="settings-msg"></div>
+
+    <div class="modal-divider"></div>
+    <div class="modal-section-label">Sensor Calibration</div>
+    <div class="calib-box">
+      <div class="calib-current">Current clean-air baseline (Ro): <b id="calib-ro">--</b></div>
+      <button class="modal-btn" onclick="doCalibrate()"><span class="btn-icon">🎯</span> Calibrate to Clean Air Now</button>
+      <div class="sts">Point the sensor at fresh air (away from the stove) before tapping this.</div>
+    </div>
+
+    <div class="modal-divider"></div>
+    <div class="modal-section-label">LPG Cylinder</div>
+    <div class="field-row">
+      <div class="modal-field">
+        <label>Capacity (kg gas)</label>
+        <input type="number" id="set-cyl-capacity" min="1" step="0.1">
+      </div>
+      <div class="modal-field">
+        <label>Refill alert at (%)</label>
+        <input type="number" id="set-cyl-low" min="1" max="90" step="1">
+      </div>
+    </div>
+    <div class="calib-box">
+      <div class="calib-current" id="cyl-calib-status">Not calibrated yet</div>
+      <button class="modal-btn" onclick="doCylinderCalibrate('empty')"><span class="btn-icon">⬇️</span> Step 1: Capture Empty Cylinder</button>
+      <button class="modal-btn" onclick="doCylinderCalibrate('full')"><span class="btn-icon">⬆️</span> Step 2: Capture Full Cylinder</button>
+      <div class="sts">Place an empty cylinder on the platform, tap Step 1. Swap in a full one, tap Step 2. Order date is up to you — the dashboard just warns when it's low.</div>
+    </div>
+
+    <div class="modal-divider"></div>
+    <div class="modal-section-label">Device</div>
+    <div class="modal-field">
+      <label>Timezone</label>
+      <select id="set-timezone">
+        <option value="-43200">UTC-12:00</option>
+        <option value="-39600">UTC-11:00</option>
+        <option value="-36000">UTC-10:00</option>
+        <option value="-32400">UTC-09:00</option>
+        <option value="-28800">UTC-08:00 (PST)</option>
+        <option value="-25200">UTC-07:00 (MST)</option>
+        <option value="-21600">UTC-06:00 (CST)</option>
+        <option value="-18000">UTC-05:00 (EST)</option>
+        <option value="-14400">UTC-04:00</option>
+        <option value="-10800">UTC-03:00</option>
+        <option value="0">UTC+00:00 (GMT)</option>
+        <option value="3600">UTC+01:00 (CET)</option>
+        <option value="7200">UTC+02:00</option>
+        <option value="10800">UTC+03:00</option>
+        <option value="16200">UTC+04:30</option>
+        <option value="19800">UTC+05:30 (IST)</option>
+        <option value="20700">UTC+05:45 (Nepal)</option>
+        <option value="21600">UTC+06:00</option>
+        <option value="25200">UTC+07:00</option>
+        <option value="28800">UTC+08:00 (China/SGT)</option>
+        <option value="32400">UTC+09:00 (JST)</option>
+        <option value="34200">UTC+09:30</option>
+        <option value="36000">UTC+10:00 (AEST)</option>
+        <option value="43200">UTC+12:00</option>
+      </select>
+    </div>
+    <div class="modal-field">
+      <label>LCD idle message (max 16 chars) — LCD currently removed</label>
+      <input type="text" id="set-lcd-msg" maxlength="16" placeholder="SafeFlame" disabled>
+    </div>
+    <div class="modal-field">
+      <label>Status LED brightness — <span id="led-bright-val">80</span>/255</label>
+      <input type="range" id="set-led-brightness" min="0" max="255" step="5" style="width:100%">
+    </div>
+
+    <div class="modal-divider"></div>
+    <div class="modal-section-label">Voice Alerts (DFPlayer Mini)</div>
+    <div class="setting-toggle-row">
+      <div>
+        <div class="stl">Spoken alerts</div>
+        <div class="sts">Plays a recorded phrase through the speaker on gas/flame/cylinder-low</div>
+      </div>
+      <label class="toggle-wrap"><input type="checkbox" id="set-voice-enabled"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="modal-field">
+      <label>Volume — <span id="voice-vol-val">20</span>/30</label>
+      <input type="range" id="set-voice-volume" min="0" max="30" step="1" style="width:100%">
+    </div>
+    <button class="modal-btn" onclick="doVoiceTest()"><span class="btn-icon">🔊</span> Test Speaker</button>
+
+    <div class="modal-divider"></div>
+    <div class="modal-section-label">Notification Routing</div>
+    <div class="sts" style="margin-bottom:12px">Choose where each alert type goes. Gas and flame always fire regardless of Quiet Hours below.</div>
+    <div class="notif-grid">
+      <div></div><div class="notif-col-label">Telegram</div><div class="notif-col-label">SMS</div>
+      <div class="notif-row-label">🔥 Gas</div>
+      <label class="toggle-wrap"><input type="checkbox" id="nt-gas-tg"><span class="toggle-slider"></span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="nt-gas-sms"><span class="toggle-slider"></span></label>
+      <div class="notif-row-label">🔥 Flame</div>
+      <label class="toggle-wrap"><input type="checkbox" id="nt-flame-tg"><span class="toggle-slider"></span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="nt-flame-sms"><span class="toggle-slider"></span></label>
+      <div class="notif-row-label">⚠️ Pressure</div>
+      <label class="toggle-wrap"><input type="checkbox" id="nt-pres-tg"><span class="toggle-slider"></span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="nt-pres-sms"><span class="toggle-slider"></span></label>
+      <div class="notif-row-label">🛒 Cylinder</div>
+      <label class="toggle-wrap"><input type="checkbox" id="nt-cyl-tg"><span class="toggle-slider"></span></label>
+      <label class="toggle-wrap"><input type="checkbox" id="nt-cyl-sms"><span class="toggle-slider"></span></label>
+    </div>
+
+    <div class="modal-divider"></div>
+    <div class="modal-section-label">Quiet Hours</div>
+    <div class="setting-toggle-row">
+      <div>
+        <div class="stl">Suppress non-critical alerts</div>
+        <div class="sts">Pressure/cylinder alerts stay silent during these hours — gas &amp; flame never do</div>
+      </div>
+      <label class="toggle-wrap"><input type="checkbox" id="set-quiet-enabled"><span class="toggle-slider"></span></label>
+    </div>
+    <div class="field-row">
+      <div class="modal-field">
+        <label>From</label>
+        <select id="set-quiet-start"></select>
+      </div>
+      <div class="modal-field">
+        <label>To</label>
+        <select id="set-quiet-end"></select>
+      </div>
+    </div>
+
+    <div class="modal-divider"></div>
+    <div class="modal-section-label">AI Safety Assistant (Gemini)</div>
+    <div class="calib-box">
+      <div class="calib-current" id="gemini-status">Not configured</div>
+      <div class="sts">Managed centrally via the Firebase console (api_keys collection) — not editable here. Toggle a key's "active" field there to change or disable it; the device picks up the change automatically within 6 hours, or on next reboot. Without an active key, the assistant still works using built-in rules based on your live sensor data.</div>
+    </div>
+
+    <div class="modal-divider"></div>
+    <div class="modal-section-label">System Info</div>
+    <div class="info-row"><span class="ik">Firmware</span><span class="iv"><span class="version-pill" id="info-version">v--</span></span></div>
+    <div class="info-row" id="update-row" style="display:none"><span class="ik">Update available</span><span class="iv"><a href="#" id="update-link" target="_blank" style="color:var(--accent);text-decoration:none;font-weight:800">-- →</a></span></div>
+    <div class="info-row"><span class="ik">WiFi network</span><span class="iv" id="info-wifi">--</span></div>
+    <div class="info-row"><span class="ik">Signal strength</span><span class="iv" id="info-rssi">--</span></div>
+    <div class="info-row"><span class="ik">Device IP</span><span class="iv" id="info-ip">--</span></div>
+    <div class="info-row"><span class="ik">Uptime</span><span class="iv" id="info-uptime">--</span></div>
+    <div class="info-row"><span class="ik">Time sync (NTP)</span><span class="iv" id="info-time">--</span></div>
+    <div class="info-row"><span class="ik">Backup RTC (DS3231)</span><span class="iv" id="info-rtc">--</span></div>
+    <div class="info-row"><span class="ik">Telegram alerts</span><span class="iv" id="info-telegram">--</span></div>
+    <div class="info-row"><span class="ik">SMS alerts</span><span class="iv" id="info-sms">--</span></div>
+    <button class="modal-btn" id="btn-sms-test" onclick="doSmsTest()" style="margin-top:10px"><span class="btn-icon">📶</span> Send Test SMS</button>
+  </div>
+</div>
+
+<!-- Toast notifications -->
+<div id="toast-stack"></div>
+
+<!-- ================================================================
+     DASHBOARD
+================================================================ -->
+<div class="top-bar">
+  <div class="header-text">
+    <h1>SafeFlame</h1>
+    <p>Intelligent Smart Kitchen Safety System</p>
+  </div>
+  <div class="top-right">
+    <div class="clock-widget" id="clock-widget"><div class="clock-time" id="clock-time">--:--</div><div class="clock-date" id="clock-date">--</div></div>
+    <div class="wifi-indicator" id="wifi-ind" title="WiFi signal"><span></span><span></span><span></span><span></span></div>
+    <div class="btn-gear" onclick="openQrModal()" title="Share dashboard">🔗</div>
+    <div class="btn-gear" onclick="openHealthModal()" title="Sensor Health">🩺</div>
+    <div class="btn-gear" onclick="openSettingsModal()" title="Settings">⚙️</div>
+    <button class="btn-account" onclick="openAccountModal()" id="btn-account">👤 Account</button>
+    <button class="btn-logout" onclick="doLogout()">⏻ Logout</button>
+  </div>
+</div>
+
+<div class="ip-row">
+  <div class="ip-badge" id="ip-label">connecting...</div>
+</div>
+
+<div class="safe-badge" id="safe-badge">
+  <span class="sb-icon" id="sb-icon">✅</span>
+  <div class="sb-text">
+    <div class="sb-title" id="sb-title">Checking status…</div>
+    <div class="sb-sub" id="sb-sub">Gathering sensor readings</div>
+  </div>
+</div>
+
+<div class="status-strip" id="status-strip">Loading system status…</div>
+
+<div class="alert-banner" id="alert-banner">
+  <span class="dot"></span><span id="alert-text">Alert</span>
+</div>
+
+<div class="night-banner" id="night-banner">
+  🌙 <span>Night schedule active — valve locked closed until morning</span>
+</div>
+
+<div class="night-banner" id="cyl-banner" style="color:var(--yellow)">
+  🛒 <span id="cyl-banner-text">LPG cylinder running low — time to order a refill</span>
+</div>
+
+<div class="night-banner" id="estop-banner" style="color:var(--red)">
+  🛑 <span>Emergency stop engaged — gas cut at the source</span>
+</div>
+
+<div class="night-banner" id="override-banner" style="color:var(--accent)">
+  🔑 <span>Manual override active — automatic valve control disabled</span>
+</div>
+
+<div class="refresh-bar">
+  <span class="refresh-info"><span class="live-dot"></span>LIVE — UPDATES EVERY 2S</span>
+  <span class="refresh-info" id="last-update">--</span>
+</div>
+
+<div class="stats-row">
+  <div class="stat-chip"><div class="stat-val" id="stat-peak">--</div><div class="stat-label">Today's Peak (ppm)</div></div>
+  <div class="stat-chip"><div class="stat-val" id="stat-alerts">--</div><div class="stat-label">Alerts Today</div></div>
+  <div class="stat-chip"><div class="stat-val" id="stat-uptime">--</div><div class="stat-label">Uptime</div></div>
+</div>
+
+<!-- QR share modal -->
+<div id="qr-modal" onclick="if(event.target===this)closeQrModal()">
+  <div class="qr-box modal-box" style="max-width:280px">
+    <div class="modal-header"><div class="modal-title">🔗 Share Dashboard</div><button class="modal-close" onclick="closeQrModal()">✕</button></div>
+    <div class="qr-timer" id="qr-timer">10:00</div>
+    <img id="qr-img" src="" alt="QR code">
+    <div class="qr-url" id="qr-url">--</div>
+    <div class="sts">Anyone who scans this can view the dashboard for 10 minutes — no login needed. They can't control the valve, fans, or anything else. Reopen this to generate a fresh link.</div>
+  </div>
+</div>
+
+<!-- ================================================================
+     SENSOR HEALTH CENTER
+================================================================ -->
+<div id="health-modal">
+  <div class="modal-box wide">
+    <div class="modal-header">
+      <div class="modal-title">🩺 Sensor Health Center</div>
+      <button class="modal-close" onclick="closeHealthModal()">✕</button>
+    </div>
+    <div id="health-list"><div class="sts">Loading…</div></div>
+  </div>
+</div>
+
+<!-- ================================================================
+     AI SAFETY ASSISTANT
+================================================================ -->
+<div id="chat-bubble" onclick="toggleChat()">💬</div>
+<div id="chat-panel">
+  <div class="chat-header">
+    <div class="chat-header-text"><div class="ch-title">SafeFlame AI</div><div class="ch-sub">Ask me about your kitchen safety</div></div>
+    <button class="modal-close" onclick="toggleChat()">✕</button>
+  </div>
+  <div class="chat-messages" id="chat-messages">
+    <div class="chat-msg bot">Hi! I can answer questions about your valve, LPG level, fans, or what to do during a gas alert — using your system's live data.</div>
+  </div>
+  <div class="chat-chips">
+    <div class="chat-chip" onclick="askChat('Why did the valve close?')">Why did the valve close?</div>
+    <div class="chat-chip" onclick="askChat('Is my LPG level okay?')">Is my LPG okay?</div>
+    <div class="chat-chip" onclick="askChat('Why are both fans running?')">Why are fans running?</div>
+    <div class="chat-chip" onclick="askChat('What should I do during a gas alert?')">Gas alert — what do I do?</div>
+  </div>
+  <div class="chat-input-row">
+    <input type="text" id="chat-input" placeholder="Ask a question…" onkeydown="if(event.key==='Enter')sendChat()">
+    <button class="chat-send" onclick="sendChat()">➤</button>
+  </div>
+</div>
+
+<div class="night-banner" id="edit-mode-banner" style="color:var(--accent2)">
+  ✏️ <span>Editing layout — drag cards to reorder</span>
+  <button class="modal-btn" style="margin:0 0 0 auto;width:auto;padding:6px 16px" onclick="toggleEditMode(false)">Done</button>
+</div>
+
+<div class="grid" id="sensor-grid">
+  <div class="card" id="card-gas">
+    <div class="card-label">Gas (MQ2)</div>
+    <div class="gauge-wrap"><div class="gauge-ring" id="gas-ring"><div class="gauge-hole"><div class="gv" id="ppm-val">--</div><div class="gu">ppm</div></div></div></div>
+    <div class="badge" id="gas-badge" style="display:block;text-align:center;width:fit-content;margin:0 auto">--</div>
+    <div class="spark-wrap"><svg viewBox="0 0 100 28" preserveAspectRatio="none"><polyline id="spark-gas" points="" stroke="var(--accent)"/></svg></div>
+  </div>
+  <div class="card info" id="card-voltage">
+    <div class="card-label">Voltage</div>
+    <div class="card-value" id="volt-val">--</div>
+    <div class="card-unit">volts</div>
+    <div class="badge badge-info">ADC</div>
+  </div>
+  <div class="card" id="card-flame">
+    <div class="card-label">Flame</div>
+    <div class="card-value" id="flame-val">--</div>
+    <div class="card-unit">intensity %</div>
+    <div class="badge" id="flame-badge">--</div>
+  </div>
+  <div class="card" id="card-pressure">
+    <div class="card-label">Pressure</div>
+    <div class="gauge-wrap"><div class="gauge-ring" id="pres-ring"><div class="gauge-hole"><div class="gv" id="pres-val">--</div><div class="gu">kPa</div></div></div></div>
+    <div class="badge" id="pres-badge" style="display:block;text-align:center;width:fit-content;margin:0 auto">--</div>
+    <div class="spark-wrap"><svg viewBox="0 0 100 28" preserveAspectRatio="none"><polyline id="spark-pres" points="" stroke="var(--accent2)"/></svg></div>
+  </div>
+  <div class="card" id="card-cylinder">
+    <div class="card-label">LPG Cylinder</div>
+    <div class="gauge-wrap"><div class="gauge-ring" id="cyl-ring"><div class="gauge-hole"><div class="gv" id="cyl-val">--</div><div class="gu">% full</div></div></div></div>
+    <div class="badge" id="cyl-badge" style="display:block;text-align:center;width:fit-content;margin:0 auto">--</div>
+    <div class="card-unit" id="cyl-kg" style="text-align:center;margin-top:6px">--</div>
+    <div class="card-unit" id="cyl-days" style="text-align:center;margin-top:2px;color:var(--accent);font-weight:700">--</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title" style="justify-content:space-between">
+    <span>🔧 Gas Valve (SG90 Servo)</span>
+    <label class="away-toggle" title="Away Mode — locks the valve closed until turned off">
+      <span class="away-label">🏠 Away</span>
+      <span class="toggle-wrap"><input type="checkbox" id="away-cb" onchange="toggleAway(this.checked)"><span class="toggle-slider"></span></span>
+    </label>
+  </div>
+  <div class="valve-display">
+    <div class="valve-icon" id="valve-icon">🟢</div>
+    <div class="valve-info">
+      <div class="valve-state-text" id="valve-state-text">--</div>
+      <div class="valve-sub" id="valve-sub">Auto controlled</div>
+    </div>
+  </div>
+  <div class="valve-btns">
+    <button class="btn" id="btn-valve-open"  onclick="valveCmd('open')">🟢 Open</button>
+    <button class="btn" id="btn-valve-close" onclick="valveCmd('close')">🔴 Close</button>
+  </div>
+  <div class="countdown-wrap" id="countdown-wrap" style="display:none">
+    <div class="countdown-ring" id="countdown-ring"><div class="countdown-hole">🌙</div></div>
+    <div class="countdown-text">Valve reopens in <b id="countdown-text">--</b></div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">💨 Exhaust Fans</div>
+  <div class="mode-pills">
+    <div class="pill" id="pill-auto"   onclick="setMode('auto')">⚡ Auto</div>
+    <div class="pill" id="pill-toggle" onclick="setMode('toggle')">⚙️ Manual</div>
+  </div>
+  <div class="fan-grid">
+    <div class="fan-card" id="fan1-card">
+      <div><div class="fan-name">Fan 1</div><div class="fan-state off" id="fan1-state">OFF</div></div>
+      <label class="toggle-wrap" id="fan1-toggle">
+        <input type="checkbox" id="fan1-cb" onchange="toggleFan(1,this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="fan-card" id="fan2-card">
+      <div><div class="fan-name">Fan 2</div><div class="fan-state off" id="fan2-state">OFF</div></div>
+      <label class="toggle-wrap" id="fan2-toggle">
+        <input type="checkbox" id="fan2-cb" onchange="toggleFan(2,this.checked)">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+  <button class="btn" id="btn-both" onclick="toggleBoth()">Both Fans OFF</button>
+</div>
+
+<div class="section">
+  <div class="section-title" style="justify-content:space-between">
+    <span>📋 Activity Feed</span>
+    <span class="clear-log-btn" onclick="clearActivityLog()">Clear</span>
+  </div>
+  <div class="activity-list" id="activity-list">
+    <div class="activity-empty" id="activity-empty">No activity yet — actions and alerts will show up here.</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-title">📋 Recent Activity</div>
+  <div class="event-list" id="event-list"><div class="event-empty">Loading…</div></div>
+</div>
+
+<div class="footer">ESP32 SAFETY MONITOR &bull; AUTO-REFRESH 2S</div>
+
+<script>
+let currentMode='auto', fan1=false, fan2=false, alertActive=false;
+let currentUser='';      // username (login identifier)
+let currentName='';      // display name (full name)
+let ppmHistory=[], presHistory=[];
+const SPARK_LEN=40;
+let wasDangerActive=false;
+let serverEpochOffset=0, clockTzOffsetSec=0, clockAvailable=false;
+let lastStatusData=null; // used by the AI Safety Assistant to answer questions with live data
+
+/* ---------- Theme ---------- */
+const THEMES=['midnight','ember','aurora','nebula','arctic','dawn'];
+function applyTheme(t){
+  if(!THEMES.includes(t))t='midnight';
+  document.documentElement.setAttribute('data-theme',t);
+  document.querySelectorAll('.settings-swatch').forEach(s=>s.classList.toggle('active',s.dataset.t===t));
+  document.cookie='theme='+t+';max-age=31536000;path=/';
+}
+function loadTheme(){let m=document.cookie.match(/theme=([a-z]+)/);applyTheme(m?m[1]:'midnight')}
+loadTheme();
+
+/* ---------- Welcome screen ---------- */
+function getGreeting(){
+  let h=new Date().getHours();
+  if(h<12)return'Good Morning';
+  if(h<17)return'Good Afternoon';
+  if(h<21)return'Good Evening';
+  return'Good Night';
+}
+function initWelcome(displayName){
+  document.getElementById('wc-greeting').textContent = getGreeting();
+  document.getElementById('wc-name').textContent     = displayName;
+  setTimeout(dismissWelcome, 5000);
+}
+function dismissWelcome(){
+  let ov=document.getElementById('welcome-overlay');
+  ov.classList.add('fade-out');
+  setTimeout(()=>ov.style.display='none', 650);
+}
+
+/* ---------- Account modal ---------- */
+function openAccountModal(){
+  document.getElementById('account-modal').classList.add('open');
+  document.getElementById('modal-uname').textContent = currentName||currentUser||'—';
+  document.getElementById('modal-username-sub').textContent = currentUser || 'SafeFlame Member';
+  document.getElementById('modal-avatar').textContent= (currentName||currentUser)?(currentName||currentUser)[0].toUpperCase():'?';
+  document.getElementById('acc-name-input').value=currentName;
+  document.getElementById('acc-cur-pass').value='';
+  document.getElementById('acc-new-pass').value='';
+  document.getElementById('acc-msg').style.display='none';
+  hideDeleteConfirm();
+}
+function closeAccountModal(){
+  document.getElementById('account-modal').classList.remove('open');
+  hideDeleteConfirm();
+}
+document.getElementById('account-modal').addEventListener('click',function(e){
+  if(e.target===this)closeAccountModal();
+});
+
+function showDeleteConfirm(){
+  document.getElementById('delete-confirm').classList.add('show');
+  document.getElementById('del-pass').value='';
+  document.getElementById('del-msg').style.display='none';
+}
+function hideDeleteConfirm(){
+  document.getElementById('delete-confirm').classList.remove('show');
+  document.getElementById('del-pass').value='';
+  document.getElementById('del-msg').style.display='none';
+}
+function showDelMsg(type,text){
+  let el=document.getElementById('del-msg');
+  el.className='modal-msg '+type;el.textContent=text;el.style.display='block';
+}
+function showAccMsg(type,text){
+  let el=document.getElementById('acc-msg');
+  el.className='modal-msg '+type;el.textContent=text;el.style.display='block';
+}
+function updateDisplayName(){
+  let name=document.getElementById('acc-name-input').value.trim();
+  if(!name){showAccMsg('error','Name cannot be empty.');return}
+  fetch('/auth/update-name',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'name='+encodeURIComponent(name)})
+    .then(r=>r.json()).then(d=>{
+      if(d.ok){
+        currentName=d.name;
+        document.getElementById('modal-uname').textContent=currentName;
+        document.getElementById('modal-avatar').textContent=currentName[0].toUpperCase();
+        document.getElementById('btn-account').textContent='👤 '+currentName;
+        showAccMsg('success','Name updated.');
+      } else showAccMsg('error',d.error||'Failed to update name.');
+    }).catch(()=>showAccMsg('error','Connection error.'));
+}
+function changePassword(){
+  let cur=document.getElementById('acc-cur-pass').value;
+  let neu=document.getElementById('acc-new-pass').value;
+  if(!cur||!neu){showAccMsg('error','Fill in both password fields.');return}
+  if(neu.length<6){showAccMsg('error','New password must be at least 6 characters.');return}
+  fetch('/auth/change-password',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:'currentPassword='+encodeURIComponent(cur)+'&newPassword='+encodeURIComponent(neu)})
+    .then(r=>r.json()).then(d=>{
+      if(d.ok){
+        document.getElementById('acc-cur-pass').value='';
+        document.getElementById('acc-new-pass').value='';
+        showAccMsg('success','Password changed.');
+      } else showAccMsg('error',d.error||'Failed to change password.');
+    }).catch(()=>showAccMsg('error','Connection error.'));
+}
+function doDeleteAccount(){
+  let p=document.getElementById('del-pass').value;
+  if(!p){showDelMsg('error','Please enter your password.');return}
+  fetch('/auth/delete',{
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:'password='+encodeURIComponent(p)
+  }).then(r=>r.json()).then(d=>{
+    if(d.ok){
+      showDelMsg('success','Account deleted. Redirecting...');
+      setTimeout(()=>location.href='/login',1500);
+    } else {
+      showDelMsg('error',d.error||'Deletion failed.');
+    }
+  }).catch(()=>showDelMsg('error','Connection error.'));
+}
+
+/* ---------- Settings modal ---------- */
+for(let h=0;h<24;h++){
+  let label=(h===0?'12 AM':h<12?h+' AM':h===12?'12 PM':(h-12)+' PM');
+  let o1=new Option(label,h), o2=new Option(label,h), o3=new Option(label,h), o4=new Option(label,h);
+  document.getElementById('set-night-start').add(o1);
+  document.getElementById('set-night-end').add(o2);
+  document.getElementById('set-quiet-start').add(o3);
+  document.getElementById('set-quiet-end').add(o4);
+}
+function openSettingsModal(){
+  document.getElementById('settings-modal').classList.add('open');
+  document.getElementById('settings-msg').style.display='none';
+  fetch('/settings').then(r=>r.json()).then(d=>{
+    document.getElementById('set-warn-ppm').value=d.warnPpm;
+    document.getElementById('set-danger-ppm').value=d.dangerPpm;
+    document.getElementById('set-pressure-kpa').value=d.pressureWarnKpa;
+    document.getElementById('set-night-enabled').checked=d.nightValveEnabled;
+    document.getElementById('set-night-start').value=d.nightStartHour;
+    document.getElementById('set-night-end').value=d.nightEndHour;
+    document.getElementById('calib-ro').textContent=d.roCleanAir.toFixed(3);
+    document.getElementById('set-cyl-capacity').value=d.cylinderCapacityKg;
+    document.getElementById('set-cyl-low').value=d.cylinderLowPercent;
+    document.getElementById('set-timezone').value=d.gmtOffsetSec;
+    document.getElementById('set-lcd-msg').value=d.lcdIdleMessage;
+    document.getElementById('set-led-brightness').value=d.ledBrightness;
+    document.getElementById('led-bright-val').textContent=d.ledBrightness;
+    document.getElementById('set-voice-enabled').checked=d.voiceAlertsEnabled;
+    document.getElementById('set-voice-volume').value=d.voiceVolume;
+    document.getElementById('voice-vol-val').textContent=d.voiceVolume;
+    document.getElementById('nt-gas-tg').checked=d.notifyTelegramGas;
+    document.getElementById('nt-gas-sms').checked=d.notifySmsGas;
+    document.getElementById('nt-flame-tg').checked=d.notifyTelegramFlame;
+    document.getElementById('nt-flame-sms').checked=d.notifySmsFlame;
+    document.getElementById('nt-pres-tg').checked=d.notifyTelegramPressure;
+    document.getElementById('nt-pres-sms').checked=d.notifySmsPressure;
+    document.getElementById('nt-cyl-tg').checked=d.notifyTelegramCylinder;
+    document.getElementById('nt-cyl-sms').checked=d.notifySmsCylinder;
+    document.getElementById('set-quiet-enabled').checked=d.quietHoursEnabled;
+    document.getElementById('set-quiet-start').value=d.quietStartHour;
+    document.getElementById('set-quiet-end').value=d.quietEndHour;
+    document.getElementById('gemini-status').innerHTML = d.geminiConfigured
+      ? 'API key configured <b style="color:var(--green)">✓</b>'
+      : 'No active key set in Firebase — using built-in rule-based answers';
+    document.getElementById('cyl-calib-status').innerHTML = d.cylinderCalibrated
+      ? 'Calibrated <b style="color:var(--green)">✓</b>'
+      : 'Not calibrated yet — capture both points below';
+    document.getElementById('info-version').textContent='v'+d.firmwareVersion;
+    let updRow=document.getElementById('update-row');
+    if(d.updateAvailable){
+      updRow.style.display='flex';
+      let link=document.getElementById('update-link');
+      link.textContent='v'+d.latestVersion+' →';
+      link.href=d.latestVersionUrl||'#';
+    } else {
+      updRow.style.display='none';
+    }
+    document.getElementById('info-wifi').textContent=d.wifiNetwork||'—';
+    document.getElementById('info-rssi').textContent=d.rssi?(d.rssi+' dBm'):'—';
+    document.getElementById('info-time').textContent=d.timeSynced?'Synced ✓':'Not synced';
+    document.getElementById('info-rtc').textContent=d.rtcAvailable?'Present ✓':'Not detected';
+    document.getElementById('info-telegram').textContent=d.telegramEnabled?'Enabled ✓':'Disabled';
+    document.getElementById('info-sms').textContent=d.smsEnabled?'Enabled ✓':'Disabled';
+    document.getElementById('btn-sms-test').style.opacity=d.smsEnabled?'1':'0.4';
+    document.getElementById('btn-sms-test').style.pointerEvents=d.smsEnabled?'auto':'none';
+    updateNightNote();
+  }).catch(()=>showSettingsMsg('error','Could not load settings.'));
+  document.getElementById('info-ip').textContent=document.getElementById('ip-label').textContent;
+}
+function closeSettingsModal(){document.getElementById('settings-modal').classList.remove('open')}
+document.getElementById('set-night-start').addEventListener('change',updateNightNote);
+document.getElementById('set-night-end').addEventListener('change',updateNightNote);
+document.getElementById('set-led-brightness').addEventListener('input',function(){
+  document.getElementById('led-bright-val').textContent=this.value;
+});
+document.getElementById('set-voice-volume').addEventListener('input',function(){
+  document.getElementById('voice-vol-val').textContent=this.value;
+});
+function doVoiceTest(){
+  fetch('/voice/test',{method:'POST'}).then(r=>r.json()).then(d=>{
+    showToast(d.ok?'Command sent to speaker':'Failed to send','success');
+  }).catch(()=>showToast('Connection error','error'));
+}
+function updateNightNote(){
+  let s=document.getElementById('set-night-start').selectedOptions[0]?.text;
+  let e=document.getElementById('set-night-end').selectedOptions[0]?.text;
+  document.getElementById('night-time-note').textContent = s&&e ? ('Valve locks closed from '+s+' to '+e+', every night.') : '';
+}
+function showSettingsMsg(type,text){
+  let el=document.getElementById('settings-msg');
+  el.className='modal-msg '+type;el.textContent=text;el.style.display='block';
+}
+
+function saveSettingsForm(){
+  let body=new URLSearchParams({
+    warnPpm: document.getElementById('set-warn-ppm').value,
+    dangerPpm: document.getElementById('set-danger-ppm').value,
+    pressureWarnKpa: document.getElementById('set-pressure-kpa').value,
+    nightValveEnabled: document.getElementById('set-night-enabled').checked?'1':'0',
+    nightStartHour: document.getElementById('set-night-start').value,
+    nightEndHour: document.getElementById('set-night-end').value,
+    cylinderCapacityKg: document.getElementById('set-cyl-capacity').value,
+    cylinderLowPercent: document.getElementById('set-cyl-low').value,
+    gmtOffsetSec: document.getElementById('set-timezone').value,
+    lcdIdleMessage: document.getElementById('set-lcd-msg').value,
+    ledBrightness: document.getElementById('set-led-brightness').value,
+    voiceAlertsEnabled: document.getElementById('set-voice-enabled').checked?'1':'0',
+    voiceVolume: document.getElementById('set-voice-volume').value,
+    notifyTelegramGas: document.getElementById('nt-gas-tg').checked?'1':'0',
+    notifySmsGas: document.getElementById('nt-gas-sms').checked?'1':'0',
+    notifyTelegramFlame: document.getElementById('nt-flame-tg').checked?'1':'0',
+    notifySmsFlame: document.getElementById('nt-flame-sms').checked?'1':'0',
+    notifyTelegramPressure: document.getElementById('nt-pres-tg').checked?'1':'0',
+    notifySmsPressure: document.getElementById('nt-pres-sms').checked?'1':'0',
+    notifyTelegramCylinder: document.getElementById('nt-cyl-tg').checked?'1':'0',
+    notifySmsCylinder: document.getElementById('nt-cyl-sms').checked?'1':'0',
+    quietHoursEnabled: document.getElementById('set-quiet-enabled').checked?'1':'0',
+    quietStartHour: document.getElementById('set-quiet-start').value,
+    quietEndHour: document.getElementById('set-quiet-end').value
+  });
+  fetch('/settings',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body}).then(r=>r.json()).then(d=>{
+    if(d.ok){showSettingsMsg('success','Settings saved.');showToast('Settings saved','success');fetchStatus()}
+    else showSettingsMsg('error',d.error||'Save failed.');
+  }).catch(()=>showSettingsMsg('error','Connection error.'));
+}
+function doCalibrate(){
+  fetch('/calibrate',{method:'POST'}).then(r=>r.json()).then(d=>{
+    if(d.ok){
+      document.getElementById('calib-ro').textContent=d.roCleanAir.toFixed(3);
+      showToast('Calibrated — new clean-air baseline set','success');
+    } else {
+      showToast(d.error||'Calibration failed','error');
+    }
+  }).catch(()=>showToast('Connection error','error'));
+}
+function doSmsTest(){
+  showToast('Sending test SMS… (can take up to ~10s)','success');
+  fetch('/sms/test',{method:'POST'}).then(r=>r.json()).then(d=>{
+    if(d.ok) showToast('Test SMS sent ✓','success');
+    else showToast(d.error||'SMS failed','error');
+  }).catch(()=>showToast('Connection error','error'));
+}
+function doCylinderCalibrate(point){
+  fetch('/cylinder/calibrate?point='+point,{method:'POST'}).then(r=>r.json()).then(d=>{
+    if(d.ok){
+      showToast((point==='empty'?'Empty':'Full')+' point captured','success');
+      document.getElementById('cyl-calib-status').innerHTML = d.calibrated
+        ? 'Calibrated <b style="color:var(--green)">✓</b>'
+        : 'Captured '+point+' point — capture the other one too';
+    } else {
+      showToast(d.error||'Calibration failed','error');
+    }
+  }).catch(()=>showToast('Connection error','error'));
+}
+
+/* ---------- Toasts ---------- */
+function showToast(text,type){
+  let stack=document.getElementById('toast-stack');
+  let t=document.createElement('div');
+  t.className='toast '+(type||'');
+  t.textContent=text;
+  stack.appendChild(t);
+  setTimeout(()=>t.remove(),2700);
+}
+
+/* ---------- Auth ---------- */
+function doLogout(){
+  fetch('/auth/logout',{method:'POST'}).then(()=>location.href='/login');
+}
+
+/* ---------- Controls ---------- */
+function setMode(m){fetch('/mode?v='+m).then(()=>{currentMode=m;updateModeUI();showToast(m==='auto'?'Switched to Auto mode':'Switched to Manual mode','success');fetchStatus()})}
+function toggleFan(n,on){if(currentMode!=='toggle')return;fetch('/fan?n='+n+'&v='+(on?'1':'0')).then(()=>{showToast('Fan '+n+' '+(on?'turned on':'turned off'),'success');fetchStatus()})}
+function toggleBoth(){if(currentMode!=='toggle')return;let turningOn=!(fan1&&fan2);fetch('/fans?v='+(fan1&&fan2?'0':'1')).then(()=>{showToast('Both fans '+(turningOn?'on':'off'),'success');fetchStatus()})}
+function valveCmd(c){fetch('/valve?v='+c).then(()=>{showToast(c==='open'?'Valve opened':'Valve closed','success');fetchStatus()})}
+function toggleAway(on){fetch('/away?v='+(on?'1':'0')).then(()=>{showToast(on?'Away Mode enabled — valve locked closed':'Away Mode disabled','success');fetchStatus()})}
+
+function updateModeUI(){
+  document.getElementById('pill-auto').classList.toggle('active',currentMode==='auto');
+  document.getElementById('pill-toggle').classList.toggle('active',currentMode==='toggle');
+  let m=currentMode==='toggle';
+  document.getElementById('fan1-toggle').classList.toggle('disabled',!m);
+  document.getElementById('fan2-toggle').classList.toggle('disabled',!m);
+  let bb=document.getElementById('btn-both');
+  bb.style.opacity=m?'1':'0.4';bb.style.pointerEvents=m?'auto':'none';
+}
+
+/* ---------- Gauges + sparklines ---------- */
+function setGauge(ringId,pct,color){
+  let r=document.getElementById(ringId);
+  r.style.setProperty('--pct',Math.max(0,Math.min(100,pct)));
+  r.style.setProperty('--ring-color',color);
+}
+function pushHistory(arr,val){arr.push(val);if(arr.length>SPARK_LEN)arr.shift()}
+function drawSpark(id,arr,max){
+  let el=document.getElementById(id);
+  if(arr.length<2){el.setAttribute('points','');return}
+  let pts=arr.map((v,i)=>{
+    let x=(i/(SPARK_LEN-1))*100;
+    let y=28-Math.max(0,Math.min(1,v/max))*26-1;
+    return x.toFixed(1)+','+y.toFixed(1);
+  }).join(' ');
+  el.setAttribute('points',pts);
+}
+
+/* ---------- WiFi indicator ---------- */
+function updateWifiIndicator(connected,rssi){
+  let el=document.getElementById('wifi-ind');
+  el.className='wifi-indicator';
+  if(!connected){el.title='Offline';return}
+  let bars = rssi>=-55?4 : rssi>=-65?3 : rssi>=-75?2 : 1;
+  el.classList.add('s'+bars);
+  el.title='WiFi: '+rssi+' dBm';
+}
+
+/* ---------- Status polling ---------- */
+function fetchStatus(){
+  fetch('/status').then(r=>{
+    if(r.status===401){location.href='/login';return null}
+    return r.json();
+  }).then(d=>{
+    if(!d)return;
+    let ppm=d.ppm, warnPpm=d.warn_ppm, dangerPpm=d.danger_ppm, warnKpa=d.pressure_warn_kpa;
+
+    document.getElementById('ppm-val').textContent=ppm;
+    let gc=document.getElementById('card-gas'),gb=document.getElementById('gas-badge');
+    let gasState = ppm>=dangerPpm?'alert':ppm>=warnPpm?'warn':'ok';
+    gc.className='card '+gasState;
+    gb.className='badge '+(gasState==='alert'?'badge-danger':gasState==='warn'?'badge-warn':'badge-safe');
+    gb.textContent=gasState==='alert'?'DANGER':gasState==='warn'?'WARNING':'SAFE';
+    setGauge('gas-ring',(ppm/dangerPpm)*100, gasState==='alert'?'var(--red)':gasState==='warn'?'var(--yellow)':'var(--green)');
+    pushHistory(ppmHistory,ppm);
+    drawSpark('spark-gas',ppmHistory,dangerPpm);
+
+    document.getElementById('volt-val').textContent=d.voltage;
+
+    let fc=document.getElementById('card-flame'),fb=document.getElementById('flame-badge');
+    document.getElementById('flame-val').textContent=d.flame_intensity;
+    fc.className='card '+(d.flame?'alert':'ok');
+    fb.className='badge '+(d.flame?'badge-danger':'badge-safe');
+    fb.textContent=d.flame?'FIRE!':'CLEAR';
+
+    let pc=document.getElementById('card-pressure'),pb=document.getElementById('pres-badge');
+    if(d.pres_valid){
+      document.getElementById('pres-val').textContent=d.pressure.toFixed(1);
+      let presState = d.pressure>=warnKpa?'alert':d.pressure>=warnKpa*0.7?'warn':'ok';
+      pc.className='card '+presState;
+      pb.className='badge '+(presState==='alert'?'badge-danger':presState==='warn'?'badge-warn':'badge-safe');
+      pb.textContent=presState==='alert'?'HIGH':presState==='warn'?'RISING':'NORMAL';
+      setGauge('pres-ring',(d.pressure/(warnKpa*1.3))*100, presState==='alert'?'var(--red)':presState==='warn'?'var(--yellow)':'var(--green)');
+      pushHistory(presHistory,d.pressure);
+      drawSpark('spark-pres',presHistory,warnKpa*1.3);
+    } else {
+      document.getElementById('pres-val').textContent='ERR';
+      pb.className='badge badge-warn';pb.textContent='NO DATA';
+    }
+
+    let cc=document.getElementById('card-cylinder'),cb=document.getElementById('cyl-badge');
+    if(d.cyl_calibrated && d.cyl_valid){
+      document.getElementById('cyl-val').textContent=Math.round(d.cyl_percent);
+      document.getElementById('cyl-kg').textContent='~'+d.cyl_kg.toFixed(1)+' / '+d.cyl_capacity_kg.toFixed(1)+' kg';
+      let daysEl=document.getElementById('cyl-days');
+      if(d.cyl_days_left>=0){
+        daysEl.textContent='~'+Math.round(d.cyl_days_left)+' days left';
+        daysEl.style.display='block';
+      } else {
+        daysEl.textContent='Learning usage pattern…';
+        daysEl.style.display='block';
+      }
+      let cylState = d.cyl_low?'alert':(d.cyl_percent<=35?'warn':'ok');
+      cc.className='card '+cylState;
+      cb.className='badge '+(cylState==='alert'?'badge-danger':cylState==='warn'?'badge-warn':'badge-safe');
+      cb.textContent=cylState==='alert'?'ORDER NOW':cylState==='warn'?'GETTING LOW':'GOOD';
+      setGauge('cyl-ring',d.cyl_percent, cylState==='alert'?'var(--red)':cylState==='warn'?'var(--yellow)':'var(--green)');
+    } else {
+      document.getElementById('cyl-val').textContent='--';
+      document.getElementById('cyl-kg').textContent='Not calibrated — see Settings';
+      document.getElementById('cyl-days').textContent='';
+      cc.className='card info';
+      cb.className='badge badge-info';cb.textContent='SETUP NEEDED';
+      setGauge('cyl-ring',0,'var(--text2)');
+    }
+
+    let open=d.valve==='open';
+    alertActive=d.gas_alert||d.flame;
+    document.getElementById('valve-icon').className='valve-icon'+(open?'':' closed');
+    document.getElementById('valve-icon').textContent=open?'🟢':'🔴';
+    document.getElementById('valve-state-text').textContent=open?'OPEN':'CLOSED';
+    document.getElementById('valve-sub').textContent = alertActive?'Locked — alert active':(d.away_mode?'Locked — Away Mode':(d.night_locked?'Locked — night schedule':(open?'Gas flow allowed':'Gas flow blocked')));
+    let btnOpen=document.getElementById('btn-valve-open');
+    let btnClose=document.getElementById('btn-valve-close');
+    btnOpen.className='btn'+(open?' active-green':'');
+    btnClose.className='btn'+(!open?' active-red':'');
+    btnOpen.disabled=alertActive||d.night_locked||d.away_mode;
+
+    fan1=d.fan1;fan2=d.fan2;
+    updateFanUI('fan1',fan1);updateFanUI('fan2',fan2);
+    let bothOn=fan1&&fan2;
+    let bb=document.getElementById('btn-both');
+    bb.textContent=bothOn?'Turn Both Fans OFF':'Turn Both Fans ON';
+    bb.className='btn'+(bothOn?' active-green':'');
+
+    currentMode=d.mode;updateModeUI();
+
+    let banner=document.getElementById('alert-banner'),at=document.getElementById('alert-text');
+    if(d.gas_alert||d.flame){
+      banner.className='alert-banner show danger';
+      if(d.gas_alert&&d.flame)at.textContent='GAS + FIRE — Valve closed, fans blasting!';
+      else if(d.gas_alert)at.textContent='Gas critical ('+ppm+' ppm) — Valve closed!';
+      else at.textContent='Flame detected — Valve closed!';
+    } else { banner.className='alert-banner'; }
+
+    document.getElementById('night-banner').className='night-banner'+((d.night_locked&&!alertActive)?' show':'');
+    document.getElementById('cyl-banner-text').textContent = 'LPG cylinder at '+Math.round(d.cyl_percent)+'% (~'+d.cyl_kg.toFixed(1)+' kg) — time to order a refill';
+    document.getElementById('cyl-banner').className='night-banner'+((d.cyl_low&&!alertActive)?' show':'');
+    document.getElementById('estop-banner').className='night-banner'+(d.estop_active?' show':'');
+    document.getElementById('override-banner').className='night-banner'+((d.override_active&&!d.estop_active)?' show':'');
+    let awayCb=document.getElementById('away-cb');
+    if(document.activeElement!==awayCb) awayCb.checked=d.away_mode; // don't fight the user mid-click
+
+    updateWifiIndicator(d.wifi_connected,d.rssi);
+
+    document.getElementById('ip-label').textContent=d.ip;
+    let now=new Date();
+    document.getElementById('last-update').textContent='Updated '+now.getHours()+':'+String(now.getMinutes()).padStart(2,'0')+':'+String(now.getSeconds()).padStart(2,'0');
+
+    // ---- Haptic buzz on newly-entering danger (rising edge only) ----
+    let dangerNow = d.gas_alert || d.flame;
+    if(dangerNow && !wasDangerActive && navigator.vibrate) navigator.vibrate([200,100,200,100,200]);
+    wasDangerActive = dangerNow;
+
+    // ---- Safe-to-leave badge ----
+    let sb=document.getElementById('safe-badge'), sbIcon=document.getElementById('sb-icon'),
+        sbTitle=document.getElementById('sb-title'), sbSub=document.getElementById('sb-sub');
+    if(dangerNow || d.estop_active){
+      sb.className='safe-badge danger'; sbIcon.textContent='🛑';
+      sbTitle.textContent='Emergency — Do Not Leave';
+      sbSub.textContent = d.estop_active ? 'Emergency stop engaged' : (d.gas_alert?'Gas leak detected':'Flame detected');
+    } else if(d.pressure_alert || d.cyl_low || d.override_active){
+      sb.className='safe-badge warn'; sbIcon.textContent='⚠️';
+      sbTitle.textContent='Check Before Leaving';
+      sbSub.textContent = d.override_active?'Manual override is active':(d.pressure_alert?'Pressure is abnormal':'Cylinder running low');
+    } else {
+      sb.className='safe-badge safe'; sbIcon.textContent='✅';
+      sbTitle.textContent='Safe to Leave the House';
+      sbSub.textContent = d.away_mode?'Away Mode — valve locked closed':(d.night_locked?'Night schedule — valve locked closed':'All systems normal');
+    }
+
+    // ---- AI-style one-line status strip ----
+    let bits=[];
+    bits.push(dangerNow?'⚠️ Active alert':'All systems normal');
+    bits.push((d.wifi_connected?(d.rssi>=-65?'WiFi strong':'WiFi weak'):'WiFi offline'));
+    if(d.cyl_calibrated) bits.push('Cylinder '+Math.round(d.cyl_percent)+'%'+(d.cyl_days_left>=0?' · ~'+Math.round(d.cyl_days_left)+'d left':''));
+    bits.push(currentMode==='auto'?'Auto mode':'Manual mode');
+    document.getElementById('status-strip').innerHTML = bits.map(b=>'<b>'+b+'</b>').join(' &nbsp;·&nbsp; ');
+
+    // ---- Stats row ----
+    document.getElementById('stat-peak').textContent=d.peak_ppm_today;
+    document.getElementById('stat-alerts').textContent=d.alerts_today;
+    let up=d.uptime_s, upStr = up<3600?Math.floor(up/60)+'m':up<86400?Math.floor(up/3600)+'h '+Math.floor((up%3600)/60)+'m':Math.floor(up/86400)+'d '+Math.floor((up%86400)/3600)+'h';
+    document.getElementById('stat-uptime').textContent=upStr;
+
+    // ---- Countdown ring (valve reopen time) ----
+    let cdWrap=document.getElementById('countdown-wrap');
+    if(d.night_locked && d.night_end_epoch>0 && d.server_epoch>0){
+      let remain=d.night_end_epoch-d.server_epoch;
+      if(remain>0){
+        cdWrap.style.display='flex';
+        let h=Math.floor(remain/3600), m=Math.floor((remain%3600)/60);
+        document.getElementById('countdown-text').textContent=(h>0?h+'h ':'')+m+'m';
+        // rough progress estimate assuming a typical 8h window — purely decorative
+        let pct=Math.max(0,Math.min(100,100-(remain/(8*3600))*100));
+        document.getElementById('countdown-ring').style.setProperty('--pct',pct);
+      } else cdWrap.style.display='none';
+    } else cdWrap.style.display='none';
+
+    // ---- Server clock sync (for the live-ticking top-bar clock) ----
+    if(d.server_epoch>0){ serverEpochOffset = d.server_epoch*1000 - Date.now(); clockTzOffsetSec = d.gmt_offset_sec; clockAvailable=true; }
+    lastStatusData=d;
+  });
+}
+
+function updateFanUI(id,on){
+  document.getElementById(id+'-card').className='fan-card'+(on?' on':'');
+  let s=document.getElementById(id+'-state');
+  s.className='fan-state '+(on?'on':'off');s.textContent=on?'ON':'OFF';
+  document.getElementById(id+'-cb').checked=on;
+}
+
+/* ---------- Edit Homepage Layout mode ---------- */
+let editModeActive=false;
+function toggleEditMode(on){
+  editModeActive=on;
+  document.querySelectorAll('#sensor-grid .card').forEach(c=>c.draggable=on);
+  document.getElementById('edit-mode-banner').className='night-banner'+(on?' show':'');
+  if(!on) showToast('Layout saved','success');
+}
+
+/* ---------- Drag-to-reorder sensor cards ---------- */
+function setupDragReorder(){
+  let grid=document.getElementById('sensor-grid');
+  let dragEl=null;
+  grid.querySelectorAll('.card').forEach(card=>{
+    card.addEventListener('dragstart',e=>{ dragEl=card; card.classList.add('dragging'); });
+    card.addEventListener('dragend',()=>{
+      card.classList.remove('dragging');
+      grid.querySelectorAll('.card').forEach(c=>c.classList.remove('drag-over'));
+      saveCardOrder();
+    });
+    card.addEventListener('dragover',e=>{
+      e.preventDefault();
+      if(card!==dragEl) card.classList.add('drag-over');
+    });
+    card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
+    card.addEventListener('drop',e=>{
+      e.preventDefault();
+      card.classList.remove('drag-over');
+      if(!dragEl||card===dragEl)return;
+      let cards=[...grid.querySelectorAll('.card')];
+      let dragIdx=cards.indexOf(dragEl), dropIdx=cards.indexOf(card);
+      if(dragIdx<dropIdx) card.after(dragEl); else card.before(dragEl);
+    });
+  });
+}
+function saveCardOrder(){
+  let order=[...document.getElementById('sensor-grid').querySelectorAll('.card')].map(c=>c.id);
+  try{ localStorage.setItem('sf-card-order', JSON.stringify(order)); }catch(e){}
+}
+function loadCardOrder(){
+  let order;
+  try{ order=JSON.parse(localStorage.getItem('sf-card-order')); }catch(e){ return }
+  if(!order||!Array.isArray(order))return;
+  let grid=document.getElementById('sensor-grid');
+  order.forEach(id=>{ let el=document.getElementById(id); if(el) grid.appendChild(el); });
+}
+loadCardOrder();
+setupDragReorder();
+
+/* ---------- Live clock (server-synced, ticks locally) ---------- */
+function tickClock(){
+  if(!clockAvailable) return;
+  let d=new Date(Date.now()+serverEpochOffset+clockTzOffsetSec*1000);
+  let hh=String(d.getUTCHours()).padStart(2,'0'), mm=String(d.getUTCMinutes()).padStart(2,'0');
+  document.getElementById('clock-time').textContent=hh+':'+mm;
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'], months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('clock-date').textContent=days[d.getUTCDay()]+' '+d.getUTCDate()+' '+months[d.getUTCMonth()];
+}
+
+/* ---------- QR share modal ---------- */
+let qrCountdownTimer=null;
+function openQrModal(){
+  document.getElementById('qr-modal').classList.add('open');
+  document.getElementById('qr-img').src='';
+  document.getElementById('qr-url').textContent='Generating link…';
+  document.getElementById('qr-timer').textContent='10:00';
+  document.getElementById('qr-timer').classList.remove('urgent');
+  fetch('/qr/generate',{method:'POST'}).then(r=>r.json()).then(d=>{
+    if(!d.ok){ document.getElementById('qr-url').textContent='Could not generate link.'; document.getElementById('qr-timer').textContent='--:--'; return; }
+    let url=window.location.origin+'/guest?token='+d.token;
+    document.getElementById('qr-url').textContent=url;
+    document.getElementById('qr-img').src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(url);
+    let expiresAt=Date.now()+d.expires_in_sec*1000;
+    if(qrCountdownTimer) clearInterval(qrCountdownTimer);
+    let tick=()=>{
+      let remain=Math.max(0,Math.round((expiresAt-Date.now())/1000));
+      let timerEl=document.getElementById('qr-timer');
+      timerEl.textContent=Math.floor(remain/60)+':'+String(remain%60).padStart(2,'0');
+      timerEl.classList.toggle('urgent',remain<=60);
+      if(remain<=0){
+        clearInterval(qrCountdownTimer);
+        document.getElementById('qr-url').textContent='Link expired — reopen to generate a new one';
+        document.getElementById('qr-img').src='';
+      }
+    };
+    tick();
+    qrCountdownTimer=setInterval(tick,1000);
+  }).catch(()=>{document.getElementById('qr-url').textContent='Connection error.'; document.getElementById('qr-timer').textContent='--:--';});
+}
+function closeQrModal(){
+  document.getElementById('qr-modal').classList.remove('open');
+  if(qrCountdownTimer) clearInterval(qrCountdownTimer);
+}
+
+/* ---------- Sensor Health Center ---------- */
+function openHealthModal(){
+  document.getElementById('health-modal').classList.add('open');
+  document.getElementById('health-list').innerHTML='<div class="sts">Loading…</div>';
+  fetch('/health').then(r=>r.json()).then(d=>{
+    let up=d.device_uptime_s, upStr = up<3600?Math.floor(up/60)+'m':up<86400?Math.floor(up/3600)+'h '+Math.floor((up%3600)/60)+'m':Math.floor(up/86400)+'d '+Math.floor((up%86400)/3600)+'h';
+    let html = d.sensors.map(s=>{
+      let cls = s.status==='Healthy' ? 'ok' : (s.status==='Stuck Reading' ? 'warn' : (s.status==='No Data Yet' ? 'warn' : 'bad'));
+      let calibText = s.last_event_epoch>0 ? new Date(s.last_event_epoch*1000).toLocaleString() : 'Never';
+      return '<div class="health-item">'
+        +'<div class="health-head">'
+          +'<div class="health-name"><span class="health-dot '+cls+'"></span>'+s.name+'</div>'
+          +'<div class="health-status '+cls+'">'+s.status+'</div>'
+        +'</div>'
+        +'<div class="health-meta">'
+          +'<div>'+s.last_event_label+': <b>'+calibText+'</b></div>'
+          +'<div>Responding: <b>'+(s.responding?'Yes':'No')+'</b></div>'
+          +'<div>Sensor uptime: <b>'+upStr+'</b></div>'
+          +'<div>Connection: <b>'+(s.responding?'OK':'Check wiring')+'</b></div>'
+        +'</div>'
+        +(s.calibration_required?'<div class="health-calib-badge">⚠ Calibration recommended</div>':'')
+        +(s.note?'<div class="health-note">'+s.note+'</div>':'')
+        +'</div>';
+    }).join('');
+    let lcdCls = d.i2c_lcd_connected===null ? 'warn' : (d.i2c_lcd_connected?'ok':'bad');
+    let lcdTxt = d.i2c_lcd_connected===null ? 'Removed' : (d.i2c_lcd_connected?'Connected':'Not Detected');
+    html += '<div class="health-item"><div class="health-head"><div class="health-name"><span class="health-dot '+lcdCls+'"></span>I2C Bus (LCD)</div><div class="health-status '+lcdCls+'">'+lcdTxt+'</div></div></div>';
+    document.getElementById('health-list').innerHTML=html;
+  }).catch(()=>{document.getElementById('health-list').innerHTML='<div class="sts">Could not load sensor health.</div>'});
+}
+function closeHealthModal(){document.getElementById('health-modal').classList.remove('open')}
+document.getElementById('health-modal').addEventListener('click',function(e){
+  if(e.target===this)closeHealthModal();
+});
+
+/* ---------- AI Safety Assistant (rule-based, uses live data) ---------- */
+function toggleChat(){
+  document.getElementById('chat-panel').classList.toggle('open');
+}
+function addChatMsg(text,who){
+  let m=document.getElementById('chat-messages');
+  let el=document.createElement('div');
+  el.className='chat-msg '+who;
+  el.textContent=text;
+  m.appendChild(el);
+  m.scrollTop=m.scrollHeight;
+  return el;
+}
+function askChat(q){
+  addChatMsg(q,'user');
+  let thinking=addChatMsg('…','bot');
+  fetch('/chat',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'q='+encodeURIComponent(q)})
+    .then(r=>r.json()).then(d=>{
+      thinking.remove();
+      if(d.ok && d.reply) addChatMsg(d.reply,'bot');
+      else addChatMsg(answerSafetyQuestion(q),'bot'); // fallback: not configured, or the Gemini call failed
+    }).catch(()=>{
+      thinking.remove();
+      addChatMsg(answerSafetyQuestion(q),'bot');
+    });
+}
+function sendChat(){
+  let inp=document.getElementById('chat-input');
+  let q=inp.value.trim();
+  if(!q)return;
+  inp.value='';
+  askChat(q);
+}
+function answerSafetyQuestion(q){
+  let d=lastStatusData;
+  if(!d) return "Still loading sensor data — give it a second and try again.";
+  let ql=q.toLowerCase();
+
+  if(ql.includes('valve')&&(ql.includes('close')||ql.includes('shut'))){
+    if(d.gas_alert) return "The valve is closed because gas levels are above the safe threshold — currently "+d.ppm+" ppm. It'll reopen automatically once the level drops back to safe.";
+    if(d.flame) return "The valve is closed because the flame sensor detected fire where it shouldn't be. It stays closed until the flame clears.";
+    if(d.away_mode) return "The valve is closed because Away Mode is on. Turn it off from the valve section on the dashboard to allow it to open again.";
+    if(d.night_locked) return "The valve is closed because of your night schedule. It reopens automatically — check the countdown on the dashboard for exactly when.";
+    if(d.valve==='closed') return "The valve is closed, but not because of any active alert right now — it was closed manually.";
+    return "The valve is actually open right now — nothing is forcing it closed.";
+  }
+  if(ql.includes('lpg')||ql.includes('cylinder')||(ql.includes('gas')&&ql.includes('level')&&!ql.includes('leak'))){
+    if(!d.cyl_calibrated) return "Your LPG cylinder sensor hasn't been calibrated yet — head to Settings → LPG Cylinder to set it up.";
+    if(d.cyl_low) return "Your cylinder is running low — "+Math.round(d.cyl_percent)+"% full (~"+d.cyl_kg.toFixed(1)+" kg). Worth ordering a refill soon.";
+    let daysTxt = d.cyl_days_left>=0 ? (", about "+Math.round(d.cyl_days_left)+" days left at your usage rate.") : ".";
+    return "Your LPG level looks good — "+Math.round(d.cyl_percent)+"% full"+daysTxt;
+  }
+  if(ql.includes('fan')){
+    if(d.fan1&&d.fan2) return "Both fans are running because "+(d.gas_alert?"gas levels are elevated":d.flame?"a flame was detected":"they were turned on manually")+". In Auto mode they'll switch off once it's safe.";
+    if(d.fan1||d.fan2) return "One fan is currently running.";
+    return "Both fans are off right now — no active alert calling for ventilation.";
+  }
+  if((ql.includes('what should i do')||ql.includes('what to do'))||((ql.includes('gas')||ql.includes('danger')||ql.includes('emergency'))&&(ql.includes('alert')||ql.includes('leak')))){
+    return "During a gas alert: 1) Leave the area and get to fresh air right away. 2) Don't flip switches or light anything nearby — sparks can ignite leaked gas. 3) The valve auto-closes and fans auto-start, but confirm in person if you're home. 4) Ventilate the kitchen (open windows/doors) before going back in. 5) The alert clears itself automatically once levels are back to safe.";
+  }
+  if(ql.includes('safe')&&(ql.includes('leave')||ql.includes('house'))){
+    let danger=d.gas_alert||d.flame;
+    if(danger) return "No — there's an active alert right now. Do not leave until it clears.";
+    if(d.pressure_alert||d.cyl_low) return "Mostly, but check the warning banner first — something needs attention (not an emergency).";
+    return "Yes, everything looks safe to leave right now.";
+  }
+  if(ql.includes('pressure')){
+    return d.pressure_alert ? "Pressure is currently abnormal — worth checking the line before you go." : "Pressure readings are normal.";
+  }
+  return "I can help with questions about the valve, LPG cylinder, fans, pressure, or what to do during a gas alert — try one of the suggestions below, or ask in your own words.";
+}
+
+/* ---------- Event timeline ---------- */
+function fetchEvents(){
+  fetch('/events').then(r=>{
+    if(r.status===401)return null;
+    return r.json();
+  }).then(list=>{
+    if(!list)return;
+    let el=document.getElementById('event-list');
+    if(list.length===0){ el.innerHTML='<div class="event-empty">No activity yet</div>'; return; }
+    el.innerHTML=list.map(e=>{
+      let timeStr='--:--';
+      if(e.ts>0){ let d=new Date(e.ts*1000); timeStr=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'); }
+      return '<div class="event-item"><span class="event-time">'+timeStr+'</span><span class="event-text">'+e.text.replace(/</g,'&lt;')+'</span></div>';
+    }).join('');
+  }).catch(()=>{});
+}
+
+/* ---------- Boot ---------- */
+let isGuest=false;
+fetch('/me').then(r=>{
+  if(r.status===401){location.href='/login';return null}
+  return r.json();
+}).then(d=>{
+  if(!d)return;
+  currentUser=d.username;
+  currentName=d.name||d.username;
+  isGuest=!!d.guest;
+  if(isGuest){
+    applyGuestRestrictions(d.guest_remaining_sec);
+    dismissWelcome();
+  } else {
+    document.getElementById('btn-account').textContent='👤 '+currentName;
+    initWelcome(currentName);
+  }
+}).catch(()=>dismissWelcome());
+
+function applyGuestRestrictions(remainingSec){
+  // Guests can look, not touch: hide anything that controls the
+  // device or exposes account/config surfaces. Backend already
+  // blocks these routes for guests regardless — this is just UX.
+  ['btn-account','btn-logout'].forEach(id=>{let el=document.getElementById(id); if(el) el.style.display='none'});
+  document.querySelectorAll('.btn-gear').forEach(el=>el.style.display='none');
+  document.getElementById('chat-bubble').style.display='none';
+  document.querySelectorAll('.valve-btns .btn, .fan-grid .toggle-wrap, #btn-both, .mode-pills .pill, .away-toggle').forEach(el=>{
+    el.style.pointerEvents='none'; el.style.opacity='0.4';
+  });
+  let banner=document.createElement('div');
+  banner.className='night-banner show';
+  banner.style.color='var(--accent)';
+  banner.id='guest-banner';
+  banner.innerHTML='👁️ <span id="guest-banner-text">Guest view — read only</span>';
+  document.querySelector('.safe-badge').insertAdjacentElement('afterend',banner);
+  let remain=remainingSec;
+  let t=setInterval(()=>{
+    remain--;
+    if(remain<=0){
+      clearInterval(t);
+      document.getElementById('guest-banner-text').textContent='Guest link expired';
+      setTimeout(()=>location.href='/login',2000);
+      return;
+    }
+    document.getElementById('guest-banner-text').textContent='Guest view — read only — '+Math.floor(remain/60)+':'+String(remain%60).padStart(2,'0')+' remaining';
+  },1000);
+}
+
+fetchStatus();
+if(!isGuest){ fetchEvents(); setInterval(fetchEvents,5000); }
+setInterval(fetchStatus,2000);
+setInterval(tickClock,1000);
+</script>
+</body>
+</html>
