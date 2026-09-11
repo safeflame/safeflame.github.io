@@ -1118,8 +1118,24 @@
       to_email: order.email,
       to_name: order.name || 'there',
       subject: 'Update on your SafeFlame AI order (#' + order.id.slice(0, 8) + ')',
-      // Individual fields — use these in your EmailJS template as {{order_id}}, {{product_name}}, etc.
+
+      // ── Matches your "Thank You for Your Order" template exactly ──
+      email: order.email,                 // template footer: "This email was sent to {{email}}"
       order_id: order.id,
+      orders: [                           // template loops this with {{#orders}}...{{/orders}}
+        {
+          name: 'SafeFlame AI — ' + tierLabel,
+          units: qty,
+          price: totalPrice.toLocaleString('en-IN')   // no ₹ here — the template already prints ₹{{price}}
+        }
+      ],
+      cost: {                             // template reads cost.shipping / cost.tax / cost.total
+        shipping: '0',
+        tax: '0',
+        total: totalPrice.toLocaleString('en-IN')
+      },
+
+      // ── Extra fields, harmless if unused by this template ──
       product_name: 'SafeFlame AI — ' + tierLabel,
       tier: tierLabel,
       quantity: qty,
@@ -1128,7 +1144,6 @@
       status: newStatus,
       address: order.address || '',
       phone: order.phone || '',
-      // Full formatted summary — use {{message}} in your template if you'd rather show one block.
       message: introLine + '\n\n' + detailsBlock
     };
     try {
