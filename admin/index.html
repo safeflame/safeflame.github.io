@@ -856,7 +856,7 @@
             <div class="field"><label>Service ID</label><input type="text" id="setEmailjsService" placeholder="service_xxxxxxx"></div>
             <div class="field"><label>Template ID</label><input type="text" id="setEmailjsTemplate" placeholder="template_xxxxxxx"></div>
             <div class="field"><label>Public Key</label><input type="text" id="setEmailjsPublicKey" placeholder="Public key from EmailJS account"></div>
-            <div class="field-hint">Create a free account at emailjs.com, connect Gmail/Outlook, and make a template with variables: to_email, subject, message.</div>
+            <div class="field-hint">Create a free account at emailjs.com, connect Gmail/Outlook, and build a template. Available variables: to_email, to_name, subject, order_id, product_name, tier, quantity, unit_price, total_price, status, address, phone, and message (a ready-made full summary — use this alone if you don't want to lay out each field).</div>
           </div>
 
           <div class="settings-group">
@@ -1099,12 +1099,37 @@
       shipped: 'Your SafeFlame AI order has Shipped! It should arrive soon.',
       cancelled: 'Your SafeFlame AI order has been Cancelled. Contact us if this is unexpected.'
     };
+    const tierLabel = order.tier === 'pro' ? '7" Pro' : '4" Base';
+    const qty = Number(order.quantity) || 1;
+    const unitPrice = priceForOrder(order);
+    const totalPrice = unitPrice * qty;
+    const introLine = statusMessages[newStatus] || ('Your order status changed to ' + newStatus + '.');
+
+    const detailsBlock =
+      'Order ID: ' + order.id + '\n' +
+      'Product: SafeFlame AI — ' + tierLabel + '\n' +
+      'Quantity: ' + qty + '\n' +
+      'Unit Price: ₹' + unitPrice.toLocaleString('en-IN') + '\n' +
+      'Total: ₹' + totalPrice.toLocaleString('en-IN') + '\n' +
+      'Status: ' + newStatus.charAt(0).toUpperCase() + newStatus.slice(1) + '\n' +
+      'Delivery Address: ' + (order.address || '—');
+
     const params = {
       to_email: order.email,
       to_name: order.name || 'there',
-      subject: 'Update on your SafeFlame AI order',
-      message: (statusMessages[newStatus] || ('Your order status changed to ' + newStatus + '.')) +
-        '\n\nOrder details: ' + (order.quantity || 1) + ' unit(s), ' + (order.tier === 'pro' ? '7" Pro' : '4" Base') + ' tier.'
+      subject: 'Update on your SafeFlame AI order (#' + order.id.slice(0, 8) + ')',
+      // Individual fields — use these in your EmailJS template as {{order_id}}, {{product_name}}, etc.
+      order_id: order.id,
+      product_name: 'SafeFlame AI — ' + tierLabel,
+      tier: tierLabel,
+      quantity: qty,
+      unit_price: '₹' + unitPrice.toLocaleString('en-IN'),
+      total_price: '₹' + totalPrice.toLocaleString('en-IN'),
+      status: newStatus,
+      address: order.address || '',
+      phone: order.phone || '',
+      // Full formatted summary — use {{message}} in your template if you'd rather show one block.
+      message: introLine + '\n\n' + detailsBlock
     };
     try {
       emailjs.init(siteSettings.emailjsPublicKey);
