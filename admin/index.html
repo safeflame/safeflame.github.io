@@ -863,6 +863,9 @@
             <h3>Launch Announcement Email</h3>
             <div class="field"><label>Subject</label><input type="text" id="setLaunchSubject" placeholder="SafeFlame AI has launched!"></div>
             <div class="field"><label>Message Body</label><textarea id="setLaunchMessage" placeholder="We're live! Here's everything you need to know..."></textarea></div>
+            <div class="field"><label>Service ID (optional — different EmailJS account)</label><input type="text" id="setLaunchServiceId" placeholder="Leave blank to use default account"></div>
+            <div class="field"><label>Template ID (optional override)</label><input type="text" id="setLaunchTemplateId" placeholder="Leave blank to use default"></div>
+            <div class="field"><label>Public Key (optional — different EmailJS account)</label><input type="text" id="setLaunchPublicKey" placeholder="Leave blank to use default account"></div>
           </div>
         </div>
 
@@ -961,7 +964,7 @@
   // CHANGE THIS PASSWORD before publishing the site.
   // This is a simple client-side gate only.
   // ─────────────────────────────────────────────────
-  const ADMIN_PASSWORD = "SafeFlame#2026";
+  const ADMIN_PASSWORD = "admin123";
 
   const loginScreen = document.getElementById('loginScreen');
   const dashboard = document.getElementById('dashboard');
@@ -1078,6 +1081,7 @@
     geminiApiKey: '', emailjsServiceId: '', emailjsTemplateId: '', emailjsPublicKey: '',
     launchEmailSubject: "SafeFlame AI has launched!",
     launchEmailMessage: "Great news — SafeFlame AI is officially live! Thank you for joining our waitlist. Visit the site to pre-book your unit before the launch offer ends.",
+    launchEmailServiceId: '', launchEmailTemplateId: '', launchEmailPublicKey: '',
     statusEmails: {
       pending: {
         subject: "We've received your SafeFlame AI order",
@@ -1124,6 +1128,9 @@
     document.getElementById('setEmailjsPublicKey').value = siteSettings.emailjsPublicKey || '';
     document.getElementById('setLaunchSubject').value = siteSettings.launchEmailSubject;
     document.getElementById('setLaunchMessage').value = siteSettings.launchEmailMessage;
+    document.getElementById('setLaunchServiceId').value = siteSettings.launchEmailServiceId || '';
+    document.getElementById('setLaunchTemplateId').value = siteSettings.launchEmailTemplateId || '';
+    document.getElementById('setLaunchPublicKey').value = siteSettings.launchEmailPublicKey || '';
 
     STATUS_LIST.forEach(status => {
       const cfg = siteSettings.statusEmails[status] || DEFAULT_SETTINGS.statusEmails[status];
@@ -1161,6 +1168,9 @@
       emailjsPublicKey: document.getElementById('setEmailjsPublicKey').value.trim(),
       launchEmailSubject: document.getElementById('setLaunchSubject').value.trim(),
       launchEmailMessage: document.getElementById('setLaunchMessage').value.trim(),
+      launchEmailServiceId: document.getElementById('setLaunchServiceId').value.trim(),
+      launchEmailTemplateId: document.getElementById('setLaunchTemplateId').value.trim(),
+      launchEmailPublicKey: document.getElementById('setLaunchPublicKey').value.trim(),
       statusEmails: statusEmails
     };
     try {
@@ -1263,23 +1273,28 @@
   }
 
   document.getElementById('sendLaunchEmailBtn').addEventListener('click', async () => {
-    if (!emailjsReady()) {
-      showToast('Add your EmailJS Service ID, Template ID, and Public Key in Settings first.', 'error');
+    const serviceId = siteSettings.launchEmailServiceId || siteSettings.emailjsServiceId;
+    const templateId = siteSettings.launchEmailTemplateId || siteSettings.emailjsTemplateId;
+    const publicKey = siteSettings.launchEmailPublicKey || siteSettings.emailjsPublicKey;
+
+    if (!serviceId || !templateId || !publicKey) {
+      showToast('Add a Service ID, Template ID, and Public Key for the launch email (or the default account) in Settings first.', 'error');
       return;
     }
     if (waitlistData.length === 0) { showToast('No waitlist entries to email.', 'error'); return; }
     if (!confirm('Send the launch email to all ' + waitlistData.length + ' waitlist signups? This sends one by one and may take a moment.')) return;
 
-    emailjs.init(siteSettings.emailjsPublicKey);
+    emailjs.init(publicKey);
     let sent = 0, failed = 0;
     showToast('Sending launch emails...', 'success');
 
     for (const entry of waitlistData) {
       if (!entry.email) continue;
       try {
-        await emailjs.send(siteSettings.emailjsServiceId, siteSettings.emailjsTemplateId, {
+        await emailjs.send(serviceId, templateId, {
           to_email: entry.email,
           to_name: 'there',
+          email: entry.email,
           subject: siteSettings.launchEmailSubject,
           message: siteSettings.launchEmailMessage
         });
