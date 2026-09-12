@@ -797,7 +797,7 @@
           <div class="panel-actions">
             <input type="text" class="search-input" id="waitlistSearch" placeholder="Search email...">
             <button class="btn-small" id="exportWaitlist">Export CSV</button>
-            <button class="btn-small primary" id="sendLaunchEmailBtn">Send Launch Email to All</button>
+            <button class="btn-small primary" id="sendLaunchEmailBtn">Send Launch Notification to All</button>
           </div>
         </div>
         <div class="table-scroll">
@@ -860,12 +860,13 @@
           </div>
 
           <div class="settings-group">
-            <h3>Launch Announcement Email</h3>
+            <h3>Launch Notifications</h3>
             <div class="field"><label>Subject</label><input type="text" id="setLaunchSubject" placeholder="SafeFlame AI has launched!"></div>
             <div class="field"><label>Message Body</label><textarea id="setLaunchMessage" placeholder="We're live! Here's everything you need to know..."></textarea></div>
-            <div class="field"><label>Service ID (optional — different EmailJS account)</label><input type="text" id="setLaunchServiceId" placeholder="Leave blank to use default account"></div>
-            <div class="field"><label>Template ID (optional override)</label><input type="text" id="setLaunchTemplateId" placeholder="Leave blank to use default"></div>
-            <div class="field"><label>Public Key (optional — different EmailJS account)</label><input type="text" id="setLaunchPublicKey" placeholder="Leave blank to use default account"></div>
+            <div class="field"><label>Service ID</label><input type="text" id="setLaunchServiceId" placeholder="service_xxxxxxx (falls back to default account above if blank)"></div>
+            <div class="field"><label>Template ID</label><input type="text" id="setLaunchTemplateId" placeholder="template_xxxxxxx (falls back to default account above if blank)"></div>
+            <div class="field"><label>Public Key</label><input type="text" id="setLaunchPublicKey" placeholder="Falls back to default account above if blank"></div>
+            <div class="field-hint">These three are used whenever you click "Send Launch Notification to All" on the Waitlist tab. Leave any of them blank to fall back to the default EmailJS account set above.</div>
           </div>
         </div>
 
