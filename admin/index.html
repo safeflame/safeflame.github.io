@@ -854,15 +854,48 @@
           <div class="settings-group">
             <h3>Email Notifications (EmailJS)</h3>
             <div class="field"><label>Service ID</label><input type="text" id="setEmailjsService" placeholder="service_xxxxxxx"></div>
-            <div class="field"><label>Template ID</label><input type="text" id="setEmailjsTemplate" placeholder="template_xxxxxxx"></div>
+            <div class="field"><label>Default Template ID</label><input type="text" id="setEmailjsTemplate" placeholder="template_xxxxxxx"></div>
             <div class="field"><label>Public Key</label><input type="text" id="setEmailjsPublicKey" placeholder="Public key from EmailJS account"></div>
-            <div class="field-hint">Create a free account at emailjs.com, connect Gmail/Outlook, and build a template. Available variables: to_email, to_name, subject, order_id, product_name, tier, quantity, unit_price, total_price, status, address, phone, and message (a ready-made full summary — use this alone if you don't want to lay out each field).</div>
+            <div class="field-hint">Used for status emails unless a status below has its own Template ID, and used for the launch email. Available variables: to_email, to_name, email, subject, order_id, orders (loop), cost.shipping/cost.tax/cost.total, product_name, tier, quantity, unit_price, total_price, status, address, phone, message.</div>
           </div>
 
           <div class="settings-group">
             <h3>Launch Announcement Email</h3>
             <div class="field"><label>Subject</label><input type="text" id="setLaunchSubject" placeholder="SafeFlame AI has launched!"></div>
             <div class="field"><label>Message Body</label><textarea id="setLaunchMessage" placeholder="We're live! Here's everything you need to know..."></textarea></div>
+          </div>
+        </div>
+
+        <h3 style="font-family:'Rajdhani',sans-serif; font-size:1.05rem; color:var(--off-white); margin: 2rem 0 0.4rem 0;">Order Status Emails</h3>
+        <div class="panel-subtitle" style="margin-bottom:1.2rem;">Write a different subject &amp; message for each status. Use tokens like {{name}}, {{order_id}}, {{tier}}, {{quantity}}, {{total_price}}, {{address}} — they're filled in automatically per order. Leave Template ID blank to use the default template above.</div>
+
+        <div class="settings-grid">
+          <div class="settings-group">
+            <h3 style="color: var(--yellow);">Pending</h3>
+            <div class="field"><label>Subject</label><input type="text" id="setSubject-pending"></div>
+            <div class="field"><label>Message</label><textarea id="setMessage-pending"></textarea></div>
+            <div class="field"><label>Template ID (optional override)</label><input type="text" id="setTemplateId-pending" placeholder="Leave blank to use default"></div>
+          </div>
+
+          <div class="settings-group">
+            <h3 style="color: var(--teal);">Confirmed</h3>
+            <div class="field"><label>Subject</label><input type="text" id="setSubject-confirmed"></div>
+            <div class="field"><label>Message</label><textarea id="setMessage-confirmed"></textarea></div>
+            <div class="field"><label>Template ID (optional override)</label><input type="text" id="setTemplateId-confirmed" placeholder="Leave blank to use default"></div>
+          </div>
+
+          <div class="settings-group">
+            <h3 style="color: var(--green);">Shipped</h3>
+            <div class="field"><label>Subject</label><input type="text" id="setSubject-shipped"></div>
+            <div class="field"><label>Message</label><textarea id="setMessage-shipped"></textarea></div>
+            <div class="field"><label>Template ID (optional override)</label><input type="text" id="setTemplateId-shipped" placeholder="Leave blank to use default"></div>
+          </div>
+
+          <div class="settings-group">
+            <h3 style="color: var(--red);">Cancelled</h3>
+            <div class="field"><label>Subject</label><input type="text" id="setSubject-cancelled"></div>
+            <div class="field"><label>Message</label><textarea id="setMessage-cancelled"></textarea></div>
+            <div class="field"><label>Template ID (optional override)</label><input type="text" id="setTemplateId-cancelled" placeholder="Leave blank to use default"></div>
           </div>
         </div>
 
@@ -1027,20 +1060,47 @@
   }
 
   // ─── Settings (shared with public site) ────────────
+  const STATUS_LIST = ['pending', 'confirmed', 'shipped', 'cancelled'];
+
   const DEFAULT_SETTINGS = {
     launchDate: '2026-12-01T00:00',
     basePrice: 24999, baseOriginalPrice: 29999,
     proPrice: 39999, proOriginalPrice: 46999,
     geminiApiKey: '', emailjsServiceId: '', emailjsTemplateId: '', emailjsPublicKey: '',
     launchEmailSubject: "SafeFlame AI has launched!",
-    launchEmailMessage: "Great news — SafeFlame AI is officially live! Thank you for joining our waitlist. Visit the site to pre-book your unit before the launch offer ends."
+    launchEmailMessage: "Great news — SafeFlame AI is officially live! Thank you for joining our waitlist. Visit the site to pre-book your unit before the launch offer ends.",
+    statusEmails: {
+      pending: {
+        subject: "We've received your SafeFlame AI order",
+        message: "Hi {{name}}, thanks for pre-booking! Your order {{order_id}} for {{tier}} (x{{quantity}}) is currently Pending — total {{total_price}}. We'll email you again once it's confirmed.",
+        templateId: ''
+      },
+      confirmed: {
+        subject: "Your SafeFlame AI order is Confirmed!",
+        message: "Hi {{name}}, good news — your order {{order_id}} for {{tier}} (x{{quantity}}) has been Confirmed! Total: {{total_price}}. We'll notify you again when it ships.",
+        templateId: ''
+      },
+      shipped: {
+        subject: "Your SafeFlame AI order has Shipped!",
+        message: "Hi {{name}}, your order {{order_id}} has shipped and is on its way to {{address}}. Thanks for your patience!",
+        templateId: ''
+      },
+      cancelled: {
+        subject: "Your SafeFlame AI order was Cancelled",
+        message: "Hi {{name}}, your order {{order_id}} has been Cancelled. If this wasn't expected, please reply to this email and we'll sort it out.",
+        templateId: ''
+      }
+    }
   };
   let siteSettings = { ...DEFAULT_SETTINGS };
 
   async function loadSettingsIntoForm() {
     try {
       const doc = await db.collection('settings').doc('site').get();
-      if (doc.exists) siteSettings = { ...DEFAULT_SETTINGS, ...doc.data() };
+      if (doc.exists) {
+        const data = doc.data();
+        siteSettings = { ...DEFAULT_SETTINGS, ...data, statusEmails: { ...DEFAULT_SETTINGS.statusEmails, ...(data.statusEmails || {}) } };
+      }
     } catch (err) {
       console.error('Failed to load settings:', err);
     }
@@ -1055,10 +1115,27 @@
     document.getElementById('setEmailjsPublicKey').value = siteSettings.emailjsPublicKey || '';
     document.getElementById('setLaunchSubject').value = siteSettings.launchEmailSubject;
     document.getElementById('setLaunchMessage').value = siteSettings.launchEmailMessage;
+
+    STATUS_LIST.forEach(status => {
+      const cfg = siteSettings.statusEmails[status] || DEFAULT_SETTINGS.statusEmails[status];
+      document.getElementById('setSubject-' + status).value = cfg.subject || '';
+      document.getElementById('setMessage-' + status).value = cfg.message || '';
+      document.getElementById('setTemplateId-' + status).value = cfg.templateId || '';
+    });
+
     renderStats();
   }
 
   document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
+    const statusEmails = {};
+    STATUS_LIST.forEach(status => {
+      statusEmails[status] = {
+        subject: document.getElementById('setSubject-' + status).value.trim(),
+        message: document.getElementById('setMessage-' + status).value.trim(),
+        templateId: document.getElementById('setTemplateId-' + status).value.trim()
+      };
+    });
+
     const updated = {
       launchDate: document.getElementById('setLaunchDate').value || DEFAULT_SETTINGS.launchDate,
       basePrice: Number(document.getElementById('setBasePrice').value) || 0,
@@ -1070,7 +1147,8 @@
       emailjsTemplateId: document.getElementById('setEmailjsTemplate').value.trim(),
       emailjsPublicKey: document.getElementById('setEmailjsPublicKey').value.trim(),
       launchEmailSubject: document.getElementById('setLaunchSubject').value.trim(),
-      launchEmailMessage: document.getElementById('setLaunchMessage').value.trim()
+      launchEmailMessage: document.getElementById('setLaunchMessage').value.trim(),
+      statusEmails: statusEmails
     };
     try {
       await db.collection('settings').doc('site').set(updated, { merge: true });
@@ -1091,35 +1169,41 @@
     return siteSettings.emailjsServiceId && siteSettings.emailjsTemplateId && siteSettings.emailjsPublicKey;
   }
 
+  function renderTokens(str, tokens) {
+    return String(str || '').replace(/\{\{(\w+)\}\}/g, (match, key) => (key in tokens ? tokens[key] : match));
+  }
+
   function sendStatusEmail(order, newStatus) {
     if (!emailjsReady() || !order.email) return;
-    const statusMessages = {
-      pending: 'Your SafeFlame AI order is now marked as Pending.',
-      confirmed: 'Good news! Your SafeFlame AI order has been Confirmed.',
-      shipped: 'Your SafeFlame AI order has Shipped! It should arrive soon.',
-      cancelled: 'Your SafeFlame AI order has been Cancelled. Contact us if this is unexpected.'
-    };
+
     const tierLabel = order.tier === 'pro' ? '7" Pro' : '4" Base';
     const qty = Number(order.quantity) || 1;
     const unitPrice = priceForOrder(order);
     const totalPrice = unitPrice * qty;
-    const introLine = statusMessages[newStatus] || ('Your order status changed to ' + newStatus + '.');
 
-    const detailsBlock =
-      'Order ID: ' + order.id + '\n' +
-      'Product: SafeFlame AI — ' + tierLabel + '\n' +
-      'Quantity: ' + qty + '\n' +
-      'Unit Price: ₹' + unitPrice.toLocaleString('en-IN') + '\n' +
-      'Total: ₹' + totalPrice.toLocaleString('en-IN') + '\n' +
-      'Status: ' + newStatus.charAt(0).toUpperCase() + newStatus.slice(1) + '\n' +
-      'Delivery Address: ' + (order.address || '—');
+    const tokens = {
+      name: order.name || 'there',
+      order_id: order.id,
+      tier: tierLabel,
+      quantity: qty,
+      unit_price: '₹' + unitPrice.toLocaleString('en-IN'),
+      total_price: '₹' + totalPrice.toLocaleString('en-IN'),
+      status: newStatus.charAt(0).toUpperCase() + newStatus.slice(1),
+      address: order.address || '—',
+      phone: order.phone || ''
+    };
+
+    const cfg = (siteSettings.statusEmails && siteSettings.statusEmails[newStatus]) || DEFAULT_SETTINGS.statusEmails[newStatus];
+    const subject = renderTokens(cfg.subject, tokens) || ('Update on your SafeFlame AI order (#' + order.id.slice(0, 8) + ')');
+    const message = renderTokens(cfg.message, tokens);
+    const templateId = cfg.templateId || siteSettings.emailjsTemplateId;
 
     const params = {
       to_email: order.email,
       to_name: order.name || 'there',
-      subject: 'Update on your SafeFlame AI order (#' + order.id.slice(0, 8) + ')',
+      subject: subject,
 
-      // ── Matches your "Thank You for Your Order" template exactly ──
+      // ── Matches the "Thank You for Your Order" style template exactly ──
       email: order.email,                 // template footer: "This email was sent to {{email}}"
       order_id: order.id,
       orders: [                           // template loops this with {{#orders}}...{{/orders}}
@@ -1144,11 +1228,11 @@
       status: newStatus,
       address: order.address || '',
       phone: order.phone || '',
-      message: introLine + '\n\n' + detailsBlock
+      message: message
     };
     try {
       emailjs.init(siteSettings.emailjsPublicKey);
-      emailjs.send(siteSettings.emailjsServiceId, siteSettings.emailjsTemplateId, params)
+      emailjs.send(siteSettings.emailjsServiceId, templateId, params)
         .then(() => showToast('Notification email sent to ' + order.email, 'success'))
         .catch(err => { console.error('EmailJS send failed:', err); showToast('Email failed to send (check EmailJS settings).', 'error'); });
     } catch (err) {
