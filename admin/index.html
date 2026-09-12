@@ -353,6 +353,7 @@
   }
   .tier-pill.base { background: rgba(78,205,196,0.15); color: var(--teal); }
   .tier-pill.pro { background: rgba(255,107,53,0.15); color: var(--flame-light); }
+  .tier-pill.elite { background: rgba(232,197,71,0.18); color: var(--yellow); }
 
   .status-select {
     background: var(--surface2);
@@ -488,6 +489,35 @@
   .field input:focus, .field textarea:focus { border-color: var(--flame); }
   .field textarea { resize: vertical; min-height: 70px; }
   .field-hint { font-size: 0.7rem; color: var(--muted); margin-top: 0.3rem; opacity: 0.8; }
+
+  .key-row {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    align-items: center;
+  }
+  .key-row input {
+    flex: 1;
+    padding: 0.55rem 0.7rem;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface3);
+    color: var(--off-white);
+    font-size: 0.82rem;
+    outline: none;
+  }
+  .key-row input:focus { border-color: var(--flame); }
+  .key-row .remove-key-btn {
+    background: none;
+    border: 1px solid rgba(232,93,93,0.3);
+    color: var(--red);
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .key-row .remove-key-btn:hover { background: rgba(232,93,93,0.15); }
 
   .settings-save-bar {
     display: flex;
@@ -688,6 +718,7 @@
   <button class="tab-btn active" data-tab="overview">Overview</button>
   <button class="tab-btn" data-tab="orders">Orders</button>
   <button class="tab-btn" data-tab="waitlist">Waitlist</button>
+  <button class="tab-btn" data-tab="customers">Customers</button>
   <button class="tab-btn" data-tab="settings">Settings</button>
 </div>
 
@@ -776,7 +807,6 @@
                 <th>Phone</th>
                 <th>Tier</th>
                 <th class="sortable" data-sort="quantity">Qty <span class="sort-arrow"></span></th>
-                <th>Address</th>
                 <th>Notes</th>
                 <th>Status</th>
                 <th></th>
@@ -812,6 +842,39 @@
       </div>
     </div>
 
+    <!-- CUSTOMERS TAB -->
+    <div class="tab-panel" id="tab-customers">
+      <div class="panel">
+        <div class="panel-header">
+          <h2>Customers</h2>
+          <div class="panel-actions">
+            <input type="text" class="search-input" id="customerSearch" placeholder="Search name or email...">
+            <button class="btn-small" id="exportCustomers">Export CSV</button>
+          </div>
+        </div>
+        <div class="panel-subtitle" style="margin-bottom:1rem;">Orders grouped by email — one row per customer, across all their orders and tiers.</div>
+        <div class="table-scroll">
+          <table id="customerTable">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Phone</th>
+                <th>Orders</th>
+                <th>Total Units</th>
+                <th>Total Spent</th>
+                <th>Latest Status</th>
+                <th>Last Order</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <div class="empty-state" id="customerEmpty" style="display:none;">No customers match.</div>
+        </div>
+      </div>
+    </div>
+
     <!-- SETTINGS TAB -->
     <div class="tab-panel" id="tab-settings">
       <div class="panel">
@@ -834,20 +897,35 @@
             <h3>Base Tier — 4" Display</h3>
             <div class="field"><label>Offer Price (₹)</label><input type="number" id="setBasePrice" min="0"></div>
             <div class="field"><label>Original Price (₹) — optional, shown struck through</label><input type="number" id="setBaseOriginal" min="0"></div>
+            <div class="field"><label>Stock (units) — leave -1 for unlimited</label><input type="number" id="setBaseStock" min="-1"></div>
           </div>
 
           <div class="settings-group">
             <h3>Pro Tier — 7" Touchscreen</h3>
             <div class="field"><label>Offer Price (₹)</label><input type="number" id="setProPrice" min="0"></div>
             <div class="field"><label>Original Price (₹) — optional, shown struck through</label><input type="number" id="setProOriginal" min="0"></div>
+            <div class="field"><label>Stock (units) — leave -1 for unlimited</label><input type="number" id="setProStock" min="-1"></div>
+          </div>
+
+          <div class="settings-group">
+            <h3>Elite Tier — 9" Touchscreen</h3>
+            <div class="field"><label>Offer Price (₹)</label><input type="number" id="setElitePrice" min="0"></div>
+            <div class="field"><label>Original Price (₹) — optional, shown struck through</label><input type="number" id="setEliteOriginal" min="0"></div>
+            <div class="field"><label>Stock (units) — leave -1 for unlimited</label><input type="number" id="setEliteStock" min="-1"></div>
           </div>
 
           <div class="settings-group">
             <h3>AI Chatbot (Gemini)</h3>
             <div class="field">
-              <label>Gemini API Key</label>
-              <input type="password" id="setGeminiKey" placeholder="AIza...">
-              <div class="field-hint">Powers both the visitor chatbot and this admin chatbot. Get a key at aistudio.google.com.</div>
+              <label>Model</label>
+              <input type="text" id="setGeminiModel" placeholder="gemini-3.5-flash">
+              <div class="field-hint">Google regularly retires older Gemini models — if the chatbot suddenly stops responding, check aistudio.google.com for the current model name and update it here (no code changes needed).</div>
+            </div>
+            <div class="field">
+              <label>API Keys (key chamber)</label>
+              <div id="geminiKeyList"></div>
+              <button type="button" class="btn-small" id="addGeminiKeyBtn" style="margin-top:0.5rem;">+ Add Key</button>
+              <div class="field-hint">Add as many keys as you want — the chatbot tries them in order and automatically falls back to the next one if a key hits its quota or fails. Powers both the visitor chatbot and this admin chatbot. Get keys at aistudio.google.com.</div>
             </div>
           </div>
 
@@ -856,7 +934,7 @@
             <div class="field"><label>Service ID</label><input type="text" id="setEmailjsService" placeholder="service_xxxxxxx"></div>
             <div class="field"><label>Default Template ID</label><input type="text" id="setEmailjsTemplate" placeholder="template_xxxxxxx"></div>
             <div class="field"><label>Public Key</label><input type="text" id="setEmailjsPublicKey" placeholder="Public key from EmailJS account"></div>
-            <div class="field-hint">Used for status emails unless a status below has its own Template ID, and used for the launch email. Available variables: to_email, to_name, email, subject, order_id, orders (loop), cost.shipping/cost.tax/cost.total, product_name, tier, quantity, unit_price, total_price, status, address, phone, message.</div>
+            <div class="field-hint">Used for status emails unless a status below has its own Template ID, and used for the launch email. Available variables: to_email, to_name, email, subject, order_id, orders (loop), cost.shipping/cost.tax/cost.total, product_name, tier, quantity, unit_price, total_price, status, phone, message.</div>
           </div>
 
           <div class="settings-group">
@@ -871,7 +949,7 @@
         </div>
 
         <h3 style="font-family:'Rajdhani',sans-serif; font-size:1.05rem; color:var(--off-white); margin: 2rem 0 0.4rem 0;">Order Status Emails</h3>
-        <div class="panel-subtitle" style="margin-bottom:1.2rem;">Write a different subject &amp; message for each status. Use tokens like {{name}}, {{order_id}}, {{tier}}, {{quantity}}, {{total_price}}, {{address}} — they're filled in automatically per order. If a status uses templates from a different EmailJS account, fill in that account's Service ID and Public Key too — leave all three (Service ID, Template ID, Public Key) blank to just use the default account above.</div>
+        <div class="panel-subtitle" style="margin-bottom:1.2rem;">Write a different subject &amp; message for each status. Use tokens like {{name}}, {{order_id}}, {{tier}}, {{quantity}}, {{total_price}} — they're filled in automatically per order. If a status uses templates from a different EmailJS account, fill in that account's Service ID and Public Key too — leave all three (Service ID, Template ID, Public Key) blank to just use the default account above.</div>
 
         <div class="settings-grid">
           <div class="settings-group">
@@ -965,7 +1043,7 @@
   // CHANGE THIS PASSWORD before publishing the site.
   // This is a simple client-side gate only.
   // ─────────────────────────────────────────────────
-  const ADMIN_PASSWORD = "admin123";
+  const ADMIN_PASSWORD = "SafeFlame#2026";
 
   const loginScreen = document.getElementById('loginScreen');
   const dashboard = document.getElementById('dashboard');
@@ -988,6 +1066,45 @@
     document.getElementById('chatToggle').style.display = 'flex';
     startListeners();
     loadSettingsIntoForm();
+
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+
+  // ─── New-order sound + browser notification ────────
+  function playNewOrderSound() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.15);
+      gain.gain.setValueAtTime(0.18, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start();
+      osc.stop(ctx.currentTime + 0.4);
+    } catch (err) {
+      console.warn('Sound notification failed:', err);
+    }
+  }
+
+  function notifyNewOrder(order) {
+    playNewOrderSound();
+    const who = order.name || order.email || 'a customer';
+    showToast('🎉 New order from ' + who + ' — ' + (order.quantity || 1) + ' unit(s)!', 'success');
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        new Notification('New SafeFlame AI order', {
+          body: who + ' just pre-booked ' + (order.quantity || 1) + ' unit(s) (' + tierLabelFor(order.tier) + ').'
+        });
+      } catch (err) {
+        console.warn('Browser notification failed:', err);
+      }
+    }
   }
 
   function attemptLogin() {
@@ -1079,7 +1196,10 @@
     launchDate: '2026-12-01T00:00',
     basePrice: 24999, baseOriginalPrice: 29999,
     proPrice: 39999, proOriginalPrice: 46999,
-    geminiApiKey: '', emailjsServiceId: '', emailjsTemplateId: '', emailjsPublicKey: '',
+    elitePrice: 54999, eliteOriginalPrice: 64999,
+    baseStock: -1, proStock: -1, eliteStock: -1,
+    geminiApiKey: '', geminiApiKeys: [], geminiModel: 'gemini-3.5-flash',
+    emailjsServiceId: '', emailjsTemplateId: '', emailjsPublicKey: '',
     launchEmailSubject: "SafeFlame AI has launched!",
     launchEmailMessage: "Great news — SafeFlame AI is officially live! Thank you for joining our waitlist. Visit the site to pre-book your unit before the launch offer ends.",
     launchEmailServiceId: '', launchEmailTemplateId: '', launchEmailPublicKey: '',
@@ -1096,7 +1216,7 @@
       },
       shipped: {
         subject: "Your SafeFlame AI order has Shipped!",
-        message: "Hi {{name}}, your order {{order_id}} has shipped and is on its way to {{address}}. Thanks for your patience!",
+        message: "Hi {{name}}, your order {{order_id}} has shipped! Thanks for your patience!",
         serviceId: '', templateId: '', publicKey: ''
       },
       cancelled: {
@@ -1107,6 +1227,32 @@
     }
   };
   let siteSettings = { ...DEFAULT_SETTINGS };
+
+  function renderGeminiKeyRows(keys) {
+    const list = document.getElementById('geminiKeyList');
+    list.innerHTML = '';
+    keys.forEach((key, i) => {
+      const row = document.createElement('div');
+      row.className = 'key-row';
+      row.innerHTML = `<input type="password" class="gemini-key-input" placeholder="AIza..." value="${key ? key.replace(/"/g, '&quot;') : ''}">
+        <button type="button" class="remove-key-btn" title="Remove this key">✕</button>`;
+      row.querySelector('.remove-key-btn').addEventListener('click', () => {
+        row.remove();
+        if (!document.querySelector('.gemini-key-input')) renderGeminiKeyRows(['']); // keep at least one empty row
+      });
+      list.appendChild(row);
+    });
+  }
+
+  document.getElementById('addGeminiKeyBtn').addEventListener('click', () => {
+    const list = document.getElementById('geminiKeyList');
+    const row = document.createElement('div');
+    row.className = 'key-row';
+    row.innerHTML = `<input type="password" class="gemini-key-input" placeholder="AIza...">
+      <button type="button" class="remove-key-btn" title="Remove this key">✕</button>`;
+    row.querySelector('.remove-key-btn').addEventListener('click', () => row.remove());
+    list.appendChild(row);
+  });
 
   async function loadSettingsIntoForm() {
     try {
@@ -1123,7 +1269,18 @@
     document.getElementById('setBaseOriginal').value = siteSettings.baseOriginalPrice || '';
     document.getElementById('setProPrice').value = siteSettings.proPrice;
     document.getElementById('setProOriginal').value = siteSettings.proOriginalPrice || '';
-    document.getElementById('setGeminiKey').value = siteSettings.geminiApiKey || '';
+    document.getElementById('setElitePrice').value = siteSettings.elitePrice;
+    document.getElementById('setEliteOriginal').value = siteSettings.eliteOriginalPrice || '';
+    document.getElementById('setBaseStock').value = siteSettings.baseStock;
+    document.getElementById('setProStock').value = siteSettings.proStock;
+    document.getElementById('setEliteStock').value = siteSettings.eliteStock;
+    document.getElementById('setGeminiModel').value = siteSettings.geminiModel || 'gemini-3.5-flash';
+
+    // Migrate a legacy single geminiApiKey into the array, if present and array is empty.
+    let keys = Array.isArray(siteSettings.geminiApiKeys) ? siteSettings.geminiApiKeys.slice() : [];
+    if (keys.length === 0 && siteSettings.geminiApiKey) keys = [siteSettings.geminiApiKey];
+    renderGeminiKeyRows(keys.length ? keys : ['']);
+
     document.getElementById('setEmailjsService').value = siteSettings.emailjsServiceId || '';
     document.getElementById('setEmailjsTemplate').value = siteSettings.emailjsTemplateId || '';
     document.getElementById('setEmailjsPublicKey').value = siteSettings.emailjsPublicKey || '';
@@ -1163,7 +1320,13 @@
       baseOriginalPrice: Number(document.getElementById('setBaseOriginal').value) || 0,
       proPrice: Number(document.getElementById('setProPrice').value) || 0,
       proOriginalPrice: Number(document.getElementById('setProOriginal').value) || 0,
-      geminiApiKey: document.getElementById('setGeminiKey').value.trim(),
+      elitePrice: Number(document.getElementById('setElitePrice').value) || 0,
+      eliteOriginalPrice: Number(document.getElementById('setEliteOriginal').value) || 0,
+      baseStock: document.getElementById('setBaseStock').value === '' ? -1 : Number(document.getElementById('setBaseStock').value),
+      proStock: document.getElementById('setProStock').value === '' ? -1 : Number(document.getElementById('setProStock').value),
+      eliteStock: document.getElementById('setEliteStock').value === '' ? -1 : Number(document.getElementById('setEliteStock').value),
+      geminiModel: document.getElementById('setGeminiModel').value.trim() || 'gemini-3.5-flash',
+      geminiApiKeys: Array.from(document.querySelectorAll('.gemini-key-input')).map(i => i.value.trim()).filter(Boolean),
       emailjsServiceId: document.getElementById('setEmailjsService').value.trim(),
       emailjsTemplateId: document.getElementById('setEmailjsTemplate').value.trim(),
       emailjsPublicKey: document.getElementById('setEmailjsPublicKey').value.trim(),
@@ -1200,7 +1363,7 @@
   function sendStatusEmail(order, newStatus) {
     if (!order.email) return;
 
-    const tierLabel = order.tier === 'pro' ? '7" Pro' : '4" Base';
+    const tierLabel = tierLabelFor(order.tier);
     const qty = Number(order.quantity) || 1;
     const unitPrice = priceForOrder(order);
     const totalPrice = unitPrice * qty;
@@ -1317,12 +1480,26 @@
   let selectedIds = new Set();
   let sortField = 'createdAt';
   let sortDir = 'desc';
+  let prebookInitialLoadDone = false;
+  let knownOrderIds = new Set();
 
   function startListeners() {
     unsubPrebook = db.collection('preBookings').orderBy('createdAt', 'desc')
       .onSnapshot(snapshot => {
         prebookData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        if (prebookInitialLoadDone) {
+          snapshot.docChanges().forEach(change => {
+            if (change.type === 'added' && !knownOrderIds.has(change.doc.id)) {
+              notifyNewOrder({ id: change.doc.id, ...change.doc.data() });
+            }
+          });
+        }
+        prebookData.forEach(o => knownOrderIds.add(o.id));
+        prebookInitialLoadDone = true;
+
         renderPrebookTable();
+        renderCustomerTable();
         renderStats();
         renderCharts();
       }, err => {
@@ -1342,9 +1519,17 @@
       });
   }
 
+  function tierLabelFor(tier) {
+    if (tier === 'elite') return '9" Elite';
+    if (tier === 'pro') return '7" Pro';
+    return '4" Base';
+  }
+
   function priceForOrder(order) {
     if (typeof order.unitPrice === 'number') return order.unitPrice;
-    return order.tier === 'pro' ? siteSettings.proPrice : siteSettings.basePrice;
+    if (order.tier === 'elite') return siteSettings.elitePrice;
+    if (order.tier === 'pro') return siteSettings.proPrice;
+    return siteSettings.basePrice;
   }
 
   function renderStats() {
@@ -1422,7 +1607,7 @@
       emptyState.style.display = 'none';
       filtered.forEach(order => {
         const status = (order.status || 'pending').toLowerCase();
-        const tier = order.tier === 'pro' ? 'pro' : 'base';
+        const tier = order.tier === 'pro' ? 'pro' : order.tier === 'elite' ? 'elite' : 'base';
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><input type="checkbox" class="row-check" data-id="${order.id}" ${selectedIds.has(order.id) ? 'checked' : ''}></td>
@@ -1430,9 +1615,8 @@
           <td>${escapeHtml(order.name)}</td>
           <td>${escapeHtml(order.email)}</td>
           <td>${escapeHtml(order.phone)}</td>
-          <td><span class="tier-pill ${tier}">${tier === 'pro' ? '7" Pro' : '4" Base'}</span></td>
+          <td><span class="tier-pill ${tier}">${tierLabelFor(tier)}</span></td>
           <td>${escapeHtml(order.quantity)}</td>
-          <td>${escapeHtml(order.address)}</td>
           <td><input type="text" class="notes-input" data-id="${order.id}" placeholder="Add note..." value="${escapeHtml(order.notes || '')}"></td>
           <td>
             <select class="status-select ${status}" data-id="${order.id}">
@@ -1442,7 +1626,10 @@
               <option value="cancelled" ${status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
             </select>
           </td>
-          <td><button class="row-delete" data-id="${order.id}" data-collection="preBookings">Delete</button></td>
+          <td>
+            <button class="btn-small slip-btn" data-id="${order.id}">Slip</button>
+            <button class="row-delete" data-id="${order.id}" data-collection="preBookings">Delete</button>
+          </td>
         `;
         tbody.appendChild(tr);
       });
@@ -1467,6 +1654,13 @@
 
     tbody.querySelectorAll('.row-delete').forEach(btn => {
       btn.addEventListener('click', () => handleDelete(btn.dataset.collection, btn.dataset.id));
+    });
+
+    tbody.querySelectorAll('.slip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const order = prebookData.find(o => o.id === btn.dataset.id);
+        if (order) printPackingSlip(order);
+      });
     });
 
     tbody.querySelectorAll('.notes-input').forEach(input => {
@@ -1589,6 +1783,163 @@
     });
   }
 
+  // ─── Customer view (orders grouped by email) ───────
+  let customerData = [];
+
+  function buildCustomerData() {
+    const groups = {};
+    prebookData.forEach(o => {
+      const email = (o.email || '').toLowerCase();
+      if (!email) return;
+      if (!groups[email]) {
+        groups[email] = { email: o.email, name: o.name, phone: o.phone, orders: [] };
+      }
+      groups[email].orders.push(o);
+      // Keep the most recently used name/phone
+      const gTime = groups[email].orders[0].createdAt && groups[email].orders[0].createdAt.toDate ? groups[email].orders[0].createdAt.toDate().getTime() : 0;
+      const oTime = o.createdAt && o.createdAt.toDate ? o.createdAt.toDate().getTime() : 0;
+      if (oTime >= gTime) { groups[email].name = o.name; groups[email].phone = o.phone; }
+    });
+
+    return Object.values(groups).map(g => {
+      const sorted = g.orders.slice().sort((a, b) => {
+        const at = a.createdAt && a.createdAt.toDate ? a.createdAt.toDate().getTime() : 0;
+        const bt = b.createdAt && b.createdAt.toDate ? b.createdAt.toDate().getTime() : 0;
+        return bt - at;
+      });
+      const totalUnits = g.orders.reduce((sum, o) => sum + (Number(o.quantity) || 0), 0);
+      const totalSpent = g.orders
+        .filter(o => (o.status || 'pending').toLowerCase() !== 'cancelled')
+        .reduce((sum, o) => sum + (priceForOrder(o) * (Number(o.quantity) || 0)), 0);
+      return {
+        email: g.email,
+        name: g.name,
+        phone: g.phone,
+        orderCount: g.orders.length,
+        totalUnits,
+        totalSpent,
+        latestStatus: sorted[0] ? (sorted[0].status || 'pending') : 'pending',
+        lastOrderDate: sorted[0] ? sorted[0].createdAt : null
+      };
+    }).sort((a, b) => {
+      const at = a.lastOrderDate && a.lastOrderDate.toDate ? a.lastOrderDate.toDate().getTime() : 0;
+      const bt = b.lastOrderDate && b.lastOrderDate.toDate ? b.lastOrderDate.toDate().getTime() : 0;
+      return bt - at;
+    });
+  }
+
+  function renderCustomerTable() {
+    customerData = buildCustomerData();
+    const tbody = document.querySelector('#customerTable tbody');
+    const emptyState = document.getElementById('customerEmpty');
+    const searchTerm = document.getElementById('customerSearch').value.trim().toLowerCase();
+
+    const filtered = customerData.filter(c =>
+      !searchTerm || (c.name || '').toLowerCase().includes(searchTerm) || (c.email || '').toLowerCase().includes(searchTerm)
+    );
+
+    tbody.innerHTML = '';
+    if (filtered.length === 0) {
+      emptyState.style.display = 'block';
+    } else {
+      emptyState.style.display = 'none';
+      filtered.forEach(c => {
+        const status = (c.latestStatus || 'pending').toLowerCase();
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${escapeHtml(c.name)}</td>
+          <td>${escapeHtml(c.email)}</td>
+          <td>${escapeHtml(c.phone)}</td>
+          <td>${c.orderCount}</td>
+          <td>${c.totalUnits}</td>
+          <td>₹${c.totalSpent.toLocaleString('en-IN')}</td>
+          <td><span class="status-pill ${status}" style="background:none; border:1px solid currentColor;">${escapeHtml(status)}</span></td>
+          <td>${formatDate(c.lastOrderDate)}</td>
+          <td><button class="btn-small view-orders-btn" data-email="${escapeHtml(c.email)}">View Orders</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    tbody.querySelectorAll('.view-orders-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelector('.tab-btn[data-tab="orders"]').click();
+        const searchInput = document.getElementById('prebookSearch');
+        searchInput.value = btn.dataset.email;
+        renderPrebookTable();
+      });
+    });
+  }
+
+  document.getElementById('customerSearch').addEventListener('input', renderCustomerTable);
+  document.getElementById('exportCustomers').addEventListener('click', () => {
+    const rows = [['Name', 'Email', 'Phone', 'Orders', 'Total Units', 'Total Spent', 'Latest Status', 'Last Order']];
+    customerData.forEach(c => rows.push([c.name, c.email, c.phone, c.orderCount, c.totalUnits, c.totalSpent, c.latestStatus, formatDate(c.lastOrderDate)]));
+    downloadCsv('safeflame-customers.csv', rows);
+  });
+
+  // ─── Packing slip (print) ──────────────────────────
+  function printPackingSlip(order) {
+    const tierLabel = tierLabelFor(order.tier);
+    const qty = Number(order.quantity) || 1;
+    const unitPrice = priceForOrder(order);
+    const totalPrice = unitPrice * qty;
+    const dateStr = formatDate(order.createdAt);
+    const status = (order.status || 'pending');
+
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Packing Slip — ${esc(order.id.slice(0, 8).toUpperCase())}</title>
+<style>
+  body { font-family: -apple-system, Arial, sans-serif; color: #1a1a2e; padding: 40px; max-width: 700px; margin: 0 auto; }
+  .brand { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
+  .brand span { color: #e63329; }
+  .tagline { font-size: 11px; letter-spacing: 1.5px; color: #888; text-transform: uppercase; margin-bottom: 24px; }
+  h1 { font-size: 18px; border-bottom: 2px solid #1a1a2e; padding-bottom: 10px; margin-bottom: 20px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+  td { padding: 8px 0; font-size: 14px; vertical-align: top; }
+  td.label { color: #888; width: 160px; }
+  .box { background: #f5f5f7; border-radius: 8px; padding: 16px 20px; margin-bottom: 20px; }
+  .total-row td { border-top: 2px solid #1a1a2e; font-weight: 700; font-size: 16px; padding-top: 12px; }
+  .footer { margin-top: 40px; font-size: 11px; color: #999; text-align: center; }
+  @media print { body { padding: 20px; } }
+</style></head>
+<body>
+  <div class="brand">SafeFlame<span>&nbsp;AI</span></div>
+  <div class="tagline">Detect · Alert · Protect</div>
+  <h1>Packing Slip — Order #${esc(order.id.slice(0, 8).toUpperCase())}</h1>
+
+  <div class="box">
+    <table>
+      <tr><td class="label">Order Date</td><td>${esc(dateStr)}</td></tr>
+      <tr><td class="label">Status</td><td>${esc(status.charAt(0).toUpperCase() + status.slice(1))}</td></tr>
+    </table>
+  </div>
+
+  <table>
+    <tr><td class="label">Customer</td><td>${esc(order.name)}<br>Phone: ${esc(order.phone)}<br>Email: ${esc(order.email)}</td></tr>
+  </table>
+
+  <table>
+    <tr><td class="label" style="border-bottom:1px solid #ddd; padding-bottom:8px;"><b>Item</b></td><td style="border-bottom:1px solid #ddd; padding-bottom:8px;"><b>Qty</b></td><td style="border-bottom:1px solid #ddd; padding-bottom:8px; text-align:right;"><b>Unit Price</b></td></tr>
+    <tr><td>SafeFlame AI — ${esc(tierLabel)}</td><td>${qty}</td><td style="text-align:right;">₹${unitPrice.toLocaleString('en-IN')}</td></tr>
+    <tr class="total-row"><td></td><td>Total</td><td style="text-align:right;">₹${totalPrice.toLocaleString('en-IN')}</td></tr>
+  </table>
+
+  <div class="footer">SafeFlame AI · This is a system-generated packing slip.</div>
+  <script>window.onload = () => window.print();<\/script>
+</body></html>`;
+
+    const win = window.open('', '_blank');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    } else {
+      showToast('Please allow pop-ups to print packing slips.', 'error');
+    }
+  }
+
   async function handleDelete(collection, id) {
     if (!confirm('Delete this entry? This cannot be undone.')) return;
     try {
@@ -1605,8 +1956,8 @@
   document.getElementById('waitlistSearch').addEventListener('input', renderWaitlistTable);
 
   document.getElementById('exportPrebooks').addEventListener('click', () => {
-    const rows = [['Date', 'Name', 'Email', 'Phone', 'Tier', 'Quantity', 'Address', 'Status', 'Notes']];
-    prebookData.forEach(o => rows.push([formatDate(o.createdAt), o.name, o.email, o.phone, o.tier === 'pro' ? '7" Pro' : '4" Base', o.quantity, o.address, o.status || 'pending', o.notes || '']));
+    const rows = [['Date', 'Name', 'Email', 'Phone', 'Tier', 'Quantity', 'Status', 'Notes']];
+    prebookData.forEach(o => rows.push([formatDate(o.createdAt), o.name, o.email, o.phone, tierLabelFor(o.tier), o.quantity, o.status || 'pending', o.notes || '']));
     downloadCsv('safeflame-prebookings.csv', rows);
   });
 
@@ -1625,12 +1976,54 @@
   let chatHistory = [];
   let chatOpened = false;
 
+  function getGeminiKeys() {
+    let keys = Array.isArray(siteSettings.geminiApiKeys) ? siteSettings.geminiApiKeys.filter(Boolean) : [];
+    if (keys.length === 0 && siteSettings.geminiApiKey) keys = [siteSettings.geminiApiKey];
+    return keys;
+  }
+
+  // Tries each configured Gemini key in turn — if one is invalid, out of quota, or
+  // rate-limited, it automatically falls back to the next key in the chamber.
+  async function callGemini(systemPrompt, history) {
+    const keys = getGeminiKeys();
+    const model = siteSettings.geminiModel || 'gemini-3.5-flash';
+    if (keys.length === 0) throw new Error('No Gemini API keys configured.');
+
+    let lastError = null;
+    for (const key of keys) {
+      try {
+        const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: { parts: [{ text: systemPrompt }] },
+            contents: history
+          })
+        });
+        if (!resp.ok) {
+          lastError = new Error('Gemini request failed with status ' + resp.status);
+          continue; // try the next key
+        }
+        const data = await resp.json();
+        const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+        if (!reply) {
+          lastError = new Error('Gemini returned no usable reply.');
+          continue;
+        }
+        return reply;
+      } catch (err) {
+        lastError = err;
+      }
+    }
+    throw lastError || new Error('All Gemini keys failed.');
+  }
+
   chatToggle.addEventListener('click', () => {
     chatPanel.classList.toggle('open');
     if (!chatOpened) {
       chatOpened = true;
-      if (!siteSettings.geminiApiKey) {
-        chatMessages.innerHTML = '<div class="chat-no-key">Add a Gemini API key in Settings to enable this assistant.</div>';
+      if (getGeminiKeys().length === 0) {
+        chatMessages.innerHTML = '<div class="chat-no-key">Add at least one Gemini API key in Settings to enable this assistant.</div>';
       } else {
         addChatMessage('bot', "Hi! I'm your business assistant. Ask me about orders, revenue, tier performance, or marketing ideas.");
       }
@@ -1649,29 +2042,33 @@
 
   function buildBusinessContext() {
     const byStatus = { pending: 0, confirmed: 0, shipped: 0, cancelled: 0 };
-    let baseUnits = 0, proUnits = 0;
+    let baseUnits = 0, proUnits = 0, eliteUnits = 0;
     prebookData.forEach(o => {
       const s = (o.status || 'pending').toLowerCase();
       if (byStatus.hasOwnProperty(s)) byStatus[s]++;
       if (o.tier === 'pro') proUnits += Number(o.quantity) || 0;
+      else if (o.tier === 'elite') eliteUnits += Number(o.quantity) || 0;
       else baseUnits += Number(o.quantity) || 0;
     });
     const revenue = prebookData
       .filter(o => (o.status || 'pending').toLowerCase() !== 'cancelled')
       .reduce((sum, o) => sum + (priceForOrder(o) * (Number(o.quantity) || 0)), 0);
 
+    const stockLine = (label, stock, sold) => stock < 0 ? `${label}: unlimited stock, ${sold} sold` : `${label}: ${stock} total stock, ${sold} sold, ${stock - sold} remaining`;
+
     return `Current SafeFlame AI business snapshot:
 - Total pre-bookings: ${prebookData.length} (Pending: ${byStatus.pending}, Confirmed: ${byStatus.confirmed}, Shipped: ${byStatus.shipped}, Cancelled: ${byStatus.cancelled})
 - Waitlist signups: ${waitlistData.length}
-- Base tier (4") units ordered: ${baseUnits} at ₹${siteSettings.basePrice}/unit
-- Pro tier (7") units ordered: ${proUnits} at ₹${siteSettings.proPrice}/unit
+- Base tier (4", 1 camera) at ₹${siteSettings.basePrice}/unit — ${stockLine('Base', siteSettings.baseStock, baseUnits)}
+- Pro tier (7", 2 cameras, gas weight monitoring) at ₹${siteSettings.proPrice}/unit — ${stockLine('Pro', siteSettings.proStock, proUnits)}
+- Elite tier (9", 4 cameras, gas weight monitoring) at ₹${siteSettings.elitePrice}/unit — ${stockLine('Elite', siteSettings.eliteStock, eliteUnits)}
 - Estimated revenue (excluding cancelled): ₹${revenue.toLocaleString('en-IN')}
 - Launch date: ${siteSettings.launchDate}`;
   }
 
   async function sendChatMessage() {
     const text = chatInput.value.trim();
-    if (!text || !siteSettings.geminiApiKey) return;
+    if (!text || getGeminiKeys().length === 0) return;
     addChatMessage('user', text);
     chatHistory.push({ role: 'user', parts: [{ text }] });
     chatInput.value = '';
@@ -1682,23 +2079,14 @@
 ${buildBusinessContext()}`;
 
     try {
-      const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${siteSettings.geminiApiKey}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          systemInstruction: { parts: [{ text: systemPrompt }] },
-          contents: chatHistory
-        })
-      });
-      const data = await resp.json();
+      const reply = await callGemini(systemPrompt, chatHistory);
       typingEl.remove();
-      const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text || "Sorry, I couldn't generate a response. Check your Gemini API key in Settings.";
       addChatMessage('bot', reply);
       chatHistory.push({ role: 'model', parts: [{ text: reply }] });
     } catch (err) {
       console.error('Chatbot error:', err);
       typingEl.remove();
-      addChatMessage('bot', "Something went wrong reaching the AI. Check your Gemini API key and connection.");
+      addChatMessage('bot', "Something went wrong reaching the AI. Check your Gemini API keys and model name in Settings.");
     }
   }
 
