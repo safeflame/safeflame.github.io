@@ -895,6 +895,16 @@
           </div>
 
           <div class="settings-group">
+            <h3>Order Numbers</h3>
+            <div class="field">
+              <label>Starting Order Number</label>
+              <input type="number" id="setOrderNumberStart" min="1" step="1">
+              <div class="field-hint">The very first order ever placed gets this number; every order after that counts up by 1 automatically (e.g. 74638, 74639, 74640...). Only change this before your first real order — changing it afterward doesn't renumber orders already placed.</div>
+              <div class="field-hint" id="orderCounterStatus" style="margin-top:0.6rem;"></div>
+            </div>
+          </div>
+
+          <div class="settings-group">
             <h3>Base Tier — 4" Display</h3>
             <div class="field"><label>Offer Price (₹)</label><input type="number" id="setBasePrice" min="0"></div>
             <div class="field"><label>Original Price (₹) — optional, shown struck through</label><input type="number" id="setBaseOriginal" min="0"></div>
@@ -1199,6 +1209,7 @@
     proPrice: 39999, proOriginalPrice: 46999,
     elitePrice: 54999, eliteOriginalPrice: 64999,
     baseStock: -1, proStock: -1, eliteStock: -1,
+    orderNumberStart: 100000,
     geminiApiKey: '', geminiApiKeys: [], geminiModel: 'gemini-3.5-flash',
     emailjsServiceId: '', emailjsTemplateId: '', emailjsPublicKey: '',
     launchEmailSubject: "SafeFlame AI has launched!",
@@ -1266,6 +1277,17 @@
       console.error('Failed to load settings:', err);
     }
     document.getElementById('setLaunchDate').value = siteSettings.launchDate;
+    document.getElementById('setOrderNumberStart').value = siteSettings.orderNumberStart;
+
+    db.collection('settings').doc('orderCounter').get().then(counterDoc => {
+      const statusEl = document.getElementById('orderCounterStatus');
+      if (counterDoc.exists) {
+        const last = Number(counterDoc.data().lastNumber) || 0;
+        statusEl.textContent = `Last order number assigned: ${last}. Next order will be ${last + 1}.`;
+      } else {
+        statusEl.textContent = `No orders placed yet. The first order will be number ${siteSettings.orderNumberStart}.`;
+      }
+    }).catch(() => { /* non-critical, ignore */ });
     document.getElementById('setBasePrice').value = siteSettings.basePrice;
     document.getElementById('setBaseOriginal').value = siteSettings.baseOriginalPrice || '';
     document.getElementById('setProPrice').value = siteSettings.proPrice;
@@ -1317,6 +1339,7 @@
 
     const updated = {
       launchDate: document.getElementById('setLaunchDate').value || DEFAULT_SETTINGS.launchDate,
+      orderNumberStart: Number(document.getElementById('setOrderNumberStart').value) || 100000,
       basePrice: Number(document.getElementById('setBasePrice').value) || 0,
       baseOriginalPrice: Number(document.getElementById('setBaseOriginal').value) || 0,
       proPrice: Number(document.getElementById('setProPrice').value) || 0,
