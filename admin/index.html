@@ -771,7 +771,7 @@
         <div class="panel-header">
           <h2>Pre-Bookings (Orders)</h2>
           <div class="panel-actions">
-            <input type="text" class="search-input" id="prebookSearch" placeholder="Search name or email...">
+            <input type="text" class="search-input" id="prebookSearch" placeholder="Search name, email, or order #...">
             <select class="filter-select" id="prebookStatusFilter">
               <option value="all">All Statuses</option>
               <option value="pending">Pending</option>
@@ -801,6 +801,7 @@
             <thead>
               <tr>
                 <th><input type="checkbox" id="selectAllPrebook"></th>
+                <th>Order #</th>
                 <th class="sortable" data-sort="createdAt">Date <span class="sort-arrow"></span></th>
                 <th>Name</th>
                 <th>Email</th>
@@ -1370,7 +1371,7 @@
 
     const tokens = {
       name: order.name || 'there',
-      order_id: order.id,
+      order_id: orderNumberFor(order),
       tier: tierLabel,
       quantity: qty,
       unit_price: '₹' + unitPrice.toLocaleString('en-IN'),
@@ -1381,7 +1382,7 @@
     };
 
     const cfg = (siteSettings.statusEmails && siteSettings.statusEmails[newStatus]) || DEFAULT_SETTINGS.statusEmails[newStatus];
-    const subject = renderTokens(cfg.subject, tokens) || ('Update on your SafeFlame AI order (#' + order.id.slice(0, 8) + ')');
+    const subject = renderTokens(cfg.subject, tokens) || ('Update on your SafeFlame AI order (#' + orderNumberFor(order) + ')');
     const message = renderTokens(cfg.message, tokens);
 
     // Use this status's own EmailJS account if set, otherwise fall back to the default account above.
@@ -1401,7 +1402,7 @@
 
       // ── Matches the "Thank You for Your Order" style template exactly ──
       email: order.email,                 // template footer: "This email was sent to {{email}}"
-      order_id: order.id,
+      order_id: orderNumberFor(order),
       orders: [                           // template loops this with {{#orders}}...{{/orders}}
         {
           name: 'SafeFlame AI — ' + tierLabel,
@@ -1525,6 +1526,16 @@
     return '4" Base';
   }
 
+  // Human-friendly order number. Falls back to a stable 6-digit number derived
+  // from the Firestore doc ID for older orders created before orderNumber existed.
+  function orderNumberFor(order) {
+    if (order.orderNumber) return String(order.orderNumber);
+    if (!order.id) return '000000';
+    let hash = 0;
+    for (let i = 0; i < order.id.length; i++) hash = (hash * 31 + order.id.charCodeAt(i)) >>> 0;
+    return String(100000 + (hash % 900000));
+  }
+
   function priceForOrder(order) {
     if (typeof order.unitPrice === 'number') return order.unitPrice;
     if (order.tier === 'elite') return siteSettings.elitePrice;
@@ -1584,7 +1595,7 @@
     const statusFilter = document.getElementById('prebookStatusFilter').value;
 
     let filtered = prebookData.filter(o => {
-      const matchesSearch = !searchTerm || (o.name || '').toLowerCase().includes(searchTerm) || (o.email || '').toLowerCase().includes(searchTerm);
+      const matchesSearch = !searchTerm || (o.name || '').toLowerCase().includes(searchTerm) || (o.email || '').toLowerCase().includes(searchTerm) || orderNumberFor(o).includes(searchTerm);
       const matchesStatus = statusFilter === 'all' || (o.status || 'pending') === statusFilter;
       return matchesSearch && matchesStatus;
     });
@@ -1611,6 +1622,7 @@
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td><input type="checkbox" class="row-check" data-id="${order.id}" ${selectedIds.has(order.id) ? 'checked' : ''}></td>
+          <td style="font-weight:600; color: var(--off-white);">#${escapeHtml(orderNumberFor(order))}</td>
           <td>${formatDate(order.createdAt)}</td>
           <td>${escapeHtml(order.name)}</td>
           <td>${escapeHtml(order.email)}</td>
@@ -1890,7 +1902,7 @@
     const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
     const html = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Packing Slip — ${esc(order.id.slice(0, 8).toUpperCase())}</title>
+<html><head><meta charset="UTF-8"><title>Packing Slip — ${esc(orderNumberFor(order))}</title>
 <style>
   body { font-family: -apple-system, Arial, sans-serif; color: #1a1a2e; padding: 40px; max-width: 700px; margin: 0 auto; }
   .brand { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
@@ -1908,7 +1920,7 @@
 <body>
   <div class="brand">SafeFlame<span>&nbsp;AI</span></div>
   <div class="tagline">Detect · Alert · Protect</div>
-  <h1>Packing Slip — Order #${esc(order.id.slice(0, 8).toUpperCase())}</h1>
+  <h1>Packing Slip — Order #${esc(orderNumberFor(order))}</h1>
 
   <div class="box">
     <table>
@@ -1956,8 +1968,8 @@
   document.getElementById('waitlistSearch').addEventListener('input', renderWaitlistTable);
 
   document.getElementById('exportPrebooks').addEventListener('click', () => {
-    const rows = [['Date', 'Name', 'Email', 'Phone', 'Tier', 'Quantity', 'Status', 'Notes']];
-    prebookData.forEach(o => rows.push([formatDate(o.createdAt), o.name, o.email, o.phone, tierLabelFor(o.tier), o.quantity, o.status || 'pending', o.notes || '']));
+    const rows = [['Order #', 'Date', 'Name', 'Email', 'Phone', 'Tier', 'Quantity', 'Status', 'Notes']];
+    prebookData.forEach(o => rows.push([orderNumberFor(o), formatDate(o.createdAt), o.name, o.email, o.phone, tierLabelFor(o.tier), o.quantity, o.status || 'pending', o.notes || '']));
     downloadCsv('safeflame-prebookings.csv', rows);
   });
 
