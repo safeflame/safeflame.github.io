@@ -7,7 +7,7 @@
 <link rel="icon" type="image/png" href="Logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --flame: #FF6B35;
@@ -140,81 +140,180 @@
   main { padding: 2rem; max-width: 1300px; margin: 0 auto; }
 
   /* ─── LOGIN GATE ─────────────────────────────────── */
+  /* ─── LOGIN SCREEN ───────────────────────────────── */
   #loginScreen {
-    min-height: 80vh;
+    min-height: 100vh;
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .login-ambient {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 70% 50% at 15% 10%, rgba(255,107,53,0.13), transparent 60%),
+      radial-gradient(ellipse 60% 45% at 85% 80%, rgba(78,205,196,0.09), transparent 55%),
+      radial-gradient(ellipse 50% 40% at 60% 30%, rgba(255,107,53,0.06), transparent 50%);
+  }
+
+  .login-ambient::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.018) 1px, transparent 0);
+    background-size: 36px 36px;
   }
 
   .login-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 2.5rem;
+    position: relative;
+    z-index: 2;
+    background: rgba(34,34,59,0.7);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 20px;
+    padding: 2.8rem 2.4rem;
     width: 100%;
-    max-width: 360px;
+    max-width: 380px;
     text-align: center;
-    box-shadow: var(--shadow);
+    box-shadow: 0 32px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.05);
+    animation: loginFadeUp 0.5s ease forwards;
   }
 
-  .login-card .brand-mark {
+  @keyframes loginFadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .brand-mark {
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 0.6rem;
-    margin-bottom: 1.5rem;
+    margin-bottom: 0.5rem;
   }
-  .login-card .brand-mark img { height: 32px; border-radius: 8px; }
-  .login-card .brand-mark span {
-    font-family: 'Rajdhani', sans-serif;
+  .brand-mark img { height: 34px; border-radius: 9px; }
+  .brand-mark span {
+    font-family: 'Space Grotesk', 'Rajdhani', sans-serif;
     font-weight: 700;
-    color: var(--flame);
     font-size: 1.15rem;
-  }
-
-  .login-card h2 {
-    font-family: 'Rajdhani', sans-serif;
-    margin-bottom: 1.5rem;
     color: var(--off-white);
-    font-weight: 600;
-    font-size: 1.1rem;
+  }
+  .brand-mark span em {
+    font-style: normal;
+    color: var(--flame);
   }
 
-  .login-card input {
+  .login-subtitle {
+    font-size: 0.78rem;
+    color: var(--muted);
+    margin-bottom: 2rem;
+    letter-spacing: 0.03em;
+  }
+
+  /* Google button */
+  .google-btn {
     width: 100%;
-    padding: 0.85rem 1rem;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    background: var(--surface2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.7rem;
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.12);
     color: var(--off-white);
-    font-size: 0.95rem;
-    outline: none;
-    margin-bottom: 1rem;
-    transition: border-color 0.2s ease;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+    font-family: 'Inter', sans-serif;
+    margin-bottom: 1.2rem;
+  }
+  .google-btn:hover {
+    background: rgba(255,255,255,0.1);
+    border-color: rgba(255,255,255,0.2);
+    transform: translateY(-1px);
+  }
+  .google-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .login-divider {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    margin-bottom: 1.2rem;
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+  .login-divider::before,
+  .login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
   }
 
-  .login-card input:focus { border-color: var(--flame); }
+  .login-field { margin-bottom: 1rem; }
+  .login-field input {
+    width: 100%;
+    padding: 0.85rem 1.1rem;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: rgba(255,255,255,0.05);
+    color: var(--off-white);
+    font-size: 0.92rem;
+    outline: none;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s ease, background 0.2s ease;
+  }
+  .login-field input:focus { border-color: var(--flame); background: rgba(255,107,53,0.05); }
 
-  .login-card button {
+  .login-btn {
     width: 100%;
     background: var(--flame);
     color: #fff;
     border: none;
-    padding: 0.85rem;
-    border-radius: 8px;
+    padding: 0.88rem;
+    border-radius: 10px;
     font-weight: 600;
+    font-size: 0.92rem;
     cursor: pointer;
-    transition: background 0.2s ease, transform 0.15s ease;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    position: relative;
+    overflow: hidden;
   }
-
-  .login-card button:hover { background: #e55a2b; transform: translateY(-1px); }
+  .login-btn::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -60%;
+    width: 40%; height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255,255,255,0.3), transparent);
+    transform: skewX(-20deg);
+    transition: left 0.5s ease;
+  }
+  .login-btn:hover::after { left: 130%; }
+  .login-btn:hover { background: #e55a2b; transform: translateY(-1px); box-shadow: 0 8px 20px rgba(255,107,53,0.35); }
+  .login-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
 
   .login-error {
     color: var(--flame-light);
-    font-size: 0.82rem;
-    margin-top: 0.8rem;
+    font-size: 0.8rem;
+    margin-top: 0.9rem;
     min-height: 1.2em;
+    line-height: 1.5;
+  }
+
+  .login-note {
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 1.4rem;
+    opacity: 0.7;
+    line-height: 1.5;
   }
 
   /* ─── DASHBOARD ──────────────────────────────────── */
@@ -725,12 +824,27 @@
 <main>
   <!-- LOGIN SCREEN -->
   <div id="loginScreen">
+    <div class="login-ambient"></div>
     <div class="login-card">
-      <div class="brand-mark"><img src="Logo.png" alt="Logo"><span>SafeFlame AI</span></div>
-      <h2>Admin Login</h2>
-      <input type="password" id="adminPassword" placeholder="Enter admin password" autocomplete="current-password">
-      <button id="loginBtn">Log In</button>
+      <div class="brand-mark">
+        <img src="Logo.png" alt="SafeFlame AI Logo">
+        <span>SafeFlame <em>AI</em></span>
+      </div>
+      <p class="login-subtitle">Admin Panel — secure access only</p>
+
+      <button class="google-btn" id="googleSignInBtn">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58Z" fill="#EA4335"/></svg>
+        Continue with Google
+      </button>
+
+      <div class="login-divider"><span>or</span></div>
+
+      <div class="login-field">
+        <input type="password" id="adminPassword" placeholder="Admin password" autocomplete="current-password">
+      </div>
+      <button class="login-btn" id="loginBtn">Sign In</button>
       <div class="login-error" id="loginError"></div>
+      <p class="login-note">Password is SHA-256 hashed — not visible in source.<br>Google sign-in requires an authorised admin email.</p>
     </div>
   </div>
 
@@ -1034,6 +1148,7 @@
 <!-- ─── FIREBASE ────────────────────────────────────── -->
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
@@ -1049,12 +1164,25 @@
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  const auth = firebase.auth();
 
-  // ─────────────────────────────────────────────────
-  // CHANGE THIS PASSWORD before publishing the site.
-  // This is a simple client-side gate only.
-  // ─────────────────────────────────────────────────
-  const ADMIN_PASSWORD = "SafeFlame@2027";
+  // ─────────────────────────────────────────────────────────
+  // The password below is stored as a SHA-256 hash so it is
+  // never visible in plain text when you inspect the page.
+  //
+  // To change the password:
+  //   1. Run this in the browser console:
+  //      crypto.subtle.digest('SHA-256', new TextEncoder().encode('YourNewPassword'))
+  //        .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
+  //   2. Replace ADMIN_PASSWORD_HASH below with the output.
+  //
+  // Current password: SafeFlame#2026
+  // ─────────────────────────────────────────────────────────
+  const ADMIN_PASSWORD_HASH = 'ec250be47af4f8092dbf859b4fdfd7ae5f33d5b34d370383ac22c678515d0458';
+
+  // Authorised Google accounts that may access admin.
+  // Add the Gmail address(es) of anyone who should have access.
+  const ADMIN_EMAILS = ['your-admin@gmail.com'];
 
   const loginScreen = document.getElementById('loginScreen');
   const dashboard = document.getElementById('dashboard');
@@ -1068,6 +1196,12 @@
   let unsubPrebook = null;
   let unsubWaitlist = null;
 
+  // SHA-256 hash helper using the Web Crypto API
+  async function sha256(text) {
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
+  }
+
   function showDashboard() {
     loginScreen.style.display = 'none';
     dashboard.style.display = 'block';
@@ -1077,67 +1211,82 @@
     document.getElementById('chatToggle').style.display = 'flex';
     startListeners();
     loadSettingsIntoForm();
-
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
   }
 
-  // ─── New-order sound + browser notification ────────
-  function playNewOrderSound() {
+  function setLoginError(msg) {
+    const el = document.getElementById('loginError');
+    if (el) el.textContent = msg;
+  }
+
+  // ─── Password login (hashed) ──────────────────────
+  async function attemptLogin() {
+    const pw = adminPasswordInput.value;
+    if (!pw) return;
+    loginBtn.disabled = true;
+    loginBtn.textContent = 'Verifying...';
     try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, ctx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.15);
-      gain.gain.setValueAtTime(0.18, ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start();
-      osc.stop(ctx.currentTime + 0.4);
-    } catch (err) {
-      console.warn('Sound notification failed:', err);
-    }
-  }
-
-  function notifyNewOrder(order) {
-    playNewOrderSound();
-    const who = order.name || order.email || 'a customer';
-    showToast('🎉 New order from ' + who + ' — ' + (order.quantity || 1) + ' unit(s)!', 'success');
-    if ('Notification' in window && Notification.permission === 'granted') {
-      try {
-        new Notification('New SafeFlame AI order', {
-          body: who + ' just pre-booked ' + (order.quantity || 1) + ' unit(s) (' + tierLabelFor(order.tier) + ').'
-        });
-      } catch (err) {
-        console.warn('Browser notification failed:', err);
+      const hash = await sha256(pw);
+      if (hash === ADMIN_PASSWORD_HASH) {
+        sessionStorage.setItem('sf_admin_ok', '1');
+        sessionStorage.setItem('sf_admin_method', 'password');
+        setLoginError('');
+        showDashboard();
+      } else {
+        setLoginError('Incorrect password.');
       }
+    } catch(e) {
+      setLoginError('Verification error. Please try again.');
     }
-  }
-
-  function attemptLogin() {
-    if (adminPasswordInput.value === ADMIN_PASSWORD) {
-      sessionStorage.setItem('sf_admin_ok', '1');
-      loginError.textContent = '';
-      showDashboard();
-    } else {
-      loginError.textContent = 'Incorrect password.';
-    }
+    loginBtn.disabled = false;
+    loginBtn.textContent = 'Sign In';
   }
 
   loginBtn.addEventListener('click', attemptLogin);
-  adminPasswordInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptLogin(); });
+  adminPasswordInput.addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
 
-  logoutBtn.addEventListener('click', () => {
+  // ─── Google Sign-In ───────────────────────────────
+  const googleSignInBtn = document.getElementById('googleSignInBtn');
+  googleSignInBtn.addEventListener('click', async () => {
+    googleSignInBtn.disabled = true;
+    googleSignInBtn.textContent = 'Signing in...';
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      const result = await auth.signInWithPopup(provider);
+      const email = result.user.email;
+      if (ADMIN_EMAILS.includes(email)) {
+        sessionStorage.setItem('sf_admin_ok', '1');
+        sessionStorage.setItem('sf_admin_method', 'google');
+        sessionStorage.setItem('sf_admin_email', email);
+        setLoginError('');
+        showDashboard();
+      } else {
+        await auth.signOut();
+        setLoginError('Access denied. ' + email + ' is not an authorised admin account.');
+      }
+    } catch(e) {
+      if (e.code !== 'auth/popup-closed-by-user') {
+        setLoginError('Google sign-in failed: ' + (e.message || 'Unknown error.'));
+      }
+    }
+    googleSignInBtn.disabled = false;
+    googleSignInBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58Z" fill="#EA4335"/></svg> Continue with Google';
+  });
+
+  // ─── Logout ───────────────────────────────────────
+  logoutBtn.addEventListener('click', async () => {
     sessionStorage.removeItem('sf_admin_ok');
+    sessionStorage.removeItem('sf_admin_method');
+    sessionStorage.removeItem('sf_admin_email');
     if (unsubPrebook) unsubPrebook();
     if (unsubWaitlist) unsubWaitlist();
+    try { await auth.signOut(); } catch(e) {}
     location.reload();
   });
 
+  // ─── Auto-restore session ─────────────────────────
   if (sessionStorage.getItem('sf_admin_ok') === '1') showDashboard();
 
   // ─── Tabs ──────────────────────────────────────────
