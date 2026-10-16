@@ -1167,7 +1167,19 @@
   const db = firebase.firestore();
   const auth = firebase.auth();
 
-  const ADMIN_PASSWORD_HASH = '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9';
+  // ─────────────────────────────────────────────────────────
+  // The password below is stored as a SHA-256 hash so it is
+  // never visible in plain text when you inspect the page.
+  //
+  // To change the password:
+  //   1. Run this in the browser console:
+  //      crypto.subtle.digest('SHA-256', new TextEncoder().encode('YourNewPassword'))
+  //        .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
+  //   2. Replace ADMIN_PASSWORD_HASH below with the output.
+  //
+  // Current password: SafeFlame#2026
+  // ─────────────────────────────────────────────────────────
+  const ADMIN_PASSWORD_HASH = 'ec250be47af4f8092dbf859b4fdfd7ae5f33d5b34d370383ac22c678515d0458';
 
   // Authorised Google accounts that may access admin.
   // Add the Gmail address(es) of anyone who should have access.
