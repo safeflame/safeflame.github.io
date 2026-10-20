@@ -2143,12 +2143,6 @@ body.sidebar-open nav{
 
     <!-- STEP 1 — Form + reCAPTCHA -->
     <div id="bookStep1">
-      <div class="security-badges">
-        <span class="sec-badge">🔒 reCAPTCHA</span>
-        <span class="sec-badge">📧 OTP Verified</span>
-        <span class="sec-badge">🛡️ Duplicate Check</span>
-        <span class="sec-badge">⏱️ Rate Limited</span>
-      </div>
 
       <div class="tier-selector" role="radiogroup" style="margin:1.2rem 0">
         <label class="tier-opt selected" data-tier="base">
@@ -2181,8 +2175,8 @@ body.sidebar-open nav{
           <input type="number" id="prebookQty" placeholder="Qty" min="1" max="10" value="1" required>
         </div>
 
-        <!-- reCAPTCHA v2 -->
-        <div class="g-recaptcha" data-sitekey="6LcvnuktAAAAAPyzbX1a385X6WkM3jmwWGdRLrxu" data-theme="dark" style="margin:1rem 0"></div>
+        <!-- reCAPTCHA v2 — rendered explicitly via onRecaptchaLoad() -->
+        <div class="g-recaptcha" style="margin:1rem 0"></div>
 
         <div class="book-error" id="bookError"></div>
         <button type="submit" class="btn-primary" id="prebookBtn" style="width:100%;justify-content:center;margin-top:.5rem">
@@ -2468,10 +2462,7 @@ body.sidebar-open nav{
 
     <div class="settings-section">
       <div class="settings-section-title">Privacy &amp; Security</div>
-      <div class="settings-row">
-        <div class="settings-row-info"><span class="settings-row-label">Require OTP on booking</span><span class="settings-row-sub">Always send an OTP before confirming a pre-booking</span></div>
-        <label class="settings-toggle"><input type="checkbox" id="settingsOtpBooking" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
-      </div>
+
       <div class="settings-row">
         <div class="settings-row-info"><span class="settings-row-label">Activity log</span><span class="settings-row-sub">Record sign-ins and bookings in Firestore</span></div>
         <label class="settings-toggle"><input type="checkbox" id="settingsActivityLog" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label>
@@ -2593,6 +2584,19 @@ body.sidebar-open nav{
 </div>
 
 <!-- ── FIREBASE + EMAILJS ──────────────────────────── -->
+<script src="https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit" async defer></script>
+<script>
+  var recaptchaWidgetId = null;
+  function onRecaptchaLoad(){
+    const container = document.querySelector('.g-recaptcha');
+    if(container && recaptchaWidgetId === null){
+      recaptchaWidgetId = grecaptcha.render(container, {
+        sitekey: '6LcvnuktAAAAAPyzbX1a385X6WkM3jmwWGdRLrxu',
+        theme: 'dark'
+      });
+    }
+  }
+</script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
@@ -3222,6 +3226,16 @@ function openDrawer(id){
   document.querySelectorAll('.drawer').forEach(d=>d.classList.remove('open'));
   const drawer = document.getElementById(id);
   if(drawer){ drawer.classList.add('open'); drawerBackdrop.classList.add('active'); }
+  // Reset reCAPTCHA when prebook drawer opens
+  if(id === 'prebookDrawer'){
+    try{
+      if(typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null){
+        grecaptcha.reset(recaptchaWidgetId);
+      } else if(typeof onRecaptchaLoad === 'function'){
+        setTimeout(onRecaptchaLoad, 300);
+      }
+    } catch(e){ console.warn('reCAPTCHA reset failed:', e); }
+  }
 }
 function closeDrawer(id){
   if(id){ const d=document.getElementById(id); if(d) d.classList.remove('open'); }
@@ -3383,6 +3397,11 @@ document.getElementById('backToFormBtn').addEventListener('click',()=>{
   document.getElementById('bookStep1').style.display='';
   document.getElementById('bookStep2').style.display='none';
   otpCode=null; clearInterval(otpResendInterval);
+  try{
+    if(typeof grecaptcha !== 'undefined' && recaptchaWidgetId !== null){
+      grecaptcha.reset(recaptchaWidgetId);
+    }
+  } catch(e){}
 });
 
 document.getElementById('verifyOtpBtn').addEventListener('click', async()=>{
