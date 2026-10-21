@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin | SafeFlame AI</title>
-<link rel="icon" type="image/png" href="Logo.png">
+<link rel="icon" type="image/png" href="../Logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -800,13 +800,49 @@
     .chat-panel { width: calc(100vw - 2rem); right: 1rem; bottom: 5rem; }
     .chat-toggle { right: 1rem; bottom: 1rem; }
   }
+
+  /* ─── CHATS ───────────────────────────────────────── */
+  .chat-badge { background: var(--red); color: #fff; font-size: .65rem; font-weight: 700; padding: .1rem .45rem; border-radius: 50px; margin-left: .3rem; }
+  .chats-layout { display: grid; grid-template-columns: 320px 1fr; min-height: 560px; height: 70vh; }
+  .chats-list-col { border-right: 1px solid var(--border); display: flex; flex-direction: column; min-height: 0; }
+  #chatList { overflow-y: auto; flex: 1; }
+  .chats-filter { display: flex; gap: .3rem; padding: .7rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .chats-filter button { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 50px; padding: .25rem .7rem; font-size: .72rem; cursor: pointer; }
+  .chats-filter button.active { background: var(--flame); border-color: var(--flame); color: #fff; }
+  .chat-item { padding: .8rem 1rem; border-bottom: 1px solid rgba(255,255,255,.05); cursor: pointer; }
+  .chat-item:hover { background: var(--surface2); }
+  .chat-item.active { background: var(--surface3); }
+  .chat-item .top { display: flex; justify-content: space-between; align-items: center; gap: .5rem; }
+  .chat-item .nm { font-weight: 600; font-size: .86rem; display: flex; align-items: center; gap: .4rem; }
+  .chat-item .lm { font-size: .76rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: .2rem; }
+  .chat-item .tm { font-size: .66rem; color: var(--muted); }
+  .unread-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--flame); display: inline-block; }
+  .chat-status { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; padding: .15rem .55rem; border-radius: 50px; background: rgba(255,255,255,.08); color: var(--muted); }
+  .chat-status.waiting_human { background: rgba(232,197,71,.18); color: var(--yellow); }
+  .chat-status.human { background: rgba(78,205,140,.15); color: var(--green); }
+  .chat-status.ai { background: rgba(78,205,196,.15); color: var(--teal); }
+  .chats-view-col { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+  .chat-view-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .9rem 1.2rem; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+  .chat-view-msgs { flex: 1; overflow-y: auto; padding: 1rem 1.2rem; display: flex; flex-direction: column; gap: .6rem; min-height: 0; }
+  .cm { max-width: 78%; padding: .6rem .9rem; border-radius: 12px; font-size: .86rem; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; }
+  .cm small { display: block; font-size: .62rem; opacity: .65; margin-top: .25rem; }
+  .cm.user { align-self: flex-start; background: var(--surface3); }
+  .cm.ai { align-self: flex-end; background: rgba(78,205,196,.12); border: 1px solid rgba(78,205,196,.25); }
+  .cm.admin { align-self: flex-end; background: var(--flame); color: #fff; }
+  .cm.system { align-self: center; background: none; color: var(--muted); font-size: .74rem; }
+  .cm .who { display: block; font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; opacity: .75; margin-bottom: .15rem; }
+  .chat-view-composer { display: flex; gap: .6rem; padding: .8rem 1.2rem; border-top: 1px solid var(--border); }
+  .chat-view-composer input { flex: 1; background: var(--darker); border: 1px solid var(--border); color: var(--off-white); border-radius: 8px; padding: .65rem .9rem; font-size: .88rem; outline: none; }
+  .chat-view-composer input:focus { border-color: var(--flame); }
+  .chat-empty { color: var(--muted); font-size: .85rem; text-align: center; padding: 2rem 1rem; }
+  @media (max-width: 800px) { .chats-layout { grid-template-columns: 1fr; height: auto; } .chats-list-col { max-height: 260px; border-right: none; border-bottom: 1px solid var(--border); } .chats-view-col { min-height: 460px; } }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">
-    <img src="Logo.png" alt="SafeFlame AI Logo">
+    <img src="../Logo.png" alt="SafeFlame AI Logo">
     SafeFlame AI Admin
     <span class="live-badge" id="liveBadge" style="display:none;"><span class="live-dot"></span>Live</span>
   </div>
@@ -818,6 +854,7 @@
   <button class="tab-btn" data-tab="orders">Orders</button>
   <button class="tab-btn" data-tab="waitlist">Waitlist</button>
   <button class="tab-btn" data-tab="customers">Customers</button>
+  <button class="tab-btn" data-tab="chats">Chats <span id="chatBadge" class="chat-badge" style="display:none">0</span></button>
   <button class="tab-btn" data-tab="settings">Settings</button>
 </div>
 
@@ -827,7 +864,7 @@
     <div class="login-ambient"></div>
     <div class="login-card">
       <div class="brand-mark">
-        <img src="Logo.png" alt="SafeFlame AI Logo">
+        <img src="../Logo.png" alt="SafeFlame AI Logo">
         <span>SafeFlame <em>AI</em></span>
       </div>
       <p class="login-subtitle">Admin Panel — secure access only</p>
@@ -990,6 +1027,40 @@
       </div>
     </div>
 
+    <!-- CHATS TAB -->
+    <div class="tab-panel" id="tab-chats">
+      <div class="panel" style="padding:0;overflow:hidden">
+        <div class="chats-layout">
+          <div class="chats-list-col">
+            <div class="chats-filter" id="chatFilter">
+              <button class="active" data-f="all">All</button>
+              <button data-f="waiting_human">Needs human <span id="waitCount"></span></button>
+              <button data-f="human">Live</button>
+              <button data-f="closed">Closed</button>
+            </div>
+            <div id="chatList"><div class="chat-empty">No chats yet.</div></div>
+          </div>
+          <div class="chats-view-col">
+            <div id="chatPlaceholder" class="chat-empty" style="margin:auto">Select a chat to read or reply.</div>
+            <div id="chatView" style="display:none;flex-direction:column;height:100%">
+              <div class="chat-view-head">
+                <div><strong id="cvName">—</strong> <span class="chat-status" id="cvStatus"></span><div class="field-hint" id="cvMeta"></div></div>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                  <button class="btn-small primary" id="cvJoin" type="button">Take over</button>
+                  <button class="btn-small danger" id="cvClose" type="button">Close chat</button>
+                </div>
+              </div>
+              <div class="chat-view-msgs" id="cvMsgs"></div>
+              <div class="chat-view-composer" id="cvComposer">
+                <input type="text" id="cvInput" placeholder="Reply as SafeFlame team…" maxlength="1000" autocomplete="off">
+                <button class="btn-small primary" id="cvSend" type="button">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- SETTINGS TAB -->
     <div class="tab-panel" id="tab-settings">
       <div class="panel">
@@ -1055,74 +1126,17 @@
           </div>
 
           <div class="settings-group">
-            <h3>Email Notifications (EmailJS)</h3>
-            <div class="field"><label>Service ID</label><input type="text" id="setEmailjsService" placeholder="service_xxxxxxx"></div>
-            <div class="field"><label>Default Template ID</label><input type="text" id="setEmailjsTemplate" placeholder="template_xxxxxxx"></div>
-            <div class="field"><label>Public Key</label><input type="text" id="setEmailjsPublicKey" placeholder="Public key from EmailJS account"></div>
-            <div class="field-hint">Used for status emails unless a status below has its own Template ID, and used for the launch email. Available variables: to_email, to_name, email, subject, order_id, orders (loop), cost.shipping/cost.tax/cost.total, product_name, tier, quantity, unit_price, total_price, status, phone, message.</div>
-          </div>
-
-          <div class="settings-group">
-            <h3>Launch Notifications</h3>
-            <div class="field"><label>Subject</label><input type="text" id="setLaunchSubject" placeholder="SafeFlame AI has launched!"></div>
-            <div class="field"><label>Message Body</label><textarea id="setLaunchMessage" placeholder="We're live! Here's everything you need to know..."></textarea></div>
-            <div class="field"><label>Service ID</label><input type="text" id="setLaunchServiceId" placeholder="service_xxxxxxx (falls back to default account above if blank)"></div>
-            <div class="field"><label>Template ID</label><input type="text" id="setLaunchTemplateId" placeholder="template_xxxxxxx (falls back to default account above if blank)"></div>
-            <div class="field"><label>Public Key</label><input type="text" id="setLaunchPublicKey" placeholder="Falls back to default account above if blank"></div>
-            <div class="field-hint">These three are used whenever you click "Send Launch Notification to All" on the Waitlist tab. Leave any of them blank to fall back to the default EmailJS account set above.</div>
+            <h3>Email Templates (EmailJS)</h3>
+            <div class="field-hint" style="font-size:.78rem;line-height:1.6">Order status emails, launch email, OTP email and account-verification email — all in one place.</div>
+            <a class="btn-small primary" href="admin-emailjs.html" style="display:inline-block;margin-top:.8rem;text-decoration:none">EmailJS →</a>
           </div>
         </div>
-
-        <h3 style="font-family:'Rajdhani',sans-serif; font-size:1.05rem; color:var(--off-white); margin: 2rem 0 0.4rem 0;">Order Status Emails</h3>
-        <div class="panel-subtitle" style="margin-bottom:1.2rem;">Write a different subject &amp; message for each status. Use tokens like {{name}}, {{order_id}}, {{tier}}, {{quantity}}, {{total_price}} — they're filled in automatically per order. If a status uses templates from a different EmailJS account, fill in that account's Service ID and Public Key too — leave all three (Service ID, Template ID, Public Key) blank to just use the default account above.</div>
-
-        <div class="settings-grid">
-          <div class="settings-group">
-            <h3 style="color: var(--yellow);">Pending</h3>
-            <div class="field"><label>Subject</label><input type="text" id="setSubject-pending"></div>
-            <div class="field"><label>Message</label><textarea id="setMessage-pending"></textarea></div>
-            <div class="field"><label>Service ID (optional — different EmailJS account)</label><input type="text" id="setServiceId-pending" placeholder="Leave blank to use default account"></div>
-            <div class="field"><label>Template ID (optional override)</label><input type="text" id="setTemplateId-pending" placeholder="Leave blank to use default"></div>
-            <div class="field"><label>Public Key (optional — different EmailJS account)</label><input type="text" id="setPublicKey-pending" placeholder="Leave blank to use default account"></div>
-          </div>
-
-          <div class="settings-group">
-            <h3 style="color: var(--teal);">Confirmed</h3>
-            <div class="field"><label>Subject</label><input type="text" id="setSubject-confirmed"></div>
-            <div class="field"><label>Message</label><textarea id="setMessage-confirmed"></textarea></div>
-            <div class="field"><label>Service ID (optional — different EmailJS account)</label><input type="text" id="setServiceId-confirmed" placeholder="Leave blank to use default account"></div>
-            <div class="field"><label>Template ID (optional override)</label><input type="text" id="setTemplateId-confirmed" placeholder="Leave blank to use default"></div>
-            <div class="field"><label>Public Key (optional — different EmailJS account)</label><input type="text" id="setPublicKey-confirmed" placeholder="Leave blank to use default account"></div>
-          </div>
-
-          <div class="settings-group">
-            <h3 style="color: var(--green);">Shipped</h3>
-            <div class="field"><label>Subject</label><input type="text" id="setSubject-shipped"></div>
-            <div class="field"><label>Message</label><textarea id="setMessage-shipped"></textarea></div>
-            <div class="field"><label>Service ID (optional — different EmailJS account)</label><input type="text" id="setServiceId-shipped" placeholder="Leave blank to use default account"></div>
-            <div class="field"><label>Template ID (optional override)</label><input type="text" id="setTemplateId-shipped" placeholder="Leave blank to use default"></div>
-            <div class="field"><label>Public Key (optional — different EmailJS account)</label><input type="text" id="setPublicKey-shipped" placeholder="Leave blank to use default account"></div>
-          </div>
-
-          <div class="settings-group">
-            <h3 style="color: var(--red);">Cancelled</h3>
-            <div class="field"><label>Subject</label><input type="text" id="setSubject-cancelled"></div>
-            <div class="field"><label>Message</label><textarea id="setMessage-cancelled"></textarea></div>
-            <div class="field"><label>Service ID (optional — different EmailJS account)</label><input type="text" id="setServiceId-cancelled" placeholder="Leave blank to use default account"></div>
-            <div class="field"><label>Template ID (optional override)</label><input type="text" id="setTemplateId-cancelled" placeholder="Leave blank to use default"></div>
-            <div class="field"><label>Public Key (optional — different EmailJS account)</label><input type="text" id="setPublicKey-cancelled" placeholder="Leave blank to use default account"></div>
-          </div>
-        </div>
-
 
         <div class="security-note">
           Heads up: this is a static site with no backend, so the Gemini key and EmailJS keys above are visible to anyone who inspects the page — they aren't truly secret. Restrict your Gemini key to your domain in Google AI Studio, and only connect an EmailJS account you're comfortable being used from the browser.
         </div>
 
-        <div class="settings-save-bar">
-          <button class="btn-small primary" id="saveSettingsBtn">Save Settings</button>
-          <span id="settingsSavedNote">Saved!</span>
-        </div>
+        <div class="settings-save-bar"><span id="settingsSavedNote" style="opacity:1;color:var(--muted)">Changes save automatically</span></div>
       </div>
     </div>
 
@@ -1211,6 +1225,7 @@
     tabNav.style.display = 'flex';
     document.getElementById('chatToggle').style.display = 'flex';
     startListeners();
+    startChatListener();
     loadSettingsIntoForm();
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
@@ -1283,6 +1298,7 @@
     sessionStorage.removeItem('sf_admin_email');
     if (unsubPrebook) unsubPrebook();
     if (unsubWaitlist) unsubWaitlist();
+    if (typeof unsubChats !== 'undefined' && unsubChats) unsubChats();
     try { await auth.signOut(); } catch(e) {}
     location.reload();
   });
@@ -1454,76 +1470,49 @@
     if (keys.length === 0 && siteSettings.geminiApiKey) keys = [siteSettings.geminiApiKey];
     renderGeminiKeyRows(keys.length ? keys : ['']);
 
-    document.getElementById('setEmailjsService').value = siteSettings.emailjsServiceId || '';
-    document.getElementById('setEmailjsTemplate').value = siteSettings.emailjsTemplateId || '';
-    document.getElementById('setEmailjsPublicKey').value = siteSettings.emailjsPublicKey || '';
-    document.getElementById('setLaunchSubject').value = siteSettings.launchEmailSubject;
-    document.getElementById('setLaunchMessage').value = siteSettings.launchEmailMessage;
-    document.getElementById('setLaunchServiceId').value = siteSettings.launchEmailServiceId || '';
-    document.getElementById('setLaunchTemplateId').value = siteSettings.launchEmailTemplateId || '';
-    document.getElementById('setLaunchPublicKey').value = siteSettings.launchEmailPublicKey || '';
-
-    STATUS_LIST.forEach(status => {
-      const cfg = siteSettings.statusEmails[status] || DEFAULT_SETTINGS.statusEmails[status];
-      document.getElementById('setSubject-' + status).value = cfg.subject || '';
-      document.getElementById('setMessage-' + status).value = cfg.message || '';
-      document.getElementById('setServiceId-' + status).value = cfg.serviceId || '';
-      document.getElementById('setTemplateId-' + status).value = cfg.templateId || '';
-      document.getElementById('setPublicKey-' + status).value = cfg.publicKey || '';
-    });
-
     renderStats();
+    settingsLoaded = true;
   }
 
-  document.getElementById('saveSettingsBtn').addEventListener('click', async () => {
-    const statusEmails = {};
-    STATUS_LIST.forEach(status => {
-      statusEmails[status] = {
-        subject: document.getElementById('setSubject-' + status).value.trim(),
-        message: document.getElementById('setMessage-' + status).value.trim(),
-        serviceId: document.getElementById('setServiceId-' + status).value.trim(),
-        templateId: document.getElementById('setTemplateId-' + status).value.trim(),
-        publicKey: document.getElementById('setPublicKey-' + status).value.trim()
-      };
-    });
-
+  // ─── Auto-save (no Save button) ────────────────────
+  let settingsTimer = null, settingsLoaded = false;
+  async function saveSettingsNow() {
+    const note = document.getElementById('settingsSavedNote');
+    const num = id => Number(document.getElementById(id).value);
+    const stock = id => document.getElementById(id).value === '' ? -1 : Number(document.getElementById(id).value);
+    if (!(num('setBasePrice') > 0 && num('setProPrice') > 0 && num('setElitePrice') > 0)) {
+      note.style.color = 'var(--yellow)'; note.textContent = 'Enter a valid price for every tier to save.'; return;
+    }
     const updated = {
       launchDate: document.getElementById('setLaunchDate').value || DEFAULT_SETTINGS.launchDate,
-      orderNumberStart: Number(document.getElementById('setOrderNumberStart').value) || 100000,
-      basePrice: Number(document.getElementById('setBasePrice').value) || 0,
-      baseOriginalPrice: Number(document.getElementById('setBaseOriginal').value) || 0,
-      proPrice: Number(document.getElementById('setProPrice').value) || 0,
-      proOriginalPrice: Number(document.getElementById('setProOriginal').value) || 0,
-      elitePrice: Number(document.getElementById('setElitePrice').value) || 0,
-      eliteOriginalPrice: Number(document.getElementById('setEliteOriginal').value) || 0,
-      baseStock: document.getElementById('setBaseStock').value === '' ? -1 : Number(document.getElementById('setBaseStock').value),
-      proStock: document.getElementById('setProStock').value === '' ? -1 : Number(document.getElementById('setProStock').value),
-      eliteStock: document.getElementById('setEliteStock').value === '' ? -1 : Number(document.getElementById('setEliteStock').value),
+      orderNumberStart: num('setOrderNumberStart') || 100000,
+      basePrice: num('setBasePrice'), baseOriginalPrice: num('setBaseOriginal') || 0,
+      proPrice: num('setProPrice'), proOriginalPrice: num('setProOriginal') || 0,
+      elitePrice: num('setElitePrice'), eliteOriginalPrice: num('setEliteOriginal') || 0,
+      baseStock: stock('setBaseStock'), proStock: stock('setProStock'), eliteStock: stock('setEliteStock'),
       geminiModel: document.getElementById('setGeminiModel').value.trim() || 'gemini-3.5-flash',
-      geminiApiKeys: Array.from(document.querySelectorAll('.gemini-key-input')).map(i => i.value.trim()).filter(Boolean),
-      emailjsServiceId: document.getElementById('setEmailjsService').value.trim(),
-      emailjsTemplateId: document.getElementById('setEmailjsTemplate').value.trim(),
-      emailjsPublicKey: document.getElementById('setEmailjsPublicKey').value.trim(),
-      launchEmailSubject: document.getElementById('setLaunchSubject').value.trim(),
-      launchEmailMessage: document.getElementById('setLaunchMessage').value.trim(),
-      launchEmailServiceId: document.getElementById('setLaunchServiceId').value.trim(),
-      launchEmailTemplateId: document.getElementById('setLaunchTemplateId').value.trim(),
-      launchEmailPublicKey: document.getElementById('setLaunchPublicKey').value.trim(),
-      statusEmails: statusEmails
+      geminiApiKeys: Array.from(document.querySelectorAll('.gemini-key-input')).map(i => i.value.trim()).filter(Boolean)
     };
+    note.style.color = 'var(--muted)'; note.textContent = 'Saving…';
     try {
       await db.collection('settings').doc('site').set(updated, { merge: true });
-      siteSettings = { ...DEFAULT_SETTINGS, ...updated };
-      const note = document.getElementById('settingsSavedNote');
-      note.style.opacity = '1';
-      setTimeout(() => note.style.opacity = '0', 2000);
-      showToast('Settings saved. The public site will pick these up on next load.', 'success');
+      siteSettings = { ...siteSettings, ...updated };
+      note.style.color = 'var(--green)'; note.textContent = 'All changes saved ✓';
       renderStats();
     } catch (err) {
       console.error('Failed to save settings:', err);
+      note.style.color = 'var(--red)'; note.textContent = 'Failed to save settings.';
       showToast('Failed to save settings.', 'error');
     }
-  });
+  }
+  function queueSettingsSave() {
+    if (!settingsLoaded) return;
+    const note = document.getElementById('settingsSavedNote');
+    note.style.color = 'var(--muted)'; note.textContent = 'Unsaved changes…';
+    clearTimeout(settingsTimer); settingsTimer = setTimeout(saveSettingsNow, 800);
+  }
+  document.getElementById('tab-settings').addEventListener('input', queueSettingsSave);
+  document.getElementById('tab-settings').addEventListener('click', e => { if (e.target.closest('.remove-key-btn') || e.target.id === 'addGeminiKeyBtn') queueSettingsSave(); });
 
   // ─── EmailJS notifications ─────────────────────────
   function emailjsReady() {
@@ -2277,6 +2266,111 @@ ${buildBusinessContext()}`;
 
   chatSendBtn.addEventListener('click', sendChatMessage);
   chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChatMessage(); });
+
+  // ─── LIVE CHATS ────────────────────────────────────
+  let chatsData = [], chatFilter = 'all', activeChatId = null, unsubChats = null, unsubChatMsgs = null;
+  const prevChatStatus = {}; let chatsFirstLoad = true;
+
+  function chatTime(ts) { if (!ts || !ts.toDate) return ''; const d = ts.toDate(), n = new Date(); return d.toDateString() === n.toDateString() ? d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : d.toLocaleDateString(); }
+  const STATUS_LABEL = { ai: 'AI', waiting_human: 'Needs human', human: 'Live', closed: 'Closed' };
+
+  function startChatListener() {
+    if (unsubChats) return;
+    unsubChats = db.collection('chats').orderBy('updatedAt', 'desc').limit(200).onSnapshot(snap => {
+      chatsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      snap.docChanges().forEach(ch => {
+        const c = { id: ch.doc.id, ...ch.doc.data() };
+        const was = prevChatStatus[c.id]; prevChatStatus[c.id] = c.status;
+        if (!chatsFirstLoad && c.status === 'waiting_human' && was !== 'waiting_human') alertHumanRequest(c);
+      });
+      chatsData.forEach(c => prevChatStatus[c.id] = c.status);
+      chatsFirstLoad = false;
+      renderChatList(); updateChatBadge();
+      if (activeChatId) { const c = chatsData.find(x => x.id === activeChatId); if (c) renderChatHeader(c); }
+    }, err => { console.error('Chats listener failed:', err); showToast('Failed to load chats.', 'error'); });
+  }
+  function alertHumanRequest(c) {
+    showToast('🙋 ' + (c.userName || 'A visitor') + ' wants to talk to a human — open the Chats tab.', 'success');
+    try { if ('Notification' in window && Notification.permission === 'granted') new Notification('SafeFlame: human requested', { body: (c.userName || 'A visitor') + ' is waiting in chat.' }); } catch (_) {}
+    try { const ctx = new (window.AudioContext || window.webkitAudioContext)(), o = ctx.createOscillator(), g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.frequency.value = 880; g.gain.value = .08; o.start(); setTimeout(() => { o.stop(); ctx.close(); }, 250); } catch (_) {}
+  }
+  function updateChatBadge() {
+    const n = chatsData.filter(c => c.status === 'waiting_human').length;
+    const b = document.getElementById('chatBadge'); b.textContent = n; b.style.display = n ? 'inline-block' : 'none';
+    document.getElementById('waitCount').textContent = n ? '(' + n + ')' : '';
+  }
+  function renderChatList() {
+    const list = chatsData.filter(c => chatFilter === 'all' || c.status === chatFilter);
+    const el = document.getElementById('chatList');
+    if (!list.length) { el.innerHTML = '<div class="chat-empty">No chats here.</div>'; return; }
+    // people waiting come first
+    list.sort((a, b) => (b.status === 'waiting_human') - (a.status === 'waiting_human'));
+    el.innerHTML = list.map(c => `<div class="chat-item ${c.id === activeChatId ? 'active' : ''}" data-id="${c.id}">
+      <div class="top"><span class="nm">${c.unreadAdmin ? '<span class="unread-dot"></span>' : ''}${escapeHtml(c.userName || 'Guest')}</span><span class="tm">${chatTime(c.updatedAt)}</span></div>
+      <div class="lm">${escapeHtml(c.lastMessage || '')}</div>
+      <div style="margin-top:.35rem"><span class="chat-status ${c.status}">${STATUS_LABEL[c.status] || c.status}</span></div></div>`).join('');
+    el.querySelectorAll('.chat-item').forEach(i => i.addEventListener('click', () => openChat(i.dataset.id)));
+  }
+  document.getElementById('chatFilter').addEventListener('click', e => {
+    const b = e.target.closest('button[data-f]'); if (!b) return;
+    chatFilter = b.dataset.f; document.querySelectorAll('#chatFilter button').forEach(x => x.classList.toggle('active', x === b)); renderChatList();
+  });
+
+  function renderChatHeader(c) {
+    document.getElementById('cvName').textContent = c.userName || 'Guest';
+    const st = document.getElementById('cvStatus'); st.className = 'chat-status ' + c.status; st.textContent = STATUS_LABEL[c.status] || c.status;
+    document.getElementById('cvMeta').textContent = [c.userEmail, c.uid ? 'signed-in user' : 'guest', c.escalationReason].filter(Boolean).join(' · ');
+    const closed = c.status === 'closed';
+    document.getElementById('cvJoin').style.display = (c.status === 'human' || closed) ? 'none' : '';
+    document.getElementById('cvClose').style.display = closed ? 'none' : '';
+    document.getElementById('cvComposer').style.display = closed ? 'none' : 'flex';
+  }
+  function openChat(id) {
+    activeChatId = id;
+    const c = chatsData.find(x => x.id === id); if (!c) return;
+    document.getElementById('chatPlaceholder').style.display = 'none';
+    document.getElementById('chatView').style.display = 'flex';
+    renderChatHeader(c); renderChatList();
+    if (c.unreadAdmin) db.collection('chats').doc(id).update({ unreadAdmin: false }).catch(() => {});
+    if (unsubChatMsgs) unsubChatMsgs();
+    unsubChatMsgs = db.collection('chats').doc(id).collection('messages').orderBy('createdAt').onSnapshot(snap => {
+      const box = document.getElementById('cvMsgs'), near = box.scrollHeight - box.scrollTop - box.clientHeight < 100;
+      box.innerHTML = snap.docs.map(d => { const m = d.data(), t = m.createdAt && m.createdAt.toDate ? m.createdAt.toDate().toLocaleString() : '';
+        if (m.role === 'system') return '<div class="cm system">' + escapeHtml(m.text) + '</div>';
+        return '<div class="cm ' + m.role + '"><span class="who">' + (m.role === 'user' ? escapeHtml((chatsData.find(x => x.id === id) || {}).userName || 'Visitor') : m.role === 'ai' ? 'AI assistant' : 'You (team)') + '</span>' + escapeHtml(m.text) + '<small>' + t + '</small></div>'; }).join('');
+      if (near) box.scrollTop = box.scrollHeight;
+      // keep clearing the unread flag while this chat is open
+      const cur = chatsData.find(x => x.id === id); if (cur && cur.unreadAdmin) db.collection('chats').doc(id).update({ unreadAdmin: false }).catch(() => {});
+    });
+    setTimeout(() => { const box = document.getElementById('cvMsgs'); box.scrollTop = box.scrollHeight; }, 300);
+  }
+  async function adminSend() {
+    const inp = document.getElementById('cvInput'), text = inp.value.trim(); if (!text || !activeChatId) return;
+    inp.value = '';
+    const ref = db.collection('chats').doc(activeChatId), c = chatsData.find(x => x.id === activeChatId) || {};
+    try {
+      await ref.collection('messages').add({ role: 'admin', text, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      const upd = { lastMessage: text.slice(0, 120), lastRole: 'admin', updatedAt: firebase.firestore.FieldValue.serverTimestamp(), unreadUser: true, unreadAdmin: false };
+      if (c.status !== 'human') {
+        upd.status = 'human'; upd.humanJoinedAt = firebase.firestore.FieldValue.serverTimestamp();
+        await ref.collection('messages').add({ role: 'system', text: 'A SafeFlame team member has joined the chat.', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      }
+      await ref.update(upd);
+    } catch (e) { console.error(e); showToast('Could not send message.', 'error'); inp.value = text; }
+  }
+  document.getElementById('cvSend').addEventListener('click', adminSend);
+  document.getElementById('cvInput').addEventListener('keydown', e => { if (e.key === 'Enter') adminSend(); });
+  document.getElementById('cvJoin').addEventListener('click', async () => {
+    if (!activeChatId) return; const ref = db.collection('chats').doc(activeChatId);
+    await ref.update({ status: 'human', humanJoinedAt: firebase.firestore.FieldValue.serverTimestamp(), unreadAdmin: false, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await ref.collection('messages').add({ role: 'system', text: 'A SafeFlame team member has joined the chat.', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+  });
+  document.getElementById('cvClose').addEventListener('click', async () => {
+    if (!activeChatId || !confirm('Close this chat? The visitor can start a new one, and this transcript stays in the Closed list.')) return;
+    const ref = db.collection('chats').doc(activeChatId);
+    await ref.collection('messages').add({ role: 'system', text: 'This chat was closed by the SafeFlame team. Thanks for talking to us!', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await ref.update({ status: 'closed', closedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  });
 </script>
 </body>
 </html>
