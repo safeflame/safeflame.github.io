@@ -2,9 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+(function () {
+  /* Only run on the official site. A copy saved with Ctrl+S (opened from disk or another host) shows an error instead. */
+  var ALLOWED = ['safeflame.github.io'];
+  if (ALLOWED.indexOf(location.hostname) === -1) {
+    try { window.stop(); } catch (e) {}
+    document.documentElement.innerHTML = '<head><meta charset="utf-8"><title>Not available</title></head><body style="margin:0;background:#08080f;color:#f0f0f8;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem"><div><h1 style="margin:0 0 .6rem;font-size:1.5rem">This copy can\u2019t be used</h1><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">SafeFlame AI only works on its official website.</p><a href="https://safeflame.github.io" style="color:#ff8a65">safeflame.github.io</a></div></body>';
+    throw new Error('Blocked: unauthorised origin');
+  }
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's') {
+      e.preventDefault(); e.stopPropagation();
+      var t = document.createElement('div');
+      t.textContent = 'Error: saving this page is not allowed.';
+      t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483647;background:#ef5350;color:#fff;padding:.75rem 1.3rem;border-radius:10px;font:600 14px system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5)';
+      document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3200);
+    }
+  }, true);
+})();
+</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin | SafeFlame AI</title>
-<link rel="icon" type="image/png" href="../Logo.png">
+<link rel="icon" type="image/png" href="/Logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -836,13 +857,16 @@
   .chat-view-composer input:focus { border-color: var(--flame); }
   .chat-empty { color: var(--muted); font-size: .85rem; text-align: center; padding: 2rem 1rem; }
   @media (max-width: 800px) { .chats-layout { grid-template-columns: 1fr; height: auto; } .chats-list-col { max-height: 260px; border-right: none; border-bottom: 1px solid var(--border); } .chats-view-col { min-height: 460px; } }
+
+  .ic { width: 1em; height: 1em; display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
+  .chat-toggle .ic { width: 1.5rem; height: 1.5rem; }
 </style>
 </head>
 <body>
 
 <header>
   <div class="brand">
-    <img src="../Logo.png" alt="SafeFlame AI Logo">
+    <img src="/Logo.png" alt="SafeFlame AI Logo">
     SafeFlame AI Admin
     <span class="live-badge" id="liveBadge" style="display:none;"><span class="live-dot"></span>Live</span>
   </div>
@@ -864,10 +888,10 @@
     <div class="login-ambient"></div>
     <div class="login-card">
       <div class="brand-mark">
-        <img src="../Logo.png" alt="SafeFlame AI Logo">
+        <img src="/Logo.png" alt="SafeFlame AI Logo">
         <span>SafeFlame <em>AI</em></span>
       </div>
-      <p class="login-subtitle">Admin Panel — secure access only</p>
+      <p class="login-subtitle">Admin Panel</p>
 
       <button class="google-btn" id="googleSignInBtn">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58Z" fill="#EA4335"/></svg>
@@ -877,11 +901,13 @@
       <div class="login-divider"><span>or</span></div>
 
       <div class="login-field">
-        <input type="password" id="adminPassword" placeholder="Admin password" autocomplete="current-password">
+        <input type="text" id="adminId" placeholder="Admin ID" autocomplete="username" autocapitalize="none" spellcheck="false">
+      </div>
+      <div class="login-field">
+        <input type="password" id="adminPassword" placeholder="Password" autocomplete="current-password">
       </div>
       <button class="login-btn" id="loginBtn">Sign In</button>
       <div class="login-error" id="loginError"></div>
-      <p class="login-note">Password is SHA-256 hashed — not visible in source.<br>Google sign-in requires an authorised admin email.</p>
     </div>
   </div>
 
@@ -1041,7 +1067,7 @@
             <div id="chatList"><div class="chat-empty">No chats yet.</div></div>
           </div>
           <div class="chats-view-col">
-            <div id="chatPlaceholder" class="chat-empty" style="margin:auto">Select a chat to read or reply.</div>
+            <div id="chatPlaceholder" class="chat-empty" style="margin:auto"><div style="font-size:2.2rem;color:var(--flame);margin-bottom:.4rem"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg></div>Select a chat to read or reply.</div>
             <div id="chatView" style="display:none;flex-direction:column;height:100%">
               <div class="chat-view-head">
                 <div><strong id="cvName">—</strong> <span class="chat-status" id="cvStatus"></span><div class="field-hint" id="cvMeta"></div></div>
@@ -1066,8 +1092,8 @@
       <div class="panel">
         <div class="panel-header">
           <h2>Site Settings</h2>
+          <span id="settingsSavedNote" style="opacity:1;font-size:.8rem;color:var(--muted)"></span>
         </div>
-        <div class="panel-subtitle" style="margin-bottom:1.4rem;">Changes here update the live public site immediately (countdown, pricing) — no code edits or redeploys needed.</div>
 
         <div class="settings-grid">
           <div class="settings-group">
@@ -1075,7 +1101,6 @@
             <div class="field">
               <label>Launch Date &amp; Time</label>
               <input type="datetime-local" id="setLaunchDate">
-              <div class="field-hint">Drives the countdown timer on the public site.</div>
             </div>
           </div>
 
@@ -1084,8 +1109,6 @@
             <div class="field">
               <label>Starting Order Number</label>
               <input type="number" id="setOrderNumberStart" min="1" step="1">
-              <div class="field-hint">The very first order ever placed gets this number; every order after that counts up by 1 automatically (e.g. 74638, 74639, 74640...). Only change this before your first real order — changing it afterward doesn't renumber orders already placed.</div>
-              <div class="field-hint" id="orderCounterStatus" style="margin-top:0.6rem;"></div>
             </div>
           </div>
 
@@ -1115,28 +1138,19 @@
             <div class="field">
               <label>Model</label>
               <input type="text" id="setGeminiModel" placeholder="gemini-3.5-flash">
-              <div class="field-hint">Google regularly retires older Gemini models — if the chatbot suddenly stops responding, check aistudio.google.com for the current model name and update it here (no code changes needed).</div>
             </div>
             <div class="field">
               <label>API Keys (key chamber)</label>
               <div id="geminiKeyList"></div>
               <button type="button" class="btn-small" id="addGeminiKeyBtn" style="margin-top:0.5rem;">+ Add Key</button>
-              <div class="field-hint">Add as many keys as you want — the chatbot tries them in order and automatically falls back to the next one if a key hits its quota or fails. Powers both the visitor chatbot and this admin chatbot. Get keys at aistudio.google.com.</div>
             </div>
           </div>
 
           <div class="settings-group">
             <h3>Email Templates (EmailJS)</h3>
-            <div class="field-hint" style="font-size:.78rem;line-height:1.6">Order status emails, launch email, OTP email and account-verification email — all in one place.</div>
-            <a class="btn-small primary" href="admin-emailjs.html" style="display:inline-block;margin-top:.8rem;text-decoration:none">EmailJS →</a>
+            <a class="btn-small primary" href="/admin/admin-emailjs" style="display:inline-block;margin-top:.8rem;text-decoration:none">EmailJS →</a>
           </div>
         </div>
-
-        <div class="security-note">
-          Heads up: this is a static site with no backend, so the Gemini key and EmailJS keys above are visible to anyone who inspects the page — they aren't truly secret. Restrict your Gemini key to your domain in Google AI Studio, and only connect an EmailJS account you're comfortable being used from the browser.
-        </div>
-
-        <div class="settings-save-bar"><span id="settingsSavedNote" style="opacity:1;color:var(--muted)">Changes save automatically</span></div>
       </div>
     </div>
 
@@ -1146,7 +1160,7 @@
 <div id="toastContainer"></div>
 
 <!-- ─── AI CHATBOT WIDGET ──────────────────────────── -->
-<button class="chat-toggle" id="chatToggle" style="display:none;">💬</button>
+<button class="chat-toggle" id="chatToggle" style="display:none;"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg></button>
 <div class="chat-panel" id="chatPanel">
   <div class="chat-header">
     <span>Business Assistant</span>
@@ -1179,29 +1193,21 @@
 
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
+  try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {}
   const auth = firebase.auth();
 
-  // ─────────────────────────────────────────────────────────
-  // The password below is stored as a SHA-256 hash so it is
-  // never visible in plain text when you inspect the page.
-  //
-  // To change the password:
-  //   1. Run this in the browser console:
-  //      crypto.subtle.digest('SHA-256', new TextEncoder().encode('YourNewPassword'))
-  //        .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
-  //   2. Replace ADMIN_PASSWORD_HASH below with the output.
-  //
-  // Current password: SafeFlame#2026
-  // ─────────────────────────────────────────────────────────
-  const ADMIN_PASSWORD_HASH = 'ec250be47af4f8092dbf859b4fdfd7ae5f33d5b34d370383ac22c678515d0458';
-
-  // Authorised Google accounts that may access admin.
-  // Add the Gmail address(es) of anyone who should have access.
-  const ADMIN_EMAILS = ['chrisbenmartink24@gmail.com'];
+  // Admin accounts live in Firebase Authentication (Firebase stores and protects the passwords).
+  // Type just "admin" as the ID — it maps to admin@safeflame.github.io. Create that user once in the
+  // Firebase console (Authentication > Users > Add user). Any Google account listed below can also sign in.
+  const ADMIN_DOMAIN = 'safeflame.github.io';
+  const ADMIN_EMAILS = ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com'];
+  const isAdminUser = u => !!u && ADMIN_EMAILS.includes(String(u.email || '').toLowerCase());
+  let dashboardShown = false;
 
   const loginScreen = document.getElementById('loginScreen');
   const dashboard = document.getElementById('dashboard');
   const adminPasswordInput = document.getElementById('adminPassword');
+  const adminIdInput = document.getElementById('adminId');
   const loginBtn = document.getElementById('loginBtn');
   const loginError = document.getElementById('loginError');
   const logoutBtn = document.getElementById('logoutBtn');
@@ -1211,13 +1217,9 @@
   let unsubPrebook = null;
   let unsubWaitlist = null;
 
-  // SHA-256 hash helper using the Web Crypto API
-  async function sha256(text) {
-    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
-    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2,'0')).join('');
-  }
-
   function showDashboard() {
+    if (dashboardShown) return;
+    dashboardShown = true;
     loginScreen.style.display = 'none';
     dashboard.style.display = 'block';
     logoutBtn.style.display = 'inline-block';
@@ -1237,24 +1239,32 @@
     if (el) el.textContent = msg;
   }
 
-  // ─── Password login (hashed) ──────────────────────
+  // ─── Password login (Firebase Authentication) ─────
   async function attemptLogin() {
+    let id = adminIdInput.value.trim().toLowerCase();
     const pw = adminPasswordInput.value;
-    if (!pw) return;
+    if (!id || !pw) return setLoginError('Enter your admin ID and password.');
+    if (!id.includes('@')) id += '@' + ADMIN_DOMAIN;
     loginBtn.disabled = true;
-    loginBtn.textContent = 'Verifying...';
+    loginBtn.textContent = 'Signing in...';
     try {
-      const hash = await sha256(pw);
-      if (hash === ADMIN_PASSWORD_HASH) {
-        sessionStorage.setItem('sf_admin_ok', '1');
-        sessionStorage.setItem('sf_admin_method', 'password');
+      const result = await auth.signInWithEmailAndPassword(id, pw);
+      if (!isAdminUser(result.user)) {
+        await auth.signOut();
+        setLoginError('This account does not have admin access.');
+      } else {
         setLoginError('');
         showDashboard();
-      } else {
-        setLoginError('Incorrect password.');
       }
-    } catch(e) {
-      setLoginError('Verification error. Please try again.');
+    } catch (e) {
+      const msgs = {
+        'auth/wrong-password': 'Incorrect ID or password.', 'auth/user-not-found': 'Incorrect ID or password.',
+        'auth/invalid-credential': 'Incorrect ID or password.', 'auth/invalid-email': 'Incorrect ID or password.',
+        'auth/too-many-requests': 'Too many attempts. Try again in a few minutes.',
+        'auth/network-request-failed': 'Network error. Check your connection.',
+        'auth/operation-not-allowed': 'Email/password sign-in is turned off in Firebase.'
+      };
+      setLoginError(msgs[e.code] || 'Sign-in failed. Please try again.');
     }
     loginBtn.disabled = false;
     loginBtn.textContent = 'Sign In';
@@ -1262,6 +1272,7 @@
 
   loginBtn.addEventListener('click', attemptLogin);
   adminPasswordInput.addEventListener('keydown', e => { if (e.key === 'Enter') attemptLogin(); });
+  adminIdInput.addEventListener('keydown', e => { if (e.key === 'Enter') adminPasswordInput.focus(); });
 
   // ─── Google Sign-In ───────────────────────────────
   const googleSignInBtn = document.getElementById('googleSignInBtn');
@@ -1272,10 +1283,7 @@
       const provider = new firebase.auth.GoogleAuthProvider();
       const result = await auth.signInWithPopup(provider);
       const email = result.user.email;
-      if (ADMIN_EMAILS.includes(email)) {
-        sessionStorage.setItem('sf_admin_ok', '1');
-        sessionStorage.setItem('sf_admin_method', 'google');
-        sessionStorage.setItem('sf_admin_email', email);
+      if (isAdminUser(result.user)) {
         setLoginError('');
         showDashboard();
       } else {
@@ -1293,9 +1301,6 @@
 
   // ─── Logout ───────────────────────────────────────
   logoutBtn.addEventListener('click', async () => {
-    sessionStorage.removeItem('sf_admin_ok');
-    sessionStorage.removeItem('sf_admin_method');
-    sessionStorage.removeItem('sf_admin_email');
     if (unsubPrebook) unsubPrebook();
     if (unsubWaitlist) unsubWaitlist();
     if (typeof unsubChats !== 'undefined' && unsubChats) unsubChats();
@@ -1304,7 +1309,7 @@
   });
 
   // ─── Auto-restore session ─────────────────────────
-  if (sessionStorage.getItem('sf_admin_ok') === '1') showDashboard();
+  auth.onAuthStateChanged(u => { if (isAdminUser(u)) showDashboard(); });
 
   // ─── Tabs ──────────────────────────────────────────
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1445,15 +1450,7 @@
     document.getElementById('setLaunchDate').value = siteSettings.launchDate;
     document.getElementById('setOrderNumberStart').value = siteSettings.orderNumberStart;
 
-    db.collection('settings').doc('orderCounter').get().then(counterDoc => {
-      const statusEl = document.getElementById('orderCounterStatus');
-      if (counterDoc.exists) {
-        const last = Number(counterDoc.data().lastNumber) || 0;
-        statusEl.textContent = `Last order number assigned: ${last}. Next order will be ${last + 1}.`;
-      } else {
-        statusEl.textContent = `No orders placed yet. The first order will be number ${siteSettings.orderNumberStart}.`;
-      }
-    }).catch(() => { /* non-critical, ignore */ });
+
     document.getElementById('setBasePrice').value = siteSettings.basePrice;
     document.getElementById('setBaseOriginal').value = siteSettings.baseOriginalPrice || '';
     document.getElementById('setProPrice').value = siteSettings.proPrice;
@@ -1497,7 +1494,7 @@
     try {
       await db.collection('settings').doc('site').set(updated, { merge: true });
       siteSettings = { ...siteSettings, ...updated };
-      note.style.color = 'var(--green)'; note.textContent = 'All changes saved ✓';
+      note.style.color = 'var(--green)'; note.textContent = 'Saved'; setTimeout(() => { if (note.textContent === 'Saved') note.textContent = ''; }, 2200);
       renderStats();
     } catch (err) {
       console.error('Failed to save settings:', err);
@@ -1508,7 +1505,7 @@
   function queueSettingsSave() {
     if (!settingsLoaded) return;
     const note = document.getElementById('settingsSavedNote');
-    note.style.color = 'var(--muted)'; note.textContent = 'Unsaved changes…';
+    note.style.color = 'var(--muted)'; note.textContent = 'Saving…';
     clearTimeout(settingsTimer); settingsTimer = setTimeout(saveSettingsNow, 800);
   }
   document.getElementById('tab-settings').addEventListener('input', queueSettingsSave);
@@ -1646,6 +1643,17 @@
   let prebookInitialLoadDone = false;
   let knownOrderIds = new Set();
 
+  // Coalesce bursts of snapshots into a single repaint so the panel stays responsive.
+  let renderTimer = null;
+  function scheduleRender() {
+    if (renderTimer) return;
+    renderTimer = setTimeout(() => {
+      renderTimer = null;
+      try { renderPrebookTable(); renderCustomerTable(); renderWaitlistTable(); renderStats(); renderCharts(); }
+      catch (e) { console.error('Render failed:', e); }
+    }, 80);
+  }
+
   function startListeners() {
     unsubPrebook = db.collection('preBookings').orderBy('createdAt', 'desc')
       .onSnapshot(snapshot => {
@@ -1661,10 +1669,7 @@
         prebookData.forEach(o => knownOrderIds.add(o.id));
         prebookInitialLoadDone = true;
 
-        renderPrebookTable();
-        renderCustomerTable();
-        renderStats();
-        renderCharts();
+        scheduleRender();
       }, err => {
         console.error('Pre-bookings listener failed:', err);
         showToast('Failed to load pre-bookings.', 'error');
@@ -1673,9 +1678,7 @@
     unsubWaitlist = db.collection('waitlist').orderBy('createdAt', 'desc')
       .onSnapshot(snapshot => {
         waitlistData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        renderWaitlistTable();
-        renderStats();
-        renderCharts();
+        scheduleRender();
       }, err => {
         console.error('Waitlist listener failed:', err);
         showToast('Failed to load waitlist.', 'error');
@@ -1735,6 +1738,7 @@
       type: 'line',
       data: { labels, datasets: [{ data: values, borderColor: color, backgroundColor: color + '33', fill: true, tension: 0.3, pointRadius: 2 }] },
       options: {
+        animation: false,
         plugins: { legend: { display: false } },
         scales: {
           x: { ticks: { color: '#A0A0B8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.05)' } },
@@ -1743,10 +1747,11 @@
       }
     });
 
-    if (prebookChart) prebookChart.destroy();
-    if (waitlistChart) waitlistChart.destroy();
-    prebookChart = new Chart(document.getElementById('prebookChart'), chartOpts(pb.labels, pb.values, '#FF6B35'));
-    waitlistChart = new Chart(document.getElementById('waitlistChart'), chartOpts(wl.labels, wl.values, '#4ECDC4'));
+    // Create the charts once, then just update their data (re-creating them on every snapshot was slow).
+    if (!prebookChart) prebookChart = new Chart(document.getElementById('prebookChart'), chartOpts(pb.labels, pb.values, '#FF6B35'));
+    else { prebookChart.data.labels = pb.labels; prebookChart.data.datasets[0].data = pb.values; prebookChart.update('none'); }
+    if (!waitlistChart) waitlistChart = new Chart(document.getElementById('waitlistChart'), chartOpts(wl.labels, wl.values, '#4ECDC4'));
+    else { waitlistChart.data.labels = wl.labels; waitlistChart.data.datasets[0].data = wl.values; waitlistChart.update('none'); }
   }
 
   // ─── Pre-Bookings table ────────────────────────────
@@ -2276,12 +2281,13 @@ ${buildBusinessContext()}`;
 
   function startChatListener() {
     if (unsubChats) return;
-    unsubChats = db.collection('chats').orderBy('updatedAt', 'desc').limit(200).onSnapshot(snap => {
+    unsubChats = db.collection('chats').orderBy('updatedAt', 'desc').limit(100).onSnapshot(snap => {
       chatsData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       snap.docChanges().forEach(ch => {
         const c = { id: ch.doc.id, ...ch.doc.data() };
         const was = prevChatStatus[c.id]; prevChatStatus[c.id] = c.status;
         if (!chatsFirstLoad && c.status === 'waiting_human' && was !== 'waiting_human') alertHumanRequest(c);
+        else if (!chatsFirstLoad && ch.type === 'modified' && c.unreadAdmin && c.lastRole === 'user' && c.id !== activeChatId && (c.status === 'human' || c.status === 'waiting_human')) playBeep();
       });
       chatsData.forEach(c => prevChatStatus[c.id] = c.status);
       chatsFirstLoad = false;
@@ -2290,8 +2296,11 @@ ${buildBusinessContext()}`;
     }, err => { console.error('Chats listener failed:', err); showToast('Failed to load chats.', 'error'); });
   }
   function alertHumanRequest(c) {
-    showToast('🙋 ' + (c.userName || 'A visitor') + ' wants to talk to a human — open the Chats tab.', 'success');
+    showToast((c.userName || 'A visitor') + ' wants to talk to a human. Open the Chats tab.', 'success');
     try { if ('Notification' in window && Notification.permission === 'granted') new Notification('SafeFlame: human requested', { body: (c.userName || 'A visitor') + ' is waiting in chat.' }); } catch (_) {}
+    playBeep();
+  }
+  function playBeep() {
     try { const ctx = new (window.AudioContext || window.webkitAudioContext)(), o = ctx.createOscillator(), g = ctx.createGain(); o.connect(g); g.connect(ctx.destination); o.frequency.value = 880; g.gain.value = .08; o.start(); setTimeout(() => { o.stop(); ctx.close(); }, 250); } catch (_) {}
   }
   function updateChatBadge() {
