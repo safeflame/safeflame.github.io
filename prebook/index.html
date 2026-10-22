@@ -2,10 +2,31 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+(function () {
+  /* Only run on the official site. A copy saved with Ctrl+S (opened from disk or another host) shows an error instead. */
+  var ALLOWED = ['safeflame.github.io'];
+  if (ALLOWED.indexOf(location.hostname) === -1) {
+    try { window.stop(); } catch (e) {}
+    document.documentElement.innerHTML = '<head><meta charset="utf-8"><title>Not available</title></head><body style="margin:0;background:#08080f;color:#f0f0f8;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem"><div><h1 style="margin:0 0 .6rem;font-size:1.5rem">This copy can\u2019t be used</h1><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">SafeFlame AI only works on its official website.</p><a href="https://safeflame.github.io" style="color:#ff8a65">safeflame.github.io</a></div></body>';
+    throw new Error('Blocked: unauthorised origin');
+  }
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's') {
+      e.preventDefault(); e.stopPropagation();
+      var t = document.createElement('div');
+      t.textContent = 'Error: saving this page is not allowed.';
+      t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483647;background:#ef5350;color:#fff;padding:.75rem 1.3rem;border-radius:10px;font:600 14px system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5)';
+      document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3200);
+    }
+  }, true);
+})();
+</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pre-Book | SafeFlame AI</title>
 <meta name="theme-color" content="#08080f">
-<link rel="icon" type="image/png" href="Logo.png">
+<link rel="icon" type="image/png" href="/Logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -153,15 +174,36 @@ a{color:var(--flame2)}
 html.compact-mode .card{padding:1.4rem 1.3rem}
 html.reduce-motion *{transition:none!important;animation:none!important}
 @media(max-width:480px){.card{padding:1.6rem 1.2rem}.otp-digit{width:40px;height:50px}}
+
+/* icons */
+.ic{width:1em;height:1em;display:inline-block;vertical-align:-.15em;flex-shrink:0}
+.big-icon{color:var(--flame2);line-height:1;display:flex;justify-content:center}
+.big-icon .ic{width:3rem;height:3rem}
+.big-icon.ok{color:var(--green)}.big-icon.warn{color:var(--yellow)}.big-icon.teal{color:var(--teal)}
+.section-title .ic{width:1.15em;height:1.15em;color:var(--flame2)}
+.channel label .ic{width:1.15rem;height:1.15rem;color:var(--flame2)}
+.card-icon{display:flex;justify-content:center;margin-bottom:.8rem;color:var(--flame2)}
+.card-icon .ic{width:2.4rem;height:2.4rem}
+.avatar-edit .ic{width:.9rem;height:.9rem}
+
+/* modal + type-to-confirm */
+.modal-back{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-card{max-width:440px;width:100%}
+.confirm-phrase{user-select:none;-webkit-user-select:none;-moz-user-select:none;pointer-events:none;background:rgba(239,83,80,.08);border:1px dashed rgba(239,83,80,.4);border-radius:9px;padding:.7rem 1rem;margin-bottom:.7rem;text-align:center;font-family:ui-monospace,Consolas,monospace;font-size:.95rem;color:#ff8a80;letter-spacing:.02em}
+.confirm-phrase::before{content:'delete my account'}
+.btn-danger-solid{background:var(--red)}
+.btn-danger-solid:hover{background:#d84340;box-shadow:0 10px 28px rgba(239,83,80,.35)}
+
+#delConfirm,#delCancel{white-space:nowrap;padding:.8rem .6rem}
 </style>
 <script src="https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit" async defer></script>
 </head>
 <body>
 <header class="topbar">
-  <a href="index.html" class="nav-brand"><img src="Logo.png" alt="SafeFlame AI"><span class="name">SafeFlame AI</span></a>
+  <a href="/" class="nav-brand"><img src="/Logo.png" alt="SafeFlame AI"><span class="name">SafeFlame AI</span></a>
   <div class="topbar-right">
-    <a class="topbar-link" href="index.html">← Home</a>
-    <a class="nav-account" id="navAccount" href="login.html">Sign In</a>
+    <a class="topbar-link" href="/">← Home</a>
+    <a class="nav-account" id="navAccount" href="/login">Sign In</a>
   </div>
 </header>
 <main>
@@ -198,8 +240,8 @@ html.reduce-motion *{transition:none!important;animation:none!important}
 
         <div class="field"><label>Send my OTP to</label></div>
         <div class="channel" style="margin-top:-.6rem">
-          <label class="selected" data-ch="email"><input type="radio" name="ch" value="email" checked> ✉️ My email</label>
-          <label data-ch="sms"><input type="radio" name="ch" value="sms"> 📱 My mobile (SMS)</label>
+          <label class="selected" data-ch="email"><input type="radio" name="ch" value="email" checked> <svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.4"/><path d="m3.8 7.5 8.2 6 8.2-6"/></svg> My email</label>
+          <label data-ch="sms"><input type="radio" name="ch" value="sms"> <svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 20.8 12 9.6l2.4 11.2M10.4 17.2h3.2" stroke-width="1.6"></path><circle cx="12" cy="7.2" r="2.1" fill="currentColor" stroke="none"></circle><path d="M7.4 10.4a6.4 6.4 0 0 1 0-6.4"><animate attributeName="opacity" values=".18;1;1;.18" keyTimes="0;0.2;0.6;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M16.6 4a6.4 6.4 0 0 1 0 6.4"><animate attributeName="opacity" values=".18;1;1;.18" keyTimes="0;0.2;0.6;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M4.4 12.8a10.6 10.6 0 0 1 0-11.2"><animate attributeName="opacity" values=".18;.18;1;1;.18" keyTimes="0;0.24;0.44;0.72;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M19.6 1.6a10.6 10.6 0 0 1 0 11.2"><animate attributeName="opacity" values=".18;.18;1;1;.18" keyTimes="0;0.24;0.44;0.72;1" dur="2.2s" repeatCount="indefinite"></animate></path></svg> My mobile (SMS)</label>
         </div>
 
         <div class="g-recaptcha" style="margin:1rem 0"></div>
@@ -212,7 +254,7 @@ html.reduce-motion *{transition:none!important;animation:none!important}
 
     <!-- STEP 2 -->
     <div id="step2" class="hidden center">
-      <div class="big-icon" id="otpIcon">📬</div>
+      <div class="big-icon" id="otpIcon"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.4"/><path d="m3.8 7.5 8.2 6 8.2-6"/></svg></div>
       <h1 class="page-title" id="otpTitle">Check your email</h1>
       <p class="page-sub">We sent a 6-digit code to <strong id="otpTo"></strong>. Enter it to confirm your booking.</p>
       <div class="otp-inputs" id="otpInputs">
@@ -227,13 +269,13 @@ html.reduce-motion *{transition:none!important;animation:none!important}
 
     <!-- STEP 3 -->
     <div id="step3" class="hidden center">
-      <div class="big-icon">🔥</div>
+      <div class="big-icon ok"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-dasharray="57" stroke-dashoffset="57"><animate attributeName="stroke-dashoffset" values="57;0;0;57" keyTimes="0;0.34;0.84;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></circle><path d="m8 12.2 2.7 2.8L16 9.4" stroke-dasharray="13" stroke-dashoffset="13"><animate attributeName="stroke-dashoffset" values="13;13;0;0;13" keyTimes="0;0.3;0.52;0.82;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></path></svg></div>
       <h1 class="page-title">Order confirmed!</h1>
       <p class="page-sub" id="doneMsg"></p>
       <div class="summary" id="doneSummary"></div>
       <div style="display:flex;gap:.8rem;flex-wrap:wrap;justify-content:center">
-        <a class="btn-primary" href="account.html" id="toAccount">View my orders</a>
-        <a class="btn-secondary" href="index.html">Back to home</a>
+        <a class="btn-primary" href="/account" id="toAccount">View my orders</a>
+        <a class="btn-secondary" href="/">Back to home</a>
       </div>
     </div>
 
@@ -258,6 +300,7 @@ const firebaseConfig = {
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {} // avoids long hangs on networks that block Firestore streaming
 const auth = firebase.auth();
 const TS = () => firebase.firestore.FieldValue.serverTimestamp();
 
@@ -316,9 +359,24 @@ async function getNextOrderNumber() {
     });
   } catch (e) { return Math.floor(100000 + Math.random() * 900000); }
 }
+/* redirect helper with a loop breaker (stops runaway reload loops instead of freezing the browser) */
+function showFatal(msg) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#08080f;color:#f0f0f8;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:Inter,system-ui,sans-serif';
+  d.innerHTML = '<div><h2 style="margin-bottom:.6rem">Something went wrong</h2><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">' + msg + '</p><a href="/" style="color:#ff8a65">Back to home</a></div>';
+  document.body.appendChild(d);
+}
+function go(url) {
+  try {
+    const now = Date.now(), a = JSON.parse(sessionStorage.getItem('sf_nav') || '[]').filter(t => now - t < 8000);
+    a.push(now); sessionStorage.setItem('sf_nav', JSON.stringify(a));
+    if (a.length > 6) { sessionStorage.removeItem('sf_nav'); return showFatal('The page kept redirecting, so we stopped it. Please reload and try again.'); }
+  } catch (_) {}
+  location.href = url;
+}
 function qs(name) { return new URLSearchParams(location.search).get(name); }
 /* only allow redirects to our own pages */
-function safeNext(n) { return n && /^[a-z0-9_\-]+(\.html)?(\?[\w=&%\-.]*)?$/i.test(n) ? n : null; }
+function safeNext(n) { return n && /^\/?[a-z0-9_-]*(\.html)?(\?[\w=&%.-]*)?$/i.test(n) ? n : null; }
 
 /* ── EmailJS ── */
 async function sendWithCfg(cfg, params) {
@@ -412,12 +470,12 @@ function randomToken() { const a = new Uint8Array(32); crypto.getRandomValues(a)
 async function createAndSendVerification(user, name) {
   const token = randomToken();
   await db.collection('emailVerifications').doc(token).set({ uid: user.uid, email: user.email, verified: false, createdAt: TS(), expiresAt: Date.now() + 24 * 3600 * 1000 });
-  const base = location.origin + location.pathname.replace(/[^/]*$/, '');
-  const link = base + 'verify.html?token=' + token;
+  const base = location.origin;
+  const link = base + '/verify?token=' + token;
   try { await sendVerifyEmail(user.email, name, link); return 'emailjs'; }
   catch (e) {
     if (e.message !== 'EMAILJS_NOT_CONFIGURED') throw e;
-    await user.sendEmailVerification({ url: base + 'verify.html?native=1' }); // fallback: Firebase's own mail
+    await user.sendEmailVerification({ url: base + '/verify?native=1' }); // fallback: Firebase's own mail
     return 'firebase';
   }
 }
@@ -426,10 +484,10 @@ async function createAndSendVerification(user, name) {
 function initNavAccount(sel) {
   const el = document.querySelector(sel || '#navAccount'); if (!el) return;
   auth.onAuthStateChanged(async user => {
-    if (!user) { el.className = 'nav-account'; el.href = 'login.html'; el.textContent = 'Sign In'; return; }
+    if (!user) { el.className = 'nav-account'; el.href = '/login'; el.textContent = 'Sign In'; return; }
     let name = user.displayName || user.email.split('@')[0], photo = user.photoURL;
     try { const d = await db.collection('users').doc(user.uid).get(); if (d.exists) { name = d.data().displayName || name; photo = d.data().photoURL || photo; } } catch (_) {}
-    el.className = 'nav-account signed-in'; el.href = 'account.html'; el.title = 'Your account';
+    el.className = 'nav-account signed-in'; el.href = '/account'; el.title = 'Your account';
     el.innerHTML = (photo ? `<img src="${esc(photo)}" alt="">` : `<span class="nav-initial">${esc(name.charAt(0).toUpperCase())}</span>`) + esc(name.split(' ')[0]);
   });
 }
@@ -539,7 +597,7 @@ function startResendTimer() {
 }
 function showStep(n) { ['step1','step2','step3'].forEach((id, i) => $(id).classList.toggle('hidden', i !== n - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 function sendErrMsg(e) {
-  if (e && e.message === 'EMAILJS_NOT_CONFIGURED') return 'Email sending isn\'t set up yet. Please try the mobile option or contact us.';
+  if (e && e.message === 'EMAILJS_NOT_CONFIGURED') { console.warn('EmailJS is not configured — open /admin > Settings > EmailJS and add the service ID, template ID and public key.'); return 'We can\'t send email codes right now. Please choose the mobile option, or contact us and we\'ll book it for you.'; }
   if (e && e.code === 'auth/billing-not-enabled') return 'SMS isn\'t enabled for this site yet. Please choose email.';
   if (e && e.code === 'auth/invalid-phone-number') return 'That mobile number looks invalid.';
   if (e && e.code === 'auth/too-many-requests') return 'Too many SMS requests. Try again later or use email.';
@@ -569,7 +627,7 @@ $('form').addEventListener('submit', async e => {
   try { await sendOtp(); }
   catch (x) { console.warn(x); err.textContent = sendErrMsg(x); btn.disabled = false; btn.textContent = label; resetCaptcha(); return; }
   const dest = channel === 'sms' ? (phoneE164) : email;
-  $('otpTo').textContent = dest; $('otpIcon').textContent = channel === 'sms' ? '📱' : '📬'; $('otpTitle').textContent = channel === 'sms' ? 'Check your messages' : 'Check your email';
+  $('otpTo').textContent = dest; $('otpIcon').innerHTML = channel === 'sms' ? '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 20.8 12 9.6l2.4 11.2M10.4 17.2h3.2" stroke-width="1.6"></path><circle cx="12" cy="7.2" r="2.1" fill="currentColor" stroke="none"></circle><path d="M7.4 10.4a6.4 6.4 0 0 1 0-6.4"><animate attributeName="opacity" values=".18;1;1;.18" keyTimes="0;0.2;0.6;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M16.6 4a6.4 6.4 0 0 1 0 6.4"><animate attributeName="opacity" values=".18;1;1;.18" keyTimes="0;0.2;0.6;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M4.4 12.8a10.6 10.6 0 0 1 0-11.2"><animate attributeName="opacity" values=".18;.18;1;1;.18" keyTimes="0;0.24;0.44;0.72;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M19.6 1.6a10.6 10.6 0 0 1 0 11.2"><animate attributeName="opacity" values=".18;.18;1;1;.18" keyTimes="0;0.24;0.44;0.72;1" dur="2.2s" repeatCount="indefinite"></animate></path></svg>' : '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.4"/><path d="m3.8 7.5 8.2 6 8.2-6"/></svg>'; $('otpTitle').textContent = channel === 'sms' ? 'Check your messages' : 'Check your email';
   $('attempts').textContent = '3 attempts remaining.'; $('otpErr').textContent = '';
   document.querySelectorAll('.otp-digit').forEach(d => d.value = '');
   showStep(2); document.querySelector('.otp-digit').focus(); startResendTimer();
@@ -632,4 +690,3 @@ $('verifyBtn').onclick = async () => {
 </script>
 </body>
 </html>
-
