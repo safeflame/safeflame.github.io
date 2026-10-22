@@ -1191,10 +1191,11 @@
     measurementId: "G-BWPGYM9SPM"
   };
 
-  firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+  // Separate Firebase app: the admin login is kept apart from the public website's sign-in.
+  const adminApp = firebase.initializeApp(firebaseConfig, 'admin');
+  const db = adminApp.firestore();
   try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {}
-  const auth = firebase.auth();
+  const auth = adminApp.auth();
 
   // Admin accounts live in Firebase Authentication (Firebase stores and protects the passwords).
   // Type just "admin" as the ID — it maps to admin@safeflame.github.io. Create that user once in the
