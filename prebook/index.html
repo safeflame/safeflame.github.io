@@ -213,7 +213,7 @@ html.reduce-motion *{transition:none!important;animation:none!important}
     <!-- STEP 1 -->
     <div id="step1">
       <h1 class="page-title center">Pre-Book Your Unit</h1>
-      <p class="page-sub center">OTP-verified · reCAPTCHA protected · No payment now</p>
+      <p class="page-sub center">Email-verified · reCAPTCHA protected · No payment now</p>
       <div class="countdown">
         <div class="cd-item"><span class="cd-num" id="cdDays">--</span><span class="cd-label">Days</span></div>
         <div class="cd-item"><span class="cd-num" id="cdHours">--</span><span class="cd-label">Hours</span></div>
@@ -234,18 +234,11 @@ html.reduce-motion *{transition:none!important;animation:none!important}
           <div class="field"><label for="email">Email</label><input id="email" type="email" maxlength="100" autocomplete="email" required></div>
         </div>
         <div class="form-row">
-          <div class="field"><label for="phone">Mobile number</label><input id="phone" type="tel" maxlength="16" placeholder="+91 98765 43210" autocomplete="tel" required></div>
+          <div class="field"><label for="phone">Mobile number (for order updates)</label><input id="phone" type="tel" maxlength="16" placeholder="+91 98765 43210" autocomplete="tel" required></div>
           <div class="field" style="max-width:110px;min-width:90px"><label for="qty">Qty</label><input id="qty" type="number" min="1" max="10" value="1" required></div>
         </div>
 
-        <div class="field"><label>Send my OTP to</label></div>
-        <div class="channel" style="margin-top:-.6rem">
-          <label class="selected" data-ch="email"><input type="radio" name="ch" value="email" checked> <svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.4"/><path d="m3.8 7.5 8.2 6 8.2-6"/></svg> My email</label>
-          <label data-ch="sms"><input type="radio" name="ch" value="sms"> <svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 20.8 12 9.6l2.4 11.2M10.4 17.2h3.2" stroke-width="1.6"></path><circle cx="12" cy="7.2" r="2.1" fill="currentColor" stroke="none"></circle><path d="M7.4 10.4a6.4 6.4 0 0 1 0-6.4"><animate attributeName="opacity" values=".18;1;1;.18" keyTimes="0;0.2;0.6;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M16.6 4a6.4 6.4 0 0 1 0 6.4"><animate attributeName="opacity" values=".18;1;1;.18" keyTimes="0;0.2;0.6;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M4.4 12.8a10.6 10.6 0 0 1 0-11.2"><animate attributeName="opacity" values=".18;.18;1;1;.18" keyTimes="0;0.24;0.44;0.72;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M19.6 1.6a10.6 10.6 0 0 1 0 11.2"><animate attributeName="opacity" values=".18;.18;1;1;.18" keyTimes="0;0.24;0.44;0.72;1" dur="2.2s" repeatCount="indefinite"></animate></path></svg> My mobile (SMS)</label>
-        </div>
-
         <div class="g-recaptcha" style="margin:1rem 0"></div>
-        <div id="smsRecaptcha"></div>
         <div class="msg-error" id="err"></div>
         <button class="btn-primary btn-block" id="sendBtn" type="submit">Send OTP to Email →</button>
         <p class="hint center" style="margin-top:.8rem">No payment now — this only reserves your spot.</p>
@@ -298,10 +291,15 @@ const firebaseConfig = {
   appId: "1:289575463177:web:027602df29e192940acbd8",
   measurementId: "G-BWPGYM9SPM"
 };
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+/* The admin pages set window.SF_APP_NAME = 'admin' so the admin login lives in its own Firebase app and never signs anyone in on the public site. */
+const _fbApp = window.SF_APP_NAME
+  ? (firebase.apps.find(a => a.name === window.SF_APP_NAME) || firebase.initializeApp(firebaseConfig, window.SF_APP_NAME))
+  : (firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig));
+const ADMIN_EMAILS = ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com'];
+const isAdminEmail = e => ADMIN_EMAILS.includes(String(e || '').toLowerCase());
+const db = _fbApp.firestore();
 try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {} // avoids long hangs on networks that block Firestore streaming
-const auth = firebase.auth();
+const auth = _fbApp.auth();
 const TS = () => firebase.firestore.FieldValue.serverTimestamp();
 
 /* ── DEFAULT SETTINGS (same shape the admin saves to settings/site) ── */
@@ -451,6 +449,7 @@ applyAppearance();
 /* ── verification state ── */
 async function isVerified(user) {
   if (!user) return false;
+  if (isAdminEmail(user.email)) return true; // admin accounts skip email verification
   if (user.emailVerified) return true;
   const isPasswordUser = user.providerData.some(p => p.providerId === 'password');
   if (!isPasswordUser) return true; // Google etc.
@@ -500,8 +499,8 @@ const $ = id => document.getElementById(id);
 const DISPOSABLE = ['mailinator.com','tempmail.com','guerrillamail.com','throwam.com','yopmail.com','10minutemail.com','trashmail.com','fakeinbox.com','maildrop.cc','sharklasers.com'];
 const RL_KEY = 'sf_booking_attempts', RL_WINDOW = 15*60*1000, RL_MAX = 3;
 let selectedTier = ['base','pro','elite'].includes(qs('tier')) ? qs('tier') : 'base';
-let channel = 'email', pending = null, otpCode = null, otpExpiry = 0, tries = 0, resendInt = null;
-let smsVerificationId = null, phoneAuth = null, smsVerifier = null, recaptchaWidgetId = null;
+let pending = null, otpCode = null, otpExpiry = 0, tries = 0, resendInt = null;
+let recaptchaWidgetId = null;
 
 /* ── reCAPTCHA (checkbox) ── */
 function onRecaptchaLoad() {
@@ -526,13 +525,6 @@ function selectTier(t) {
   document.querySelectorAll('.tier-opt').forEach(o => { const on = o.dataset.tier === t; o.classList.toggle('selected', on); o.querySelector('input').checked = on; });
 }
 document.querySelectorAll('.tier-opt').forEach(o => o.addEventListener('click', () => { if (!o.classList.contains('sold-out')) selectTier(o.dataset.tier); }));
-document.querySelectorAll('.channel label').forEach(l => l.addEventListener('click', () => {
-  channel = l.dataset.ch;
-  document.querySelectorAll('.channel label').forEach(x => x.classList.toggle('selected', x === l));
-  l.querySelector('input').checked = true;
-  $('sendBtn').textContent = channel === 'sms' ? 'Send OTP to Mobile →' : 'Send OTP to Email →';
-}));
-
 async function init() {
   await loadSiteSettings();
   LAUNCH = new Date(siteSettings.launchDate); tick();
@@ -563,32 +555,12 @@ auth.onAuthStateChanged(async u => {
 /* ── security helpers ── */
 function rlOk(email) { try { const s = JSON.parse(localStorage.getItem(RL_KEY) || '{}'), r = s[email]; if (r && Date.now() - r.t < RL_WINDOW && r.c >= RL_MAX) return false; } catch (_) {} return true; }
 function rlBump(email) { try { const s = JSON.parse(localStorage.getItem(RL_KEY) || '{}'), r = s[email]; s[email] = (!r || Date.now() - r.t >= RL_WINDOW) ? { c: 1, t: Date.now() } : { c: r.c + 1, t: r.t }; localStorage.setItem(RL_KEY, JSON.stringify(s)); } catch (_) {} }
-function toE164(raw) {
-  let p = String(raw || '').replace(/[\s\-().]/g, '');
-  if (/^\+\d{8,15}$/.test(p)) return p;
-  if (/^\d{10}$/.test(p)) return '+91' + p;
-  if (/^0\d{10}$/.test(p)) return '+91' + p.slice(1);
-  if (/^91\d{10}$/.test(p)) return '+' + p;
-  return null;
-}
-
 /* ── OTP delivery ── */
 const genOtp = () => String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
 async function sendOtp() {
   tries = 0;
-  if (channel === 'email') {
-    otpCode = genOtp(); otpExpiry = Date.now() + 10*60*1000;
-    await sendOtpEmail(pending.email, pending.name, otpCode);
-  } else {
-    otpCode = null;
-    if (!phoneAuth) { // secondary app so the visitor's real login (if any) is never replaced
-      const app = firebase.apps.find(a => a.name === 'phoneVerify') || firebase.initializeApp(firebaseConfig, 'phoneVerify');
-      phoneAuth = app.auth();
-    }
-    if (!smsVerifier) smsVerifier = new firebase.auth.RecaptchaVerifier('smsRecaptcha', { size: 'invisible' }, phoneAuth.app);
-    smsVerificationId = await new firebase.auth.PhoneAuthProvider(phoneAuth).verifyPhoneNumber(pending.phoneE164, smsVerifier);
-    otpExpiry = Date.now() + 10*60*1000;
-  }
+  otpCode = genOtp(); otpExpiry = Date.now() + 10*60*1000;
+  await sendOtpEmail(pending.email, pending.name, otpCode);
 }
 function startResendTimer() {
   let s = 60; clearInterval(resendInt);
@@ -597,11 +569,7 @@ function startResendTimer() {
 }
 function showStep(n) { ['step1','step2','step3'].forEach((id, i) => $(id).classList.toggle('hidden', i !== n - 1)); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 function sendErrMsg(e) {
-  if (e && e.message === 'EMAILJS_NOT_CONFIGURED') { console.warn('EmailJS is not configured — open /admin > Settings > EmailJS and add the service ID, template ID and public key.'); return 'We can\'t send email codes right now. Please choose the mobile option, or contact us and we\'ll book it for you.'; }
-  if (e && e.code === 'auth/billing-not-enabled') return 'SMS isn\'t enabled for this site yet. Please choose email.';
-  if (e && e.code === 'auth/invalid-phone-number') return 'That mobile number looks invalid.';
-  if (e && e.code === 'auth/too-many-requests') return 'Too many SMS requests. Try again later or use email.';
-  if (e && e.code === 'auth/operation-not-allowed') return 'SMS verification isn\'t enabled yet. Please choose email.';
+  if (e && e.message === 'EMAILJS_NOT_CONFIGURED') { console.warn('EmailJS is not configured — open /admin > Settings > EmailJS and add the service ID, template ID and public key.'); return 'We can\'t send the code right now. Please try again later or contact us and we\'ll book it for you.'; }
   return 'Could not send the code' + (e && (e.text || e.message) ? ': ' + (e.text || e.message) : '.');
 }
 
@@ -613,8 +581,6 @@ $('form').addEventListener('submit', async e => {
   if (!name || !email || !phone) return err.textContent = 'Please fill in all fields.';
   if (!isValidEmail(email)) return err.textContent = 'Please enter a valid email address.';
   if (DISPOSABLE.includes(email.split('@')[1])) return err.textContent = 'Temporary email addresses are not allowed.';
-  const phoneE164 = toE164(phone);
-  if (channel === 'sms' && !phoneE164) return err.textContent = 'Enter your mobile as +91XXXXXXXXXX or a 10-digit number to receive an SMS.';
   if (!rlOk(email)) return err.textContent = 'Too many booking attempts. Please try again in 15 minutes.';
   if (!(typeof grecaptcha !== 'undefined' && grecaptcha.getResponse(recaptchaWidgetId))) return err.textContent = 'Please complete the reCAPTCHA.';
   const btn = $('sendBtn'), label = btn.textContent; btn.disabled = true; btn.textContent = 'Checking…';
@@ -622,12 +588,11 @@ $('form').addEventListener('submit', async e => {
     const dup = await db.collection('preBookings').where('email', '==', email).get();
     if (!dup.empty) { err.textContent = 'An order already exists for this email. Track it from the home page or your account.'; btn.disabled = false; btn.textContent = label; return; }
   } catch (_) {}
-  pending = { name, email, phone, phoneE164, quantity, tier: selectedTier, unitPrice: tierPriceFor(selectedTier), otpChannel: channel };
+  pending = { name, email, phone, quantity, tier: selectedTier, unitPrice: tierPriceFor(selectedTier), otpChannel: 'email' };
   btn.textContent = 'Sending OTP…';
   try { await sendOtp(); }
   catch (x) { console.warn(x); err.textContent = sendErrMsg(x); btn.disabled = false; btn.textContent = label; resetCaptcha(); return; }
-  const dest = channel === 'sms' ? (phoneE164) : email;
-  $('otpTo').textContent = dest; $('otpIcon').innerHTML = channel === 'sms' ? '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 20.8 12 9.6l2.4 11.2M10.4 17.2h3.2" stroke-width="1.6"></path><circle cx="12" cy="7.2" r="2.1" fill="currentColor" stroke="none"></circle><path d="M7.4 10.4a6.4 6.4 0 0 1 0-6.4"><animate attributeName="opacity" values=".18;1;1;.18" keyTimes="0;0.2;0.6;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M16.6 4a6.4 6.4 0 0 1 0 6.4"><animate attributeName="opacity" values=".18;1;1;.18" keyTimes="0;0.2;0.6;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M4.4 12.8a10.6 10.6 0 0 1 0-11.2"><animate attributeName="opacity" values=".18;.18;1;1;.18" keyTimes="0;0.24;0.44;0.72;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M19.6 1.6a10.6 10.6 0 0 1 0 11.2"><animate attributeName="opacity" values=".18;.18;1;1;.18" keyTimes="0;0.24;0.44;0.72;1" dur="2.2s" repeatCount="indefinite"></animate></path></svg>' : '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.4"/><path d="m3.8 7.5 8.2 6 8.2-6"/></svg>'; $('otpTitle').textContent = channel === 'sms' ? 'Check your messages' : 'Check your email';
+  $('otpTo').textContent = email;
   $('attempts').textContent = '3 attempts remaining.'; $('otpErr').textContent = '';
   document.querySelectorAll('.otp-digit').forEach(d => d.value = '');
   showStep(2); document.querySelector('.otp-digit').focus(); startResendTimer();
@@ -641,7 +606,7 @@ document.querySelectorAll('.otp-digit').forEach((inp, i, all) => {
   inp.addEventListener('paste', e => { e.preventDefault(); const p = (e.clipboardData || window.clipboardData).getData('text').replace(/\D/g, '').slice(0, 6); [...p].forEach((c, j) => all[j].value = c); all[Math.min(p.length, 5)].focus(); });
 });
 
-$('backBtn').onclick = () => { clearInterval(resendInt); otpCode = null; smsVerificationId = null; resetCaptcha(); showStep(1); };
+$('backBtn').onclick = () => { clearInterval(resendInt); otpCode = null; resetCaptcha(); showStep(1); };
 $('resendBtn').onclick = async () => {
   $('otpErr').textContent = '';
   try { await sendOtp(); $('attempts').textContent = 'New code sent. 3 attempts remaining.'; startResendTimer(); }
@@ -655,13 +620,7 @@ $('verifyBtn').onclick = async () => {
   const btn = $('verifyBtn'); btn.disabled = true; er.textContent = '';
   tries++;
   let ok = false;
-  if (channel === 'email') ok = entered === otpCode;
-  else {
-    try {
-      const cred = firebase.auth.PhoneAuthProvider.credential(smsVerificationId, entered);
-      await phoneAuth.signInWithCredential(cred); await phoneAuth.signOut(); ok = true;
-    } catch (x) { ok = false; if (x.code === 'auth/code-expired') { er.textContent = 'This code has expired. Please resend.'; btn.disabled = false; return; } }
-  }
+  ok = entered === otpCode;
   if (!ok) {
     const left = 3 - tries;
     btn.disabled = false;
@@ -674,8 +633,7 @@ $('verifyBtn').onclick = async () => {
   btn.textContent = 'Confirming booking…';
   try {
     const orderNumber = await getNextOrderNumber();
-    const { phoneE164, ...rest } = pending;
-    const order = { ...rest, orderNumber, status: 'pending', createdAt: TS() };
+    const order = { ...pending, orderNumber, status: 'pending', createdAt: TS() };
     const ref = await db.collection('preBookings').add(order);
     sendOrderConfirmationEmail({ ...order, id: ref.id });
     rlBump(pending.email); clearInterval(resendInt);
