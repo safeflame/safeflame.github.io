@@ -315,10 +315,15 @@ const firebaseConfig = {
   appId: "1:289575463177:web:027602df29e192940acbd8",
   measurementId: "G-BWPGYM9SPM"
 };
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
+/* The admin pages set window.SF_APP_NAME = 'admin' so the admin login lives in its own Firebase app and never signs anyone in on the public site. */
+const _fbApp = window.SF_APP_NAME
+  ? (firebase.apps.find(a => a.name === window.SF_APP_NAME) || firebase.initializeApp(firebaseConfig, window.SF_APP_NAME))
+  : (firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig));
+const ADMIN_EMAILS = ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com'];
+const isAdminEmail = e => ADMIN_EMAILS.includes(String(e || '').toLowerCase());
+const db = _fbApp.firestore();
 try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {} // avoids long hangs on networks that block Firestore streaming
-const auth = firebase.auth();
+const auth = _fbApp.auth();
 const TS = () => firebase.firestore.FieldValue.serverTimestamp();
 
 /* ── DEFAULT SETTINGS (same shape the admin saves to settings/site) ── */
@@ -468,6 +473,7 @@ applyAppearance();
 /* ── verification state ── */
 async function isVerified(user) {
   if (!user) return false;
+  if (isAdminEmail(user.email)) return true; // admin accounts skip email verification
   if (user.emailVerified) return true;
   const isPasswordUser = user.providerData.some(p => p.providerId === 'password');
   if (!isPasswordUser) return true; // Google etc.
