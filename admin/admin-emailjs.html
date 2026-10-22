@@ -2,9 +2,30 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+(function () {
+  /* Only run on the official site. A copy saved with Ctrl+S (opened from disk or another host) shows an error instead. */
+  var ALLOWED = ['safeflame.github.io'];
+  if (ALLOWED.indexOf(location.hostname) === -1) {
+    try { window.stop(); } catch (e) {}
+    document.documentElement.innerHTML = '<head><meta charset="utf-8"><title>Not available</title></head><body style="margin:0;background:#08080f;color:#f0f0f8;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem"><div><h1 style="margin:0 0 .6rem;font-size:1.5rem">This copy can\u2019t be used</h1><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">SafeFlame AI only works on its official website.</p><a href="https://safeflame.github.io" style="color:#ff8a65">safeflame.github.io</a></div></body>';
+    throw new Error('Blocked: unauthorised origin');
+  }
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's') {
+      e.preventDefault(); e.stopPropagation();
+      var t = document.createElement('div');
+      t.textContent = 'Error: saving this page is not allowed.';
+      t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483647;background:#ef5350;color:#fff;padding:.75rem 1.3rem;border-radius:10px;font:600 14px system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5)';
+      document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3200);
+    }
+  }, true);
+})();
+</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>EmailJS | SafeFlame AI Admin</title>
-<link rel="icon" type="image/png" href="../Logo.png">
+<link rel="icon" type="image/png" href="/Logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Inter:wght@300;400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -809,52 +830,55 @@
   .vars{background:rgba(78,205,196,.07);border:1px solid rgba(78,205,196,.25);border-radius:8px;padding:.8rem 1rem;font-size:.78rem;color:var(--muted);margin-bottom:1.2rem;line-height:1.6}
   .vars code{color:var(--teal)}
   header{top:0}.tab-nav{top:61px}
+
+  .chips{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1.2rem}
+  .chips span{font-family:ui-monospace,Consolas,monospace;font-size:.75rem;color:var(--teal);background:rgba(78,205,196,.08);border:1px solid rgba(78,205,196,.25);border-radius:6px;padding:.2rem .55rem}
+  .ic{width:1em;height:1em;display:inline-block;vertical-align:-.15em;flex-shrink:0;margin-right:.3rem}
 </style>
 </head>
 <body>
 <header>
-  <div class="brand"><img src="../Logo.png" alt="SafeFlame AI"> EmailJS Templates</div>
+  <div class="brand"><img src="/Logo.png" alt="SafeFlame AI"> EmailJS Templates</div>
   <div style="display:flex;align-items:center;gap:1rem">
-    <span id="autosaveChip">Loading…</span>
-    <a class="back-link" href="admin.html">← Back to admin</a>
+    <span id="autosaveChip"></span>
+    <a class="back-link" href="/admin/">← Back to admin</a>
   </div>
 </header>
 
 <div class="tab-nav" id="tabNav">
-  <button class="tab-btn active" data-tab="account">Account</button>
-  <button class="tab-btn" data-tab="status">Order Statuses</button>
-  <button class="tab-btn" data-tab="launch">Launch Email</button>
-  <button class="tab-btn" data-tab="otp">OTP Email</button>
-  <button class="tab-btn" data-tab="verify">Account Verification</button>
+  <button class="tab-btn active" data-tab="account"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="10" r="3.1"></circle><path d="M6.1 18.7a6.6 6.6 0 0 1 11.8 0"></path></svg> Account</button>
+  <button class="tab-btn" data-tab="status"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg> Order Statuses</button>
+  <button class="tab-btn" data-tab="launch"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9.6 20.8 12 9.6l2.4 11.2M10.4 17.2h3.2" stroke-width="1.6"></path><circle cx="12" cy="7.2" r="2.1" fill="currentColor" stroke="none"></circle><path d="M7.4 10.4a6.4 6.4 0 0 1 0-6.4"><animate attributeName="opacity" values=".18;1;1;.18" keyTimes="0;0.2;0.6;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M16.6 4a6.4 6.4 0 0 1 0 6.4"><animate attributeName="opacity" values=".18;1;1;.18" keyTimes="0;0.2;0.6;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M4.4 12.8a10.6 10.6 0 0 1 0-11.2"><animate attributeName="opacity" values=".18;.18;1;1;.18" keyTimes="0;0.24;0.44;0.72;1" dur="2.2s" repeatCount="indefinite"></animate></path><path d="M19.6 1.6a10.6 10.6 0 0 1 0 11.2"><animate attributeName="opacity" values=".18;.18;1;1;.18" keyTimes="0;0.24;0.44;0.72;1" dur="2.2s" repeatCount="indefinite"></animate></path></svg> Launch Email</button>
+  <button class="tab-btn" data-tab="otp"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.4 3.1 8 7.5 9.5 4.4-1.5 7.5-5.1 7.5-9.5V6L12 3Z"/><rect x="9.2" y="10.8" width="5.6" height="4.4" rx="1"/><path d="M10.6 10.8V9.6a1.4 1.4 0 0 1 2.8 0v1.2"/></svg> OTP Email</button>
+  <button class="tab-btn" data-tab="verify"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-dasharray="57" stroke-dashoffset="57"><animate attributeName="stroke-dashoffset" values="57;0;0;57" keyTimes="0;0.34;0.84;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></circle><path d="m8 12.2 2.7 2.8L16 9.4" stroke-dasharray="13" stroke-dashoffset="13"><animate attributeName="stroke-dashoffset" values="13;13;0;0;13" keyTimes="0;0.3;0.52;0.82;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></path></svg> Verification</button>
 </div>
 
 <main>
   <div class="tab-panel active" id="tab-account"><div class="panel">
-    <div class="panel-header"><div><h2>Default EmailJS account</h2><div class="panel-subtitle">Used by every email below unless that email has its own IDs. Changes save automatically.</div></div></div>
-    <div class="settings-grid"><div class="settings-group" id="g-account"></div>
-    <div class="settings-group"><h3>Variables sent with every email</h3>
-      <div class="field-hint" style="font-size:.78rem;line-height:1.7">to_email, to_name, name, email, subject, message, order_id<br>Orders also send: orders (loop), cost.shipping / cost.tax / cost.total, product_name, tier, quantity, unit_price, total_price, status, phone.<br>OTP also sends <b>otp</b>. Verification also sends <b>link</b>.</div></div></div>
+    <div class="panel-header"><div><h2>Default EmailJS account</h2></div></div>
+    <div class="settings-grid"><div class="settings-group" id="g-account"></div></div>
   </div></div>
 
   <div class="tab-panel" id="tab-status"><div class="panel">
-    <div class="panel-header"><div><h2>Order status emails</h2><div class="panel-subtitle">Tokens: {{name}}, {{order_id}}, {{tier}}, {{quantity}}, {{total_price}}. Leave the three ID fields blank to use the default account.</div></div></div>
+    <div class="panel-header"><div><h2>Order status emails</h2></div></div>
+    <div class="chips"><span>{{name}}</span><span>{{order_id}}</span><span>{{tier}}</span><span>{{quantity}}</span><span>{{total_price}}</span></div>
     <div class="settings-grid" id="g-status"></div>
   </div></div>
 
   <div class="tab-panel" id="tab-launch"><div class="panel">
-    <div class="panel-header"><div><h2>Launch notification</h2><div class="panel-subtitle">Sent when you click "Send Launch Notification to All" on the Waitlist tab.</div></div></div>
+    <div class="panel-header"><div><h2>Launch notification</h2></div></div>
     <div class="settings-grid" id="g-launch"></div>
   </div></div>
 
   <div class="tab-panel" id="tab-otp"><div class="panel">
-    <div class="panel-header"><div><h2>OTP email</h2><div class="panel-subtitle">The code email sent on the pre-book page when a visitor chooses email.</div></div></div>
-    <div class="vars">Tokens for the message: <code>{{name}}</code> <code>{{otp}}</code> <code>{{email}}</code>. Your EmailJS template should print <code>{{subject}}</code> and <code>{{message}}</code>.</div>
+    <div class="panel-header"><div><h2>OTP email</h2></div></div>
+    <div class="chips"><span>{{name}}</span><span>{{otp}}</span><span>{{email}}</span></div>
     <div class="settings-grid" id="g-otp"></div>
   </div></div>
 
   <div class="tab-panel" id="tab-verify"><div class="panel">
-    <div class="panel-header"><div><h2>Account verification email</h2><div class="panel-subtitle">Sent when someone creates an account. Contains the link that verifies their email.</div></div></div>
-    <div class="vars">Tokens for the message: <code>{{name}}</code> <code>{{email}}</code> <code>{{link}}</code>. If your EmailJS template has its own layout, use <code>{{name}}</code>, <code>{{email}}</code> and <code>{{link}}</code> directly — they are always sent. If no verification IDs (and no default account) are set, Firebase's own verification email is used as a fallback.</div>
+    <div class="panel-header"><div><h2>Account verification email</h2></div></div>
+    <div class="chips"><span>{{name}}</span><span>{{email}}</span><span>{{link}}</span></div>
     <div class="settings-grid" id="g-verify"></div>
   </div></div>
 </main>
@@ -877,6 +901,7 @@ const firebaseConfig = {
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {} // avoids long hangs on networks that block Firestore streaming
 const auth = firebase.auth();
 const TS = () => firebase.firestore.FieldValue.serverTimestamp();
 
@@ -935,9 +960,24 @@ async function getNextOrderNumber() {
     });
   } catch (e) { return Math.floor(100000 + Math.random() * 900000); }
 }
+/* redirect helper with a loop breaker (stops runaway reload loops instead of freezing the browser) */
+function showFatal(msg) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#08080f;color:#f0f0f8;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:Inter,system-ui,sans-serif';
+  d.innerHTML = '<div><h2 style="margin-bottom:.6rem">Something went wrong</h2><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">' + msg + '</p><a href="/" style="color:#ff8a65">Back to home</a></div>';
+  document.body.appendChild(d);
+}
+function go(url) {
+  try {
+    const now = Date.now(), a = JSON.parse(sessionStorage.getItem('sf_nav') || '[]').filter(t => now - t < 8000);
+    a.push(now); sessionStorage.setItem('sf_nav', JSON.stringify(a));
+    if (a.length > 6) { sessionStorage.removeItem('sf_nav'); return showFatal('The page kept redirecting, so we stopped it. Please reload and try again.'); }
+  } catch (_) {}
+  location.href = url;
+}
 function qs(name) { return new URLSearchParams(location.search).get(name); }
 /* only allow redirects to our own pages */
-function safeNext(n) { return n && /^[a-z0-9_\-]+(\.html)?(\?[\w=&%\-.]*)?$/i.test(n) ? n : null; }
+function safeNext(n) { return n && /^\/?[a-z0-9_-]*(\.html)?(\?[\w=&%.-]*)?$/i.test(n) ? n : null; }
 
 /* ── EmailJS ── */
 async function sendWithCfg(cfg, params) {
@@ -1031,12 +1071,12 @@ function randomToken() { const a = new Uint8Array(32); crypto.getRandomValues(a)
 async function createAndSendVerification(user, name) {
   const token = randomToken();
   await db.collection('emailVerifications').doc(token).set({ uid: user.uid, email: user.email, verified: false, createdAt: TS(), expiresAt: Date.now() + 24 * 3600 * 1000 });
-  const base = location.origin + location.pathname.replace(/[^/]*$/, '');
-  const link = base + 'verify.html?token=' + token;
+  const base = location.origin;
+  const link = base + '/verify?token=' + token;
   try { await sendVerifyEmail(user.email, name, link); return 'emailjs'; }
   catch (e) {
     if (e.message !== 'EMAILJS_NOT_CONFIGURED') throw e;
-    await user.sendEmailVerification({ url: base + 'verify.html?native=1' }); // fallback: Firebase's own mail
+    await user.sendEmailVerification({ url: base + '/verify?native=1' }); // fallback: Firebase's own mail
     return 'firebase';
   }
 }
@@ -1045,10 +1085,10 @@ async function createAndSendVerification(user, name) {
 function initNavAccount(sel) {
   const el = document.querySelector(sel || '#navAccount'); if (!el) return;
   auth.onAuthStateChanged(async user => {
-    if (!user) { el.className = 'nav-account'; el.href = 'login.html'; el.textContent = 'Sign In'; return; }
+    if (!user) { el.className = 'nav-account'; el.href = '/login'; el.textContent = 'Sign In'; return; }
     let name = user.displayName || user.email.split('@')[0], photo = user.photoURL;
     try { const d = await db.collection('users').doc(user.uid).get(); if (d.exists) { name = d.data().displayName || name; photo = d.data().photoURL || photo; } } catch (_) {}
-    el.className = 'nav-account signed-in'; el.href = 'account.html'; el.title = 'Your account';
+    el.className = 'nav-account signed-in'; el.href = '/account'; el.title = 'Your account';
     el.innerHTML = (photo ? `<img src="${esc(photo)}" alt="">` : `<span class="nav-initial">${esc(name.charAt(0).toUpperCase())}</span>`) + esc(name.split(' ')[0]);
   });
 }
@@ -1056,7 +1096,7 @@ const GOOGLE_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none">
 const HEAD_LIBS = '';
 </script>
 <script>
-if (sessionStorage.getItem('sf_admin_ok') !== '1') location.replace('admin.html');
+const ADMIN_EMAILS = ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com'];
 
 const $ = id => document.getElementById(id);
 const FIELDS = [['subject','Subject','text'],['message','Message','area'],['serviceId','Service ID (optional — different EmailJS account)','text','Leave blank to use default account'],['templateId','Template ID (optional override)','text','Leave blank to use default'],['publicKey','Public Key (optional — different EmailJS account)','text','Leave blank to use default account']];
@@ -1104,10 +1144,10 @@ const chip = $('autosaveChip');
 let timer = null, loaded = false;
 async function save() {
   chip.className = ''; chip.textContent = 'Saving…';
-  try { await db.collection('settings').doc('site').set(collect(), { merge: true }); chip.className = 'ok'; chip.textContent = 'All changes saved ✓'; }
-  catch (e) { console.error(e); chip.className = 'err'; chip.textContent = 'Could not save — check connection / permissions'; }
+  try { await db.collection('settings').doc('site').set(collect(), { merge: true }); chip.className = 'ok'; chip.textContent = 'Saved'; setTimeout(() => { if (chip.textContent === 'Saved') chip.textContent = ''; }, 2200); }
+  catch (e) { console.error(e); chip.className = 'err'; chip.textContent = 'Could not save'; }
 }
-function queue() { if (!loaded) return; chip.className = ''; chip.textContent = 'Unsaved changes…'; clearTimeout(timer); timer = setTimeout(save, 700); }
+function queue() { if (!loaded) return; chip.className = ''; chip.textContent = 'Saving…'; clearTimeout(timer); timer = setTimeout(save, 700); }
 document.addEventListener('input', e => { if (e.target.matches('[data-path]')) queue(); });
 window.addEventListener('beforeunload', () => { if (timer) { clearTimeout(timer); save(); } });
 
@@ -1120,11 +1160,14 @@ document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', (
 }));
 const h = location.hash.slice(1); if (h && document.querySelector(`.tab-btn[data-tab="${h}"]`)) document.querySelector(`.tab-btn[data-tab="${h}"]`).click();
 
-(async () => {
+let started = false;
+auth.onAuthStateChanged(async u => {
+  if (!u || !ADMIN_EMAILS.includes(String(u.email || '').toLowerCase())) { location.replace('/admin/'); return; }
+  if (started) return; started = true;
   await loadSiteSettings();
   fill(siteSettings);
-  loaded = true; chip.textContent = 'All changes save automatically';
-})();
+  loaded = true; chip.textContent = '';
+});
 </script>
 </body>
 </html>
