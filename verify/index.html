@@ -2,10 +2,31 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+(function () {
+  /* Only run on the official site. A copy saved with Ctrl+S (opened from disk or another host) shows an error instead. */
+  var ALLOWED = ['safeflame.github.io'];
+  if (ALLOWED.indexOf(location.hostname) === -1) {
+    try { window.stop(); } catch (e) {}
+    document.documentElement.innerHTML = '<head><meta charset="utf-8"><title>Not available</title></head><body style="margin:0;background:#08080f;color:#f0f0f8;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem"><div><h1 style="margin:0 0 .6rem;font-size:1.5rem">This copy can\u2019t be used</h1><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">SafeFlame AI only works on its official website.</p><a href="https://safeflame.github.io" style="color:#ff8a65">safeflame.github.io</a></div></body>';
+    throw new Error('Blocked: unauthorised origin');
+  }
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's') {
+      e.preventDefault(); e.stopPropagation();
+      var t = document.createElement('div');
+      t.textContent = 'Error: saving this page is not allowed.';
+      t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483647;background:#ef5350;color:#fff;padding:.75rem 1.3rem;border-radius:10px;font:600 14px system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5)';
+      document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3200);
+    }
+  }, true);
+})();
+</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Verify Email | SafeFlame AI</title>
 <meta name="theme-color" content="#08080f">
-<link rel="icon" type="image/png" href="Logo.png">
+<link rel="icon" type="image/png" href="/Logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -153,20 +174,41 @@ a{color:var(--flame2)}
 html.compact-mode .card{padding:1.4rem 1.3rem}
 html.reduce-motion *{transition:none!important;animation:none!important}
 @media(max-width:480px){.card{padding:1.6rem 1.2rem}.otp-digit{width:40px;height:50px}}
+
+/* icons */
+.ic{width:1em;height:1em;display:inline-block;vertical-align:-.15em;flex-shrink:0}
+.big-icon{color:var(--flame2);line-height:1;display:flex;justify-content:center}
+.big-icon .ic{width:3rem;height:3rem}
+.big-icon.ok{color:var(--green)}.big-icon.warn{color:var(--yellow)}.big-icon.teal{color:var(--teal)}
+.section-title .ic{width:1.15em;height:1.15em;color:var(--flame2)}
+.channel label .ic{width:1.15rem;height:1.15rem;color:var(--flame2)}
+.card-icon{display:flex;justify-content:center;margin-bottom:.8rem;color:var(--flame2)}
+.card-icon .ic{width:2.4rem;height:2.4rem}
+.avatar-edit .ic{width:.9rem;height:.9rem}
+
+/* modal + type-to-confirm */
+.modal-back{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-card{max-width:440px;width:100%}
+.confirm-phrase{user-select:none;-webkit-user-select:none;-moz-user-select:none;pointer-events:none;background:rgba(239,83,80,.08);border:1px dashed rgba(239,83,80,.4);border-radius:9px;padding:.7rem 1rem;margin-bottom:.7rem;text-align:center;font-family:ui-monospace,Consolas,monospace;font-size:.95rem;color:#ff8a80;letter-spacing:.02em}
+.confirm-phrase::before{content:'delete my account'}
+.btn-danger-solid{background:var(--red)}
+.btn-danger-solid:hover{background:#d84340;box-shadow:0 10px 28px rgba(239,83,80,.35)}
+
+#delConfirm,#delCancel{white-space:nowrap;padding:.8rem .6rem}
 </style>
 </head>
 <body>
 <header class="topbar">
-  <a href="index.html" class="nav-brand"><img src="Logo.png" alt="SafeFlame AI"><span class="name">SafeFlame AI</span></a>
+  <a href="/" class="nav-brand"><img src="/Logo.png" alt="SafeFlame AI"><span class="name">SafeFlame AI</span></a>
   <div class="topbar-right">
-    <a class="topbar-link" href="index.html">← Home</a>
-    <a class="nav-account" id="navAccount" href="login.html">Sign In</a>
+    <a class="topbar-link" href="/">← Home</a>
+    <a class="nav-account" id="navAccount" href="/login">Sign In</a>
   </div>
 </header>
 <main>
 <div class="page">
   <div class="card center" id="box">
-    <div class="big-icon" id="icon">📬</div>
+    <div class="big-icon" id="icon"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7.6 3.2H5.8a2 2 0 0 0-2 2V7M16.4 3.2h1.8a2 2 0 0 1 2 2V7M7.6 20.8H5.8a2 2 0 0 1-2-2V17M16.4 20.8h1.8a2 2 0 0 0 2-2V17"></path><path d="M3.8 12h16.4" stroke-width="1.9"><animateTransform attributeName="transform" type="translate" values="0 -5;0 5;0 -5" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.2 1;0.45 0 0.2 1"></animateTransform><animate attributeName="opacity" values=".3;1;.3;1;.3" keyTimes="0;0.25;0.5;0.75;1" dur="2.6s" repeatCount="indefinite"></animate></path></svg></div>
     <h1 class="page-title" id="title">Checking…</h1>
     <p class="page-sub" id="sub"></p>
     <div id="actions"></div>
@@ -193,6 +235,7 @@ const firebaseConfig = {
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {} // avoids long hangs on networks that block Firestore streaming
 const auth = firebase.auth();
 const TS = () => firebase.firestore.FieldValue.serverTimestamp();
 
@@ -251,9 +294,24 @@ async function getNextOrderNumber() {
     });
   } catch (e) { return Math.floor(100000 + Math.random() * 900000); }
 }
+/* redirect helper with a loop breaker (stops runaway reload loops instead of freezing the browser) */
+function showFatal(msg) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#08080f;color:#f0f0f8;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:Inter,system-ui,sans-serif';
+  d.innerHTML = '<div><h2 style="margin-bottom:.6rem">Something went wrong</h2><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">' + msg + '</p><a href="/" style="color:#ff8a65">Back to home</a></div>';
+  document.body.appendChild(d);
+}
+function go(url) {
+  try {
+    const now = Date.now(), a = JSON.parse(sessionStorage.getItem('sf_nav') || '[]').filter(t => now - t < 8000);
+    a.push(now); sessionStorage.setItem('sf_nav', JSON.stringify(a));
+    if (a.length > 6) { sessionStorage.removeItem('sf_nav'); return showFatal('The page kept redirecting, so we stopped it. Please reload and try again.'); }
+  } catch (_) {}
+  location.href = url;
+}
 function qs(name) { return new URLSearchParams(location.search).get(name); }
 /* only allow redirects to our own pages */
-function safeNext(n) { return n && /^[a-z0-9_\-]+(\.html)?(\?[\w=&%\-.]*)?$/i.test(n) ? n : null; }
+function safeNext(n) { return n && /^\/?[a-z0-9_-]*(\.html)?(\?[\w=&%.-]*)?$/i.test(n) ? n : null; }
 
 /* ── EmailJS ── */
 async function sendWithCfg(cfg, params) {
@@ -347,12 +405,12 @@ function randomToken() { const a = new Uint8Array(32); crypto.getRandomValues(a)
 async function createAndSendVerification(user, name) {
   const token = randomToken();
   await db.collection('emailVerifications').doc(token).set({ uid: user.uid, email: user.email, verified: false, createdAt: TS(), expiresAt: Date.now() + 24 * 3600 * 1000 });
-  const base = location.origin + location.pathname.replace(/[^/]*$/, '');
-  const link = base + 'verify.html?token=' + token;
+  const base = location.origin;
+  const link = base + '/verify?token=' + token;
   try { await sendVerifyEmail(user.email, name, link); return 'emailjs'; }
   catch (e) {
     if (e.message !== 'EMAILJS_NOT_CONFIGURED') throw e;
-    await user.sendEmailVerification({ url: base + 'verify.html?native=1' }); // fallback: Firebase's own mail
+    await user.sendEmailVerification({ url: base + '/verify?native=1' }); // fallback: Firebase's own mail
     return 'firebase';
   }
 }
@@ -361,10 +419,10 @@ async function createAndSendVerification(user, name) {
 function initNavAccount(sel) {
   const el = document.querySelector(sel || '#navAccount'); if (!el) return;
   auth.onAuthStateChanged(async user => {
-    if (!user) { el.className = 'nav-account'; el.href = 'login.html'; el.textContent = 'Sign In'; return; }
+    if (!user) { el.className = 'nav-account'; el.href = '/login'; el.textContent = 'Sign In'; return; }
     let name = user.displayName || user.email.split('@')[0], photo = user.photoURL;
     try { const d = await db.collection('users').doc(user.uid).get(); if (d.exists) { name = d.data().displayName || name; photo = d.data().photoURL || photo; } } catch (_) {}
-    el.className = 'nav-account signed-in'; el.href = 'account.html'; el.title = 'Your account';
+    el.className = 'nav-account signed-in'; el.href = '/account'; el.title = 'Your account';
     el.innerHTML = (photo ? `<img src="${esc(photo)}" alt="">` : `<span class="nav-initial">${esc(name.charAt(0).toUpperCase())}</span>`) + esc(name.split(' ')[0]);
   });
 }
@@ -376,46 +434,46 @@ initNavAccount();
 const $ = id => document.getElementById(id);
 const next = safeNext(qs('next'));
 const token = qs('token');
-function setView(icon, title, sub, actionsHtml) { $('icon').textContent = icon; $('title').textContent = title; $('sub').innerHTML = sub; $('actions').innerHTML = actionsHtml || ''; }
+function setView(icon, title, sub, actionsHtml) { $('icon').className = 'big-icon' + (/payment-success/.test('' + icon) ? ' ok' : /warning|clock/.test('' + icon) ? ' warn' : ''); $('icon').innerHTML = icon; $('title').textContent = title; $('sub').innerHTML = sub; $('actions').innerHTML = actionsHtml || ''; }
 async function goNext(user) {
   let complete = false;
   try { const d = await db.collection('users').doc(user.uid).get(); complete = d.exists && d.data().profileComplete; } catch (_) {}
-  location.href = next || (complete ? 'index.html' : 'account.html?welcome=1');
+  go(next || (complete ? '/' : '/account?welcome=1'));
 }
 
 /* ── A) arrived from the link in the email ── */
 async function handleToken() {
-  setView('⏳', 'Verifying your email…', 'One moment.');
+  setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2a8.8 8.8 0 0 1 8.8 8.8" stroke-width="2"><animateTransform attributeName="transform" type="rotate" values="0 12 12;360 12 12" dur="1.4s" repeatCount="indefinite"></animateTransform></path><path d="M12 19a7 7 0 0 1-7-7" stroke-width="2" stroke-opacity=".55"><animateTransform attributeName="transform" type="rotate" values="360 12 12;0 12 12" dur="1.05s" repeatCount="indefinite"></animateTransform></path></svg>', 'Verifying your email…', 'One moment.');
   try {
     const ref = db.collection('emailVerifications').doc(token);
     const snap = await ref.get();
-    if (!snap.exists) return setView('⚠️', 'Link invalid or already used', 'Sign in — if your account is already verified you will go straight through. Otherwise request a new link.', '<a class="btn-primary" href="login.html">Go to sign in</a>');
+    if (!snap.exists) return setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', 'Link invalid or already used', 'Sign in — if your account is already verified you will go straight through. Otherwise request a new link.', '<a class="btn-primary" href="/login">Go to sign in</a>');
     const d = snap.data();
-    if (Date.now() > d.expiresAt) return setView('⌛', 'This link has expired', 'Sign in and request a new verification email.', '<a class="btn-primary" href="login.html">Go to sign in</a>');
+    if (Date.now() > d.expiresAt) return setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>', 'This link has expired', 'Sign in and request a new verification email.', '<a class="btn-primary" href="/login">Go to sign in</a>');
     await ref.update({ verified: true, verifiedAt: TS() });
     const u = auth.currentUser || await new Promise(r => { const un = auth.onAuthStateChanged(x => { un(); r(x); }); });
     if (u && u.uid === d.uid) {
       await db.collection('users').doc(u.uid).set({ emailVerified: true }, { merge: true });
       ref.delete().catch(() => {});
-      setView('✅', 'Email verified!', 'Taking you to the next step…');
+      setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-dasharray="57" stroke-dashoffset="57"><animate attributeName="stroke-dashoffset" values="57;0;0;57" keyTimes="0;0.34;0.84;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></circle><path d="m8 12.2 2.7 2.8L16 9.4" stroke-dasharray="13" stroke-dashoffset="13"><animate attributeName="stroke-dashoffset" values="13;13;0;0;13" keyTimes="0;0.3;0.52;0.82;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></path></svg>', 'Email verified!', 'Taking you to the next step…');
       setTimeout(() => goNext(u), 1200);
     } else {
-      setView('✅', 'Email verified!', 'Your email is confirmed. Sign in to continue.', '<a class="btn-primary" href="login.html?verified=1' + (next ? '&next=' + encodeURIComponent(next) : '') + '">Sign in</a>');
+      setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-dasharray="57" stroke-dashoffset="57"><animate attributeName="stroke-dashoffset" values="57;0;0;57" keyTimes="0;0.34;0.84;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></circle><path d="m8 12.2 2.7 2.8L16 9.4" stroke-dasharray="13" stroke-dashoffset="13"><animate attributeName="stroke-dashoffset" values="13;13;0;0;13" keyTimes="0;0.3;0.52;0.82;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></path></svg>', 'Email verified!', 'Your email is confirmed. Sign in to continue.', '<a class="btn-primary" href="/login?verified=1' + (next ? '&next=' + encodeURIComponent(next) : '') + '">Sign in</a>');
     }
-  } catch (e) { console.error(e); setView('⚠️', 'Could not verify', esc(e.message || 'Please try again.'), '<a class="btn-secondary" href="login.html">Back to sign in</a>'); }
+  } catch (e) { console.error(e); setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', 'Could not verify', esc(e.message || 'Please try again.'), '<a class="btn-secondary" href="/login">Back to sign in</a>'); }
 }
 
 /* ── B) "check your inbox" waiting page ── */
 let pollTimer = null;
 async function pending(user) {
   const failed = sessionStorage.getItem('sf_verify_send_failed');
-  setView('📬', 'Check your email', 'We sent a verification link to <strong>' + esc(user.email) + '</strong>. Click it to activate your account — this page continues automatically.',
+  setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7.6 3.2H5.8a2 2 0 0 0-2 2V7M16.4 3.2h1.8a2 2 0 0 1 2 2V7M7.6 20.8H5.8a2 2 0 0 1-2-2V17M16.4 20.8h1.8a2 2 0 0 0 2-2V17"></path><path d="M3.8 12h16.4" stroke-width="1.9"><animateTransform attributeName="transform" type="translate" values="0 -5;0 5;0 -5" dur="2.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.45 0 0.2 1;0.45 0 0.2 1"></animateTransform><animate attributeName="opacity" values=".3;1;.3;1;.3" keyTimes="0;0.25;0.5;0.75;1" dur="2.6s" repeatCount="indefinite"></animate></path></svg>', 'Check your email', 'We sent a verification link to <strong>' + esc(user.email) + '</strong>. Click it to activate your account — this page continues automatically.',
     '<button class="btn-primary btn-block" id="checkBtn" type="button">I\'ve verified — continue</button>' +
     '<p class="hint" style="margin-top:1rem"><span id="resendWrap"><button class="link-btn" id="resendBtn" type="button">Resend email</button></span> · <button class="link-btn" id="outBtn" type="button">Use a different account</button></p>');
   if (failed) { $('err').textContent = 'We could not send the email automatically — tap "Resend email".'; sessionStorage.removeItem('sf_verify_send_failed'); }
   const check = async (manual) => {
     await user.reload();
-    if (await isVerified(auth.currentUser)) { clearInterval(pollTimer); setView('✅', 'Email verified!', 'Taking you to the next step…'); setTimeout(() => goNext(auth.currentUser), 900); }
+    if (await isVerified(auth.currentUser)) { clearInterval(pollTimer); setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-dasharray="57" stroke-dashoffset="57"><animate attributeName="stroke-dashoffset" values="57;0;0;57" keyTimes="0;0.34;0.84;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></circle><path d="m8 12.2 2.7 2.8L16 9.4" stroke-dasharray="13" stroke-dashoffset="13"><animate attributeName="stroke-dashoffset" values="13;13;0;0;13" keyTimes="0;0.3;0.52;0.82;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></path></svg>', 'Email verified!', 'Taking you to the next step…'); setTimeout(() => goNext(auth.currentUser), 900); }
     else if (manual) { $('err').textContent = 'Not verified yet — open the link in your email first.'; }
   };
   $('checkBtn').onclick = () => check(true);
@@ -431,14 +489,14 @@ async function pending(user) {
     let s = 60; const b = $('resendBtn'); b.disabled = true;
     const t = setInterval(() => { b.textContent = 'Resend in ' + (--s) + 's'; if (s <= 0) { clearInterval(t); b.disabled = false; b.textContent = 'Resend email'; cooling = false; } }, 1000);
   };
-  $('outBtn').onclick = async () => { await auth.signOut(); location.href = 'login.html'; };
+  $('outBtn').onclick = async () => { await auth.signOut(); go('/login'); };
 }
 
 (async () => {
   await loadSiteSettings();
   if (token) return handleToken();
   const user = await new Promise(r => { const un = auth.onAuthStateChanged(x => { un(); r(x); }); });
-  if (!user) return setView('🔒', 'Please sign in', 'Sign in to continue.', '<a class="btn-primary" href="login.html">Sign in</a>');
+  if (!user) return setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>', 'Please sign in', 'Sign in to continue.', '<a class="btn-primary" href="/login">Sign in</a>');
   await user.reload();
   if (await isVerified(auth.currentUser)) return goNext(auth.currentUser);
   pending(auth.currentUser);
