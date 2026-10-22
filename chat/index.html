@@ -2,10 +2,31 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script>
+(function () {
+  /* Only run on the official site. A copy saved with Ctrl+S (opened from disk or another host) shows an error instead. */
+  var ALLOWED = ['safeflame.github.io'];
+  if (ALLOWED.indexOf(location.hostname) === -1) {
+    try { window.stop(); } catch (e) {}
+    document.documentElement.innerHTML = '<head><meta charset="utf-8"><title>Not available</title></head><body style="margin:0;background:#08080f;color:#f0f0f8;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem"><div><h1 style="margin:0 0 .6rem;font-size:1.5rem">This copy can\u2019t be used</h1><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">SafeFlame AI only works on its official website.</p><a href="https://safeflame.github.io" style="color:#ff8a65">safeflame.github.io</a></div></body>';
+    throw new Error('Blocked: unauthorised origin');
+  }
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's') {
+      e.preventDefault(); e.stopPropagation();
+      var t = document.createElement('div');
+      t.textContent = 'Error: saving this page is not allowed.';
+      t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483647;background:#ef5350;color:#fff;padding:.75rem 1.3rem;border-radius:10px;font:600 14px system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5)';
+      document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3200);
+    }
+  }, true);
+})();
+</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chat with us | SafeFlame AI</title>
 <meta name="theme-color" content="#08080f">
-<link rel="icon" type="image/png" href="Logo.png">
+<link rel="icon" type="image/png" href="/Logo.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -153,6 +174,27 @@ a{color:var(--flame2)}
 html.compact-mode .card{padding:1.4rem 1.3rem}
 html.reduce-motion *{transition:none!important;animation:none!important}
 @media(max-width:480px){.card{padding:1.6rem 1.2rem}.otp-digit{width:40px;height:50px}}
+
+/* icons */
+.ic{width:1em;height:1em;display:inline-block;vertical-align:-.15em;flex-shrink:0}
+.big-icon{color:var(--flame2);line-height:1;display:flex;justify-content:center}
+.big-icon .ic{width:3rem;height:3rem}
+.big-icon.ok{color:var(--green)}.big-icon.warn{color:var(--yellow)}.big-icon.teal{color:var(--teal)}
+.section-title .ic{width:1.15em;height:1.15em;color:var(--flame2)}
+.channel label .ic{width:1.15rem;height:1.15rem;color:var(--flame2)}
+.card-icon{display:flex;justify-content:center;margin-bottom:.8rem;color:var(--flame2)}
+.card-icon .ic{width:2.4rem;height:2.4rem}
+.avatar-edit .ic{width:.9rem;height:.9rem}
+
+/* modal + type-to-confirm */
+.modal-back{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-card{max-width:440px;width:100%}
+.confirm-phrase{user-select:none;-webkit-user-select:none;-moz-user-select:none;pointer-events:none;background:rgba(239,83,80,.08);border:1px dashed rgba(239,83,80,.4);border-radius:9px;padding:.7rem 1rem;margin-bottom:.7rem;text-align:center;font-family:ui-monospace,Consolas,monospace;font-size:.95rem;color:#ff8a80;letter-spacing:.02em}
+.confirm-phrase::before{content:'delete my account'}
+.btn-danger-solid{background:var(--red)}
+.btn-danger-solid:hover{background:#d84340;box-shadow:0 10px 28px rgba(239,83,80,.35)}
+
+#delConfirm,#delCancel{white-space:nowrap;padding:.8rem .6rem}
 </style>
 <style>
 body{padding-bottom:0}
@@ -188,17 +230,17 @@ body{padding-bottom:0}
 </head>
 <body>
 <header class="topbar">
-  <a href="index.html" class="nav-brand"><img src="Logo.png" alt="SafeFlame AI"><span class="name">SafeFlame AI</span></a>
+  <a href="/" class="nav-brand"><img src="/Logo.png" alt="SafeFlame AI"><span class="name">SafeFlame AI</span></a>
   <div class="topbar-right">
-    <a class="topbar-link" href="index.html">← Home</a>
-    <a class="nav-account" id="navAccount" href="login.html">Sign In</a>
+    <a class="topbar-link" href="/">← Home</a>
+    <a class="nav-account" id="navAccount" href="/login">Sign In</a>
   </div>
 </header>
 <main>
 <div class="chat-shell">
   <div class="chat-card">
     <div class="chat-head">
-      <div><h1>SafeFlame Assistant</h1><div class="hint" id="subtitle">Ask about features, pricing, orders…</div></div>
+      <div style="display:flex;align-items:center;gap:.8rem"><span class="card-icon" style="margin:0;font-size:1.6rem"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg></span><div><h1>SafeFlame Assistant</h1><div class="hint" id="subtitle">Ask about features, pricing, orders…</div></div></div>
       <span class="pill ai" id="pill">AI assistant</span>
     </div>
 
@@ -238,6 +280,7 @@ const firebaseConfig = {
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
+try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {} // avoids long hangs on networks that block Firestore streaming
 const auth = firebase.auth();
 const TS = () => firebase.firestore.FieldValue.serverTimestamp();
 
@@ -296,9 +339,24 @@ async function getNextOrderNumber() {
     });
   } catch (e) { return Math.floor(100000 + Math.random() * 900000); }
 }
+/* redirect helper with a loop breaker (stops runaway reload loops instead of freezing the browser) */
+function showFatal(msg) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#08080f;color:#f0f0f8;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:Inter,system-ui,sans-serif';
+  d.innerHTML = '<div><h2 style="margin-bottom:.6rem">Something went wrong</h2><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">' + msg + '</p><a href="/" style="color:#ff8a65">Back to home</a></div>';
+  document.body.appendChild(d);
+}
+function go(url) {
+  try {
+    const now = Date.now(), a = JSON.parse(sessionStorage.getItem('sf_nav') || '[]').filter(t => now - t < 8000);
+    a.push(now); sessionStorage.setItem('sf_nav', JSON.stringify(a));
+    if (a.length > 6) { sessionStorage.removeItem('sf_nav'); return showFatal('The page kept redirecting, so we stopped it. Please reload and try again.'); }
+  } catch (_) {}
+  location.href = url;
+}
 function qs(name) { return new URLSearchParams(location.search).get(name); }
 /* only allow redirects to our own pages */
-function safeNext(n) { return n && /^[a-z0-9_\-]+(\.html)?(\?[\w=&%\-.]*)?$/i.test(n) ? n : null; }
+function safeNext(n) { return n && /^\/?[a-z0-9_-]*(\.html)?(\?[\w=&%.-]*)?$/i.test(n) ? n : null; }
 
 /* ── EmailJS ── */
 async function sendWithCfg(cfg, params) {
@@ -392,12 +450,12 @@ function randomToken() { const a = new Uint8Array(32); crypto.getRandomValues(a)
 async function createAndSendVerification(user, name) {
   const token = randomToken();
   await db.collection('emailVerifications').doc(token).set({ uid: user.uid, email: user.email, verified: false, createdAt: TS(), expiresAt: Date.now() + 24 * 3600 * 1000 });
-  const base = location.origin + location.pathname.replace(/[^/]*$/, '');
-  const link = base + 'verify.html?token=' + token;
+  const base = location.origin;
+  const link = base + '/verify?token=' + token;
   try { await sendVerifyEmail(user.email, name, link); return 'emailjs'; }
   catch (e) {
     if (e.message !== 'EMAILJS_NOT_CONFIGURED') throw e;
-    await user.sendEmailVerification({ url: base + 'verify.html?native=1' }); // fallback: Firebase's own mail
+    await user.sendEmailVerification({ url: base + '/verify?native=1' }); // fallback: Firebase's own mail
     return 'firebase';
   }
 }
@@ -406,10 +464,10 @@ async function createAndSendVerification(user, name) {
 function initNavAccount(sel) {
   const el = document.querySelector(sel || '#navAccount'); if (!el) return;
   auth.onAuthStateChanged(async user => {
-    if (!user) { el.className = 'nav-account'; el.href = 'login.html'; el.textContent = 'Sign In'; return; }
+    if (!user) { el.className = 'nav-account'; el.href = '/login'; el.textContent = 'Sign In'; return; }
     let name = user.displayName || user.email.split('@')[0], photo = user.photoURL;
     try { const d = await db.collection('users').doc(user.uid).get(); if (d.exists) { name = d.data().displayName || name; photo = d.data().photoURL || photo; } } catch (_) {}
-    el.className = 'nav-account signed-in'; el.href = 'account.html'; el.title = 'Your account';
+    el.className = 'nav-account signed-in'; el.href = '/account'; el.title = 'Your account';
     el.innerHTML = (photo ? `<img src="${esc(photo)}" alt="">` : `<span class="nav-initial">${esc(name.charAt(0).toUpperCase())}</span>`) + esc(name.split(' ')[0]);
   });
 }
@@ -419,9 +477,9 @@ const HEAD_LIBS = '';
 <script>
 initNavAccount();
 const $ = id => document.getElementById(id);
-const CHAT_KEY = 'sf_chat_id', GUEST_KEY = 'sf_chat_guest';
+let CHAT_KEY = 'sf_chat_id_guest'; const GUEST_KEY = 'sf_chat_guest';
 const HUMAN_RE = /\b(human|real person|live agent|agent|representative|support team|customer care|customer service|someone from (the )?team|talk to (a |an )?(person|someone|staff|executive)|speak (to|with) (a |an )?(person|someone|staff|executive))\b/i;
-let chatId = localStorage.getItem(CHAT_KEY), chat = null, me = { name: 'Guest', email: '' }, unsubMsgs = null, unsubChat = null, busy = false, msgs = [];
+let chatId = null, chat = null, me = { name: 'Guest', email: '' }, unsubMsgs = null, unsubChat = null, busy = false, msgs = [];
 
 const pillText = { ai: 'AI assistant', waiting_human: 'Waiting for a person', human: 'Live with our team', closed: 'Chat ended' };
 function renderStatus() {
@@ -444,7 +502,7 @@ function renderMsgs() {
   box.innerHTML = msgs.map(m => m.role === 'system'
     ? '<div class="m system">' + esc(m.text) + '</div>'
     : '<div class="m ' + m.role + '">' + (m.role === 'ai' ? '<span class="who">Assistant</span>' : m.role === 'admin' ? '<span class="who">SafeFlame team</span>' : '') + esc(m.text) + '<small>' + fmtTime(m.createdAt) + '</small></div>').join('')
-    + (busy ? '<div class="typing">Assistant is typing…</div>' : '');
+    + (busy ? '<div class="typing"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg> Assistant is typing…</div>' : '');
   if (atBottom || busy) box.scrollTop = box.scrollHeight;
 }
 function watch() {
@@ -475,7 +533,11 @@ async function escalate(reason) {
   await db.collection('chats').doc(chatId).update({ status: 'waiting_human', humanRequested: true, escalatedAt: TS(), escalationReason: reason, unreadAdmin: true, updatedAt: TS() });
   await addMsg('system', "Connecting you to a team member. We've alerted our team — please stay on this page and they'll reply here as soon as they can.");
 }
-async function newChat() { localStorage.removeItem(CHAT_KEY); chatId = null; chat = null; msgs = []; await ensureChat(); watch(); }
+async function newChat() {
+  if (unsubMsgs) unsubMsgs(); if (unsubChat) unsubChat();
+  localStorage.removeItem(CHAT_KEY); chatId = null; chat = null; msgs = []; $('msgs').innerHTML = '';
+  renderStatus(); await ensureChat(); watch();
+}
 
 function systemPrompt() {
   return `You are the customer-facing assistant for SafeFlame AI — an ESP32-based IoT kitchen safety system for LPG kitchens. It detects gas, flame and pressure, shuts the valve automatically, alerts via Telegram and SMS, tracks cylinder weight, has voice commands, and serves a local web dashboard.
@@ -496,7 +558,7 @@ async function send(text) {
   const wantsHuman = HUMAN_RE.test(text);
   if (wantsHuman) {
     const asks = (chat.humanAsks || 0) + 1;
-    await db.collection('chats').doc(chatId).update({ humanAsks: asks });
+    await db.collection('chats').doc(chatId).update({ humanAsks: firebase.firestore.FieldValue.increment(1) });
     if (asks >= 2) return escalate('Visitor insisted on a human.');
   }
   busy = true; renderMsgs();
@@ -531,9 +593,10 @@ $('startBtn').onclick = () => {
   if (user) {
     let name = user.displayName || user.email.split('@')[0];
     try { const d = await db.collection('users').doc(user.uid).get(); if (d.exists && d.data().displayName) name = d.data().displayName; } catch (_) {}
-    me = { name, email: user.email || '' }; return begin();
+    me = { name, email: user.email || '' }; CHAT_KEY = 'sf_chat_id_' + user.uid; chatId = localStorage.getItem(CHAT_KEY); return begin();
   }
   const saved = JSON.parse(localStorage.getItem(GUEST_KEY) || 'null');
+  chatId = localStorage.getItem(CHAT_KEY);
   if (saved || chatId) { me = saved || me; return begin(); }
   $('intro').classList.remove('hidden');
 })();
