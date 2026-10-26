@@ -29,6 +29,7 @@
 <meta name="theme-color" content="#08080f">
 <link rel="icon" type="image/png" href="/Logo.png">
 <link rel="apple-touch-icon" href="/Logo.png">
+<link rel="manifest" href="/manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -1717,6 +1718,14 @@ body.sidebar-open nav{
 .modal-icon{display:flex;justify-content:center;color:var(--green)}
 .modal-icon .ic{width:3.4rem;height:3.4rem;color:var(--green)}
 .chat-toggle .ic{width:1.5rem;height:1.5rem}
+.nav-badge{background:#EF5350;color:#fff;font-size:.62rem;font-weight:700;min-width:18px;height:18px;border-radius:50px;display:inline-flex;align-items:center;justify-content:center;padding:0 .3rem}
+
+.skel{border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.09),rgba(255,255,255,.04));background-size:200% 100%;animation:skel 1.2s linear infinite}
+.skel-card{height:110px;margin-bottom:.8rem}
+@keyframes skel{from{background-position:200% 0}to{background-position:-200% 0}}
+
+.lang-select{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:.4rem .5rem;font-size:.78rem;max-width:120px;font-family:'Inter',sans-serif;outline:none;cursor:pointer}
+.lang-select option{background:#0d0d1a}
 </style>
 </head>
 <body>
@@ -1734,9 +1743,11 @@ body.sidebar-open nav{
     <a href="#specs">Hardware</a>
     <a href="#pricing">Pricing</a>
     <a href="#faq">FAQ</a>
-    <button class="btn-drawer-link" data-drawer="trackDrawer">Track Order</button>
+    <button class="btn-drawer-link" data-drawer="trackDrawer">My Orders</button>
     <button class="btn-drawer-link" data-drawer="waitlistDrawer">Waitlist</button>
+    <a href="/help">Help</a>
     <a href="/chat">Chat</a>
+    <select class="lang-select" id="langSel" aria-label="Language" translate="no"></select>
     <a href="/login" class="btn-signin" id="navAccount" style="text-decoration:none">Sign In</a>
     <a href="/prebook" class="nav-cta">Pre-Book Now</a>
   </div>
@@ -2091,6 +2102,7 @@ body.sidebar-open nav{
     <div class="section-label reveal">Early Testers</div>
     <h2 class="section-title reveal">From our closed pilot program.</h2>
     <p class="section-sub reveal d1">Feedback from early households before public launch. Public reviews will be added after general availability.</p>
+    <div class="testimonials-grid" id="liveStories" style="display:none;margin-bottom:1.5rem"></div>
     <div class="testimonials-grid">
       <div class="t-card reveal">
         <div class="t-quote">The gas line shutoff during a pressure spike gave us peace of mind we didn't have before. The Telegram photo meant I could see the kitchen from the office within seconds.</div>
@@ -2179,19 +2191,13 @@ body.sidebar-open nav{
     <div class="drawer-title">
       <span class="drawer-icon"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg></span>
       <div>
-        <div class="drawer-name">Track Your Order</div>
-        <div class="drawer-sub">No login needed — just your email</div>
+        <div class="drawer-name">My Orders</div>
+        <div class="drawer-sub">Orders placed with your account</div>
       </div>
     </div>
     <button class="drawer-close" data-close="trackDrawer">✕</button>
   </div>
   <div class="drawer-body">
-    <form id="trackForm" style="max-width:520px;margin:0 auto">
-      <div class="track-form">
-        <input type="email" id="trackEmail" placeholder="Enter your email address..." required>
-        <button type="submit" class="btn-primary" id="trackBtn">Find Orders</button>
-      </div>
-    </form>
     <div id="trackResults"></div>
   </div>
 </div>
@@ -2213,13 +2219,15 @@ body.sidebar-open nav{
     <div class="footer-col">
       <h4>Get Started</h4>
       <a href="/prebook">Pre-Book a Unit</a>
+        <a href="/help">Help centre</a>
+        <a href="#" id="installApp" style="display:none">Install the app</a>
       <a href="#" data-open-drawer="waitlistDrawer">Join Waitlist</a>
-      <a href="#" data-open-drawer="trackDrawer">Track Your Order</a>
+      <a href="#" data-open-drawer="trackDrawer">My Orders</a>
       <a href="#faq">FAQ</a>
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 SafeFlame AI. All rights reserved.</span>
+    <span>© 2026 SafeFlame AI. All rights reserved. · <a href="/privacy">Privacy</a> · <a href="/refund">Refunds</a> · <a href="/warranty">Warranty</a></span>
     <a href="/admin/" style="opacity:.3;font-size:.7rem;">Admin</a>
   </div>
 </footer>
@@ -2428,16 +2436,72 @@ function sendOrderConfirmationEmail(order) {
   try { emailjs.init(pubKey); emailjs.send(svcId,tplId,params).catch(e=>console.warn('Confirmation email failed:',e)); } catch(e){ console.warn('EmailJS error:',e); }
 }
 
+// ── referral link capture (?ref=CODE) ──
+try { const r = new URLSearchParams(location.search).get('ref'); if (r && /^[A-Z0-9]{4,12}$/i.test(r)) localStorage.setItem('sf_ref', r.toUpperCase()); } catch (_) {}
+
 // ── NAV ACCOUNT BUTTON (sign-in / profile are separate pages now) ──
 const auth = firebase.auth();
+const isAdminEmail = e => ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com'].includes(String(e || '').toLowerCase());
+function applySiteControls(s) {
+  try {
+    const a = s.announcement || {};
+    if (a.enabled && a.text && !sessionStorage.getItem('sf_banner_closed') && !document.getElementById('sfBanner')) {
+      const b = document.createElement('div'); b.id = 'sfBanner';
+      b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9000;background:linear-gradient(90deg,#FF5722,#FF8A65);color:#fff;font:600 .85rem Inter,system-ui,sans-serif;padding:.65rem 4.5rem .65rem 1rem;text-align:center';
+      const txt = document.createElement(a.link ? 'a' : 'span'); txt.textContent = a.text; if (a.link) { txt.href = a.link; txt.style.cssText = 'color:#fff;text-decoration:underline'; }
+      const x = document.createElement('button'); x.textContent = '✕'; x.setAttribute('aria-label', 'Dismiss');
+      x.style.cssText = 'position:absolute;right:4.6rem;top:50%;transform:translateY(-50%);background:none;border:none;color:#fff;cursor:pointer;font-size:1rem';
+      x.onclick = () => { sessionStorage.setItem('sf_banner_closed', '1'); b.remove(); };
+      b.append(txt, x); document.body.appendChild(b);
+    }
+    const m = s.maintenance || {};
+    if (m.enabled && !document.getElementById('sfMaint')) {
+      const o = document.createElement('div'); o.id = 'sfMaint';
+      o.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#08080f;color:#f0f0f8;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:Inter,system-ui,sans-serif';
+      const d = document.createElement('div'); const h = document.createElement('h1'); h.textContent = 'Back soon'; h.style.cssText = 'margin:0 0 .7rem;font-size:1.8rem';
+      const p = document.createElement('p'); p.textContent = m.message || ''; p.style.cssText = 'color:#a0a0b8;max-width:420px;margin:0 auto';
+      d.append(h, p); o.appendChild(d); document.body.appendChild(o);
+      // admins can still use the site while it is in maintenance mode
+      try { auth.onAuthStateChanged(u => { if (u && isAdminEmail(u.email)) o.remove(); }); } catch (_) {}
+    }
+  } catch (e) { console.warn('site controls', e); }
+}
+
+
+function applySeo(q) {
+  if (!q) return; const set = (sel, attr, val) => { if (!val) return; let el = document.querySelector(sel); if (!el) { el = document.createElement('meta'); const m = sel.match(/\[(name|property)="([^"]+)"\]/); if (m) el.setAttribute(m[1], m[2]); document.head.appendChild(el); } el.setAttribute(attr, val); };
+  if (q.title) { document.title = q.title; set('meta[property="og:title"]', 'content', q.title); set('meta[name="twitter:title"]', 'content', q.title); }
+  if (q.description) { set('meta[name="description"]', 'content', q.description); set('meta[property="og:description"]', 'content', q.description); set('meta[name="twitter:description"]', 'content', q.description); }
+  if (q.image) { set('meta[property="og:image"]', 'content', q.image); set('meta[name="twitter:image"]', 'content', q.image); set('meta[name="twitter:card"]', 'content', 'summary_large_image'); }
+}
+db.collection('settings').doc('site').get().then(d => { if (d.exists) { applySiteControls(d.data()); applySeo(d.data().seo); } }).catch(() => {});
+// customer stories + featured reviews (approved in Admin > Inbox)
+(async function liveStories() {
+  try {
+    const [rv, st] = await Promise.all([db.collection('reviews').where('featured', '==', true).get(), db.collection('stories').where('status', '==', 'approved').get()]);
+    const items = [];
+    rv.forEach(d => { const r = d.data(); items.push({ order: Number(r.featuredOrder) || 0, name: r.name, role: 'SafeFlame customer · ' + '★'.repeat(r.rating || 5), quote: r.comment || '', photo: '' }); });
+    st.forEach(d => { const r = d.data(); items.push({ order: Number(r.featuredOrder) || 0, name: r.name, role: 'Shared their setup', quote: r.story || '', photo: r.photo || '', title: r.title || '' }); });
+    const e = x => String(x == null ? '' : x).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    const list = items.filter(i => i.quote).sort((a, b) => a.order - b.order).slice(0, 6); if (!list.length) return;
+    const box = document.getElementById('liveStories'); box.style.display = '';
+    box.innerHTML = list.map(i => '<div class="t-card">' + (i.photo ? '<img src="' + e(i.photo) + '" alt="" style="width:100%;border-radius:10px;margin-bottom:.8rem;max-height:200px;object-fit:cover">' : '') + (i.title ? '<b>' + e(i.title) + '</b>' : '') + '<div class="t-quote">' + e(i.quote) + '</div><div class="t-author"><div class="t-avatar">' + e(String(i.name || '?').charAt(0).toUpperCase()) + '</div><div><div class="t-name">' + e(String(i.name || 'Customer').split(' ')[0]) + '</div><div class="t-role">' + e(i.role) + '</div></div></div></div>').join('');
+  } catch (_) {}
+})();
+let _unread = null;
 (function(){
   const el = document.getElementById('navAccount'); if(!el) return;
   auth.onAuthStateChanged(async user=>{
+    if(_unread){ _unread(); _unread=null; }
     if(!user){ el.className='btn-signin'; el.href='/login'; el.textContent='Sign In'; return; }
     let name = user.displayName || user.email.split('@')[0], photo = user.photoURL;
     try{ const d = await db.collection('users').doc(user.uid).get(); if(d.exists){ name = d.data().displayName || name; photo = d.data().photoURL || photo; } }catch(_){}
     el.className='btn-signin signed-in'; el.href='/account'; el.title='Your account';
     el.innerHTML = (photo ? '<img src="'+String(photo).replace(/"/g,'&quot;')+'" class="user-avatar-nav" alt="">' : '<span style="width:20px;height:20px;border-radius:50%;background:var(--flame);display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:700;color:#fff">'+name.charAt(0).toUpperCase()+'</span>') + ' ' + name.split(' ')[0].replace(/[<>&"]/g,'');
+    const baseHtml = el.innerHTML;
+    _unread = db.collection('notifications').where('email','==',String(user.email).toLowerCase()).where('read','==',false).onSnapshot(sn=>{
+      el.innerHTML = baseHtml + (sn.size ? ' <span class="nav-badge">'+sn.size+'</span>' : ''); el.href = sn.size ? '/account#notifications' : '/account';
+    }, ()=>{});
   });
 })();
 
@@ -2461,6 +2525,7 @@ function openDrawer(id){
   document.querySelectorAll('.drawer').forEach(d=>d.classList.remove('open'));
   const drawer = document.getElementById(id);
   if(drawer){ drawer.classList.add('open'); drawerBackdrop.classList.add('active'); }
+  if(id==='trackDrawer' && typeof loadMyOrders==='function') loadMyOrders();
 }
 function closeDrawer(id){
   if(id){ const d=document.getElementById(id); if(d) d.classList.remove('open'); }
@@ -2558,39 +2623,28 @@ waitlistForm.addEventListener('submit', async e=>{
   finally { btn.disabled=false; btn.textContent=orig; }
 });
 
-// ── TRACK ORDER ───────────────────────────────────────
-const trackForm = document.getElementById('trackForm');
+// ── MY ORDERS (the signed-in customer's own orders) ──
 const trackResults = document.getElementById('trackResults');
-trackForm.addEventListener('submit', async e=>{
-  e.preventDefault();
-  const email = document.getElementById('trackEmail').value.trim();
-  if(!email||!isValidEmail(email)){ alert('Please enter a valid email.'); return; }
-  const btn = document.getElementById('trackBtn');
-  const orig = btn.textContent;
-  btn.disabled=true; btn.textContent='Searching...';
-  trackResults.innerHTML='';
+const skelHtml = '<div class="skel skel-card"></div><div class="skel skel-card"></div>';
+async function loadMyOrders(){
+  const u = auth.currentUser;
+  if(!u){ trackResults.innerHTML = '<div class="track-empty">Sign in to see the orders placed with your account.<br><a class="btn-primary" href="/login?next=/" style="margin-top:1rem;display:inline-flex">Sign in</a></div>'; return; }
+  trackResults.innerHTML = skelHtml;
   try {
-    const snap = await db.collection('preBookings').where('email','==',email).get();
-    if(snap.empty){
-      trackResults.innerHTML='<div class="track-empty">No orders found for that email. Double-check the address you pre-booked with.</div>';
-    } else {
-      const orders = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>{
-        const at=a.createdAt&&a.createdAt.toDate?a.createdAt.toDate().getTime():0;
-        const bt=b.createdAt&&b.createdAt.toDate?b.createdAt.toDate().getTime():0;
-        return bt-at;
-      });
-      trackResults.innerHTML=orders.map(renderTrackCard).join('');
-    }
-    logEvent('order_tracked');
-  } catch(e){ trackResults.innerHTML='<div class="track-error">Something went wrong. Please try again.</div>'; }
-  finally { btn.disabled=false; btn.textContent=orig; }
-});
+    const snap = await db.collection('preBookings').where('email','==',String(u.email).toLowerCase()).get();
+    if(snap.empty){ trackResults.innerHTML = '<div class="track-empty">You have no orders yet.<br><a class="btn-primary" href="/prebook" style="margin-top:1rem;display:inline-flex">Pre-book your unit</a></div>'; return; }
+    const ms = o => o.createdAt && o.createdAt.toDate ? o.createdAt.toDate().getTime() : 0;
+    const orders = snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>ms(b)-ms(a));
+    trackResults.innerHTML = orders.map(renderTrackCard).join('') + '<div style="text-align:center;margin-top:1rem"><a class="btn-secondary" href="/account#orders" style="display:inline-flex;padding:.7rem 1.4rem;border:1px solid var(--border);border-radius:10px;color:var(--text);text-decoration:none">Manage orders in your account</a></div>';
+  } catch(e){ trackResults.innerHTML='<div class="track-error">Could not load your orders. Please try again.</div>'; }
+}
+auth.onAuthStateChanged(()=>{ if(document.getElementById('trackDrawer').classList.contains('open')) loadMyOrders(); });
 function renderTrackCard(order){
   const status=(order.status||'pending').toLowerCase();
   const tierLabel=tierLabelFor(order.tier);
   const qty=Number(order.quantity)||1;
   const unitPrice=typeof order.unitPrice==='number'?order.unitPrice:tierPriceFor(order.tier);
-  const total=unitPrice*qty;
+  const total=unitPrice*qty+(Number(order.addonsTotal)||0);
   const dateStr=order.createdAt&&order.createdAt.toDate?order.createdAt.toDate().toLocaleDateString():'—';
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   return `<div class="t-order-card"><div class="t-order-top"><span class="t-order-id">Order #${esc(orderNumberFor(order))}</span><span class="t-status ${status}">${esc(status)}</span></div><div class="t-order-details"><div><span>Product</span>SafeFlame AI — ${esc(tierLabel)}</div><div><span>Qty</span>${qty}</div><div><span>Total</span>₹${total.toLocaleString('en-IN')}</div><div><span>Ordered</span>${esc(dateStr)}</div></div></div>`;
@@ -2618,6 +2672,36 @@ updateCountdown();
 setInterval(updateCountdown,1000);
 loadSiteSettings();
 
+
+// ── language picker ──
+/* ── language picker (Google Website Translator: ~130 languages, machine translation) ── */
+const SF_LANGS = [['en','English'],['af','Afrikaans'],['sq','Albanian'],['am','Amharic'],['ar','Arabic'],['hy','Armenian'],['as','Assamese'],['ay','Aymara'],['az','Azerbaijani'],['bm','Bambara'],['eu','Basque'],['be','Belarusian'],['bn','Bengali'],['bho','Bhojpuri'],['bs','Bosnian'],['bg','Bulgarian'],['ca','Catalan'],['ceb','Cebuano'],['ny','Chichewa'],['zh-CN','Chinese (Simplified)'],['zh-TW','Chinese (Traditional)'],['co','Corsican'],['hr','Croatian'],['cs','Czech'],['da','Danish'],['dv','Dhivehi'],['doi','Dogri'],['nl','Dutch'],['eo','Esperanto'],['et','Estonian'],['ee','Ewe'],['tl','Filipino'],['fi','Finnish'],['fr','French'],['fy','Frisian'],['gl','Galician'],['ka','Georgian'],['de','German'],['el','Greek'],['gn','Guarani'],['gu','Gujarati'],['ht','Haitian Creole'],['ha','Hausa'],['haw','Hawaiian'],['iw','Hebrew'],['hi','Hindi'],['hmn','Hmong'],['hu','Hungarian'],['is','Icelandic'],['ig','Igbo'],['ilo','Ilocano'],['id','Indonesian'],['ga','Irish'],['it','Italian'],['ja','Japanese'],['jw','Javanese'],['kn','Kannada'],['kk','Kazakh'],['km','Khmer'],['rw','Kinyarwanda'],['gom','Konkani'],['ko','Korean'],['kri','Krio'],['ku','Kurdish (Kurmanji)'],['ckb','Kurdish (Sorani)'],['ky','Kyrgyz'],['lo','Lao'],['la','Latin'],['lv','Latvian'],['ln','Lingala'],['lt','Lithuanian'],['lg','Luganda'],['lb','Luxembourgish'],['mk','Macedonian'],['mai','Maithili'],['mg','Malagasy'],['ms','Malay'],['ml','Malayalam'],['mt','Maltese'],['mi','Maori'],['mr','Marathi'],['mni-Mtei','Meiteilon (Manipuri)'],['lus','Mizo'],['mn','Mongolian'],['my','Myanmar (Burmese)'],['ne','Nepali'],['no','Norwegian'],['or','Odia (Oriya)'],['om','Oromo'],['ps','Pashto'],['fa','Persian'],['pl','Polish'],['pt','Portuguese'],['pa','Punjabi'],['qu','Quechua'],['ro','Romanian'],['ru','Russian'],['sm','Samoan'],['sa','Sanskrit'],['gd','Scots Gaelic'],['nso','Sepedi'],['sr','Serbian'],['st','Sesotho'],['sn','Shona'],['sd','Sindhi'],['si','Sinhala'],['sk','Slovak'],['sl','Slovenian'],['so','Somali'],['es','Spanish'],['su','Sundanese'],['sw','Swahili'],['sv','Swedish'],['tg','Tajik'],['ta','Tamil'],['tt','Tatar'],['te','Telugu'],['th','Thai'],['ti','Tigrinya'],['ts','Tsonga'],['tr','Turkish'],['tk','Turkmen'],['ak','Twi'],['uk','Ukrainian'],['ur','Urdu'],['ug','Uyghur'],['uz','Uzbek'],['vi','Vietnamese'],['cy','Welsh'],['xh','Xhosa'],['yi','Yiddish'],['yo','Yoruba'],['zu','Zulu']];
+function sfSetLangCookie(code) {
+  const v = code === 'en' ? '' : '/en/' + code, exp = code === 'en' ? ';expires=Thu, 01 Jan 1970 00:00:00 GMT' : '';
+  document.cookie = 'googtrans=' + v + ';path=/' + exp; document.cookie = 'googtrans=' + v + ';path=/;domain=' + location.hostname + exp;
+}
+function sfLoadTranslator() {
+  if (window.__sfGt) return; window.__sfGt = 1;
+  const d = document.createElement('div'); d.id = 'sf_gt'; d.style.display = 'none'; document.body.appendChild(d);
+  const st = document.createElement('style'); st.textContent = '.goog-te-banner-frame,.skiptranslate>iframe{display:none!important}body{top:0!important}.goog-tooltip{display:none!important}.goog-text-highlight{background:none!important;box-shadow:none!important}'; document.head.appendChild(st);
+  window.googleTranslateElementInit = () => { try { new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false }, 'sf_gt'); } catch (_) {} };
+  const s = document.createElement('script'); s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'; s.async = true; document.head.appendChild(s);
+}
+function initLanguage() {
+  const sel = document.getElementById('langSel'), saved = localStorage.getItem('sf_lang') || 'en';
+  if (sel) {
+    sel.innerHTML = SF_LANGS.map(l => '<option value="' + l[0] + '">' + l[1] + '</option>').join(''); sel.value = saved; sel.setAttribute('translate', 'no');
+    sel.onchange = () => { localStorage.setItem('sf_lang', sel.value); sfSetLangCookie(sel.value); location.reload(); };
+  }
+  if (saved !== 'en') { sfSetLangCookie(saved); sfLoadTranslator(); }
+}
+
+initLanguage();
+// ── installable app ──
+if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+let _installEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); _installEvt = e; const a = document.getElementById('installApp'); if (a) a.style.display = ''; });
+document.getElementById('installApp').addEventListener('click', async ev => { ev.preventDefault(); if (!_installEvt) return; _installEvt.prompt(); await _installEvt.userChoice.catch(() => {}); _installEvt = null; ev.target.style.display = 'none'; });
 </script>
 </body>
 </html>
