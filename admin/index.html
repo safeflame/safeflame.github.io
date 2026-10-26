@@ -11,6 +11,7 @@
     document.documentElement.innerHTML = '<head><meta charset="utf-8"><title>Not available</title></head><body style="margin:0;background:#08080f;color:#f0f0f8;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem"><div><h1 style="margin:0 0 .6rem;font-size:1.5rem">This copy can\u2019t be used</h1><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">SafeFlame AI only works on its official website.</p><a href="https://safeflame.github.io" style="color:#ff8a65">safeflame.github.io</a></div></body>';
     throw new Error('Blocked: unauthorised origin');
   }
+  try { var th = localStorage.getItem('sf_theme') || 'dark'; if (location.pathname.indexOf('/admin') !== 0 && (th === 'light' || (th === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches))) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
   document.addEventListener('keydown', function (e) {
     if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's') {
       e.preventDefault(); e.stopPropagation();
