@@ -23,6 +23,7 @@
 })();
 </script>
 
+<link rel="manifest" href="/manifest.webmanifest">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>My Account | SafeFlame AI</title>
 <meta name="theme-color" content="#08080f">
@@ -195,6 +196,84 @@ html.reduce-motion *{transition:none!important;animation:none!important}
 .btn-danger-solid:hover{background:#d84340;box-shadow:0 10px 28px rgba(239,83,80,.35)}
 
 #delConfirm,#delCancel{white-space:nowrap;padding:.8rem .6rem}
+
+.nav-badge{background:var(--red);color:#fff;font-size:.62rem;font-weight:700;min-width:18px;height:18px;border-radius:50px;display:inline-flex;align-items:center;justify-content:center;padding:0 .3rem;margin-left:.15rem}
+
+.check-row{display:flex;align-items:center;gap:.6rem;font-size:.85rem;padding:.55rem .8rem;border:1px solid var(--border);background:var(--surface);border-radius:10px;margin-bottom:.6rem;cursor:pointer;color:var(--text2)}
+.check-row input{accent-color:var(--flame)}
+.check-row .ic{width:1.1rem;height:1.1rem;color:var(--flame2)}
+
+/* account sections */
+.acc-nav{display:flex;flex-direction:column;gap:.2rem}
+.acc-nav button{display:flex;align-items:center;gap:.6rem;background:none;border:none;color:var(--text2);padding:.65rem .8rem;border-radius:10px;font:500 .88rem Inter,sans-serif;cursor:pointer;text-align:left;transition:background .2s,color .2s}
+.acc-nav button:hover{background:var(--surface2);color:var(--text)}
+.acc-nav button.active{background:rgba(255,87,34,.12);color:var(--flame2)}
+.acc-nav .nav-badge{margin-left:auto}
+@media(max-width:820px){.acc-nav{flex-direction:row;overflow-x:auto;padding-bottom:.2rem}.acc-nav button{white-space:nowrap}}
+.order-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+.order-actions .btn-secondary{padding:.5rem .9rem;font-size:.8rem}
+.tl{display:flex;margin:.2rem 0 1rem}
+.tl-step{flex:1;position:relative;text-align:center;font-size:.72rem;color:var(--text3)}
+.tl-step::before{content:'';position:absolute;top:7px;left:-50%;width:100%;height:2px;background:var(--border)}
+.tl-step:first-child::before{display:none}
+.tl-dot{display:block;width:16px;height:16px;border-radius:50%;background:var(--bg2);border:2px solid var(--border);margin:0 auto .35rem;position:relative;z-index:1}
+.tl-step b{display:block;font-weight:600;color:var(--text2)}
+.tl-step small{display:block;font-size:.66rem}
+.tl-step.done .tl-dot{background:var(--green);border-color:var(--green)}
+.tl-step.done::before{background:var(--green)}
+.tl-step.done b{color:var(--text)}
+.tl-step.bad .tl-dot{background:var(--red);border-color:var(--red)}
+.tl-step.bad::before{background:var(--red)}
+.notif{display:flex;gap:.8rem;align-items:flex-start;padding:.85rem .9rem;border:1px solid var(--border);border-radius:12px;margin-bottom:.6rem;background:var(--surface)}
+.notif .ic{width:1.3rem;height:1.3rem;color:var(--flame2);margin-top:.15rem}
+.notif div{flex:1}.notif b{font-size:.9rem}.notif p{font-size:.82rem;color:var(--text2);margin:.1rem 0}.notif small{font-size:.7rem;color:var(--text3)}
+.notif.unread{border-color:var(--border2);background:rgba(255,87,34,.06)}
+.notif.announce{border-color:rgba(255,167,38,.35);background:rgba(255,167,38,.07)}
+.stars{display:flex;gap:.3rem;justify-content:center;margin-bottom:1rem}
+.stars button{background:none;border:none;cursor:pointer;color:var(--text3);font-size:2rem;padding:.1rem}
+.stars button.on{color:var(--yellow)}
+.stars .ic{width:1em;height:1em;fill:currentColor}
+.transcript{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:.5rem}
+.tr-msg{max-width:85%;padding:.55rem .8rem;border-radius:10px;font-size:.84rem;white-space:pre-wrap;background:var(--surface2)}
+.tr-msg b{display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;color:var(--teal2);margin-bottom:.15rem}
+.tr-msg.user{align-self:flex-end;background:rgba(255,87,34,.18)}
+.tr-sys{text-align:center;font-size:.72rem;color:var(--text3)}
+textarea.input{resize:vertical;font-family:'Inter',sans-serif}
+
+.faq-item{border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:.6rem;padding:.2rem 1rem}
+.faq-item summary{cursor:pointer;padding:.8rem 0;font-weight:600;font-size:.92rem;list-style:none;display:flex;justify-content:space-between;gap:1rem}
+.faq-item summary::after{content:'+';color:var(--flame2);font-size:1.2rem;line-height:1}
+.faq-item[open] summary::after{content:'−'}
+.faq-item p{color:var(--text2);font-size:.88rem;padding-bottom:.9rem}
+
+.rate-btn{background:none!important;border:none!important;color:var(--text3)!important;font-size:1.3rem!important;padding:0 .1rem!important;cursor:pointer}
+.rate-btn:hover{color:var(--yellow)!important}
+.rate-btn .ic{fill:currentColor}
+
+.lang-select{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:.4rem .5rem;font-size:.78rem;max-width:130px;font-family:'Inter',sans-serif;outline:none;cursor:pointer}
+.lang-select option{background:#0d0d1a}
+.skel{border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.09),rgba(255,255,255,.04));background-size:200% 100%;animation:skel 1.2s linear infinite}
+.skel-card{height:110px;margin-bottom:.8rem}.skel-line{height:14px;margin:.5rem 0}
+@keyframes skel{from{background-position:200% 0}to{background-position:-200% 0}}
+.empty-rich{text-align:center;padding:2rem 1rem;color:var(--text3)}
+.empty-rich .ic{width:2.4rem;height:2.4rem;color:var(--text3);opacity:.7;margin-bottom:.6rem}
+.empty-rich b{display:block;color:var(--text2);font-size:.95rem;margin-bottom:.2rem}
+.empty-rich p{font-size:.82rem;margin-bottom:.9rem}
+html.reduce-motion .skel{animation:none}
+
+.rich h3{font-size:.95rem;margin:.8rem 0 .3rem}.rich p{margin:.4rem 0}.rich ul,.rich ol{margin:.4rem 0 .6rem 1.2rem}.rich li{margin:.2rem 0}
+.tl-list{border-left:2px solid var(--border);margin:.4rem 0 .4rem .4rem;padding-left:1rem}
+.tl-item{position:relative;padding:.35rem 0;font-size:.85rem}.tl-item::before{content:'';position:absolute;left:-1.37rem;top:.7rem;width:10px;height:10px;border-radius:50%;background:var(--flame)}
+.tl-item small{display:block;color:var(--text3);font-size:.72rem}
+.warr-bar{height:6px;background:var(--surface2);border-radius:6px;margin:.8rem 0 .3rem;overflow:hidden}.warr-bar div{height:100%;background:linear-gradient(90deg,var(--green),var(--teal));border-radius:6px}
+.unread-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--flame)}
+.complete-bar{height:8px;background:var(--surface2);border-radius:8px;overflow:hidden;margin:.5rem 0}.complete-bar div{height:100%;background:linear-gradient(90deg,var(--flame),var(--yellow));width:0;transition:width .4s}
+
+.vote{display:flex;flex-direction:column;align-items:center;gap:.1rem;min-width:48px;padding:.4rem .5rem;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'Inter',sans-serif}
+.vote b{font-size:.9rem}.vote .ic{width:1.2rem;height:1.2rem}.vote:hover{border-color:var(--border2)}
+.vote.on{background:rgba(255,87,34,.14);border-color:var(--flame);color:var(--flame2)}
+
+.sf-foot{position:relative;z-index:1;text-align:center;font-size:.76rem;color:var(--text3);padding:1.6rem 1rem 2rem}.sf-foot a{color:var(--text3)}.sf-foot a:hover{color:var(--flame2)}
 </style>
 </head>
 <body>
@@ -202,7 +281,7 @@ html.reduce-motion *{transition:none!important;animation:none!important}
   <a href="/" class="nav-brand"><img src="/Logo.png" alt="SafeFlame AI"><span class="name">SafeFlame AI</span></a>
   <div class="topbar-right">
     <a class="topbar-link" href="/">← Home</a>
-    <a class="nav-account" id="navAccount" href="/login">Sign In</a>
+    <select class="lang-select" id="langSel" aria-label="Language" translate="no"></select><a class="nav-account" id="navAccount" href="/login">Sign In</a>
   </div>
 </header>
 <main>
@@ -210,12 +289,12 @@ html.reduce-motion *{transition:none!important;animation:none!important}
   <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:1rem;flex-wrap:wrap">
     <div><h1 class="page-title">My account</h1>
     <p class="page-sub">Everything saves automatically.</p></div>
-    <button class="btn-secondary js-signout" type="button">Sign out</button>
+    <div style="display:flex;gap:.6rem;flex-wrap:wrap"><a class="btn-secondary" href="/help"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg> Help</a><button class="btn-secondary js-signout" type="button">Sign out</button></div>
   </div>
   <div class="banner hidden" id="welcome">Welcome! Add a few details below to personalise your experience. <button class="link-btn" id="skipWelcome" type="button" style="color:var(--yellow)">Skip for now</button></div>
+  <div class="banner hidden" id="announce"></div>
 
   <div class="account-grid">
-    <!-- left -->
     <div class="stack">
       <div class="card center">
         <div class="avatar-wrap">
@@ -230,58 +309,190 @@ html.reduce-motion *{transition:none!important;animation:none!important}
           <div class="stat-row"><span>Member since</span><span id="sSince">—</span></div>
           <div class="stat-row"><span>Orders</span><span id="sOrders">—</span></div>
         </div>
-        <button class="btn-secondary btn-block js-signout" type="button" style="margin-top:1.2rem">Sign out</button>
+      </div>
+      <div class="card" style="padding:.8rem">
+        <nav class="acc-nav" id="accNav">
+          <button data-sec="profile" class="active"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="10" r="3.1"></circle><path d="M6.1 18.7a6.6 6.6 0 0 1 11.8 0"></path></svg> Profile &amp; settings</button>
+          <button data-sec="orders"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg> My orders</button>
+          <button data-sec="notifications"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg> Notifications <span class="nav-badge hidden" id="notifCount">0</span></button>
+          <button data-sec="addresses"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.4"/></svg> Addresses</button>
+          <button data-sec="devices"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.6" width="18" height="7" rx="2.2"></rect><rect x="3" y="13.4" width="18" height="7" rx="2.2"></rect><path d="M14.6 7.1h3.2M14.6 16.9h3.2" stroke-width="1.5"></path><g fill="currentColor" stroke="none"><circle cx="6.9" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.35s" repeatCount="indefinite"></animate></circle><circle cx="6.9" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.7s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="1.05s" repeatCount="indefinite"></animate></circle></g></svg> Devices &amp; warranty</button>
+          <button data-sec="guides"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg> Guides</button>
+          <button data-sec="tickets"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg> Support tickets</button>
+          <button data-sec="community"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8L12 3.5Z"/></svg> Community</button>
+          <button data-sec="chats"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg> Chat history</button>
+          <button data-sec="referrals"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 5.5a3 3 0 0 1 0 6M18 14.8c1.8.7 3 2.4 3 5.2"/></svg> Refer friends</button>
+          <button data-sec="security"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.4 3.1 8 7.5 9.5 4.4-1.5 7.5-5.1 7.5-9.5V6L12 3Z"/><rect x="9.2" y="10.8" width="5.6" height="4.4" rx="1"/><path d="M10.6 10.8V9.6a1.4 1.4 0 0 1 2.8 0v1.2"/></svg> Security &amp; data</button>
+        </nav>
+        <button class="btn-secondary btn-block js-signout" type="button" style="margin-top:.8rem">Sign out</button>
       </div>
     </div>
 
-    <!-- right -->
     <div class="stack">
-      <div class="card">
-        <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="10" r="3.1"></circle><path d="M6.1 18.7a6.6 6.6 0 0 1 11.8 0"></path></svg> Profile <span class="save-chip" id="profChip"></span></div>
-        <div class="form-row">
-          <div class="field"><label for="pName">Display name</label><input id="pName" maxlength="50" autocomplete="name"></div>
-          <div class="field"><label for="pPhone">Phone number</label><input id="pPhone" type="tel" maxlength="16" placeholder="+91 XXXXX XXXXX" autocomplete="tel"></div>
+      <!-- PROFILE -->
+      <div class="sec" data-sec="profile">
+        <div class="card" id="completeCard"><div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg> Complete your profile <span id="completePct" style="margin-left:auto">0%</span></div><div class="complete-bar"><div id="completeBar"></div></div><div id="completeMissing" style="margin-top:.4rem"></div></div>
+        <div class="card" style="margin-top:1.4rem">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="10" r="3.1"></circle><path d="M6.1 18.7a6.6 6.6 0 0 1 11.8 0"></path></svg> Profile <span class="save-chip" id="profChip"></span></div>
+          <div class="form-row">
+            <div class="field"><label for="pName">Display name</label><input id="pName" maxlength="50" autocomplete="name"></div>
+            <div class="field"><label for="pPhone">Phone number</label><input id="pPhone" type="tel" maxlength="16" placeholder="+91 XXXXX XXXXX" autocomplete="tel"></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label for="pDob">Date of birth</label><input id="pDob" type="date"></div>
+            <div class="field"><label for="pGender">Gender</label>
+              <select id="pGender"><option value="">Prefer not to say</option><option value="male">Male</option><option value="female">Female</option><option value="nonbinary">Non-binary</option><option value="other">Other</option></select></div>
+          </div>
+          <div class="field"><label>Email</label><input id="pEmail" disabled></div>
         </div>
-        <div class="form-row">
-          <div class="field"><label for="pDob">Date of birth</label><input id="pDob" type="date"></div>
-          <div class="field"><label for="pGender">Gender</label>
-            <select id="pGender"><option value="">Prefer not to say</option><option value="male">Male</option><option value="female">Female</option><option value="nonbinary">Non-binary</option><option value="other">Other</option></select></div>
+        <div class="card" style="margin-top:1.4rem">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h9M18.5 6.5h1.5M4 12h3.5M13 12h7M4 17.5h9M18.5 17.5h1.5"></path><circle cx="15.5" cy="6.5" r="2.3"></circle><circle cx="10" cy="12" r="2.3"></circle><circle cx="15.5" cy="17.5" r="2.3"></circle></svg> Settings <span class="save-chip" id="setChip"></span></div>
+          <div class="settings-row"><div><span class="settings-row-label">Font size</span></div>
+            <select class="settings-select" id="sFont"><option value="14px">Small</option><option value="16px">Medium</option><option value="18px">Large</option></select></div>
+          <div class="settings-row"><div><span class="settings-row-label">Reduce motion</span><span class="settings-row-sub">Disable animations and transitions</span></div>
+            <label class="toggle"><input type="checkbox" id="sMotion"><span class="toggle-track"><span class="toggle-thumb"></span></span></label></div>
+          <div class="settings-row"><div><span class="settings-row-label">Compact mode</span><span class="settings-row-sub">Tighter spacing</span></div>
+            <label class="toggle"><input type="checkbox" id="sCompact"><span class="toggle-track"><span class="toggle-thumb"></span></span></label></div>
+          <div class="settings-row" id="installRow" style="display:none"><div><span class="settings-row-label">Install SafeFlame AI</span><span class="settings-row-sub">Add the app to your home screen</span></div><button class="btn-secondary" id="installBtn" type="button" style="padding:.4rem .9rem;font-size:.8rem">Install</button></div>
+          <div class="settings-row"><div><span class="settings-row-label">Order status emails</span><span class="settings-row-sub">Email me when my order status changes</span></div>
+            <label class="toggle"><input type="checkbox" id="sOrderMail" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label></div>
+          <div class="settings-row"><div><span class="settings-row-label">Launch announcements</span><span class="settings-row-sub">Be first to know when SafeFlame ships</span></div>
+            <label class="toggle"><input type="checkbox" id="sLaunchMail" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label></div>
         </div>
-        <div class="field"><label>Email</label><input id="pEmail" disabled></div>
       </div>
 
-      <div class="card">
-        <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg> My orders</div>
-        <div id="orders"><div class="empty">Loading…</div></div>
-        <a class="btn-secondary" href="/prebook" style="margin-top:.4rem">+ Pre-book another unit</a>
-      </div>
-
-      <div class="card">
-        <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h9M18.5 6.5h1.5M4 12h3.5M13 12h7M4 17.5h9M18.5 17.5h1.5"></path><circle cx="15.5" cy="6.5" r="2.3"></circle><circle cx="10" cy="12" r="2.3"></circle><circle cx="15.5" cy="17.5" r="2.3"></circle></svg> Settings <span class="save-chip" id="setChip"></span></div>
-        <div class="settings-row"><div><span class="settings-row-label">Font size</span></div>
-          <select class="settings-select" id="sFont"><option value="14px">Small</option><option value="16px">Medium</option><option value="18px">Large</option></select></div>
-        <div class="settings-row"><div><span class="settings-row-label">Reduce motion</span><span class="settings-row-sub">Disable animations and transitions</span></div>
-          <label class="toggle"><input type="checkbox" id="sMotion"><span class="toggle-track"><span class="toggle-thumb"></span></span></label></div>
-        <div class="settings-row"><div><span class="settings-row-label">Compact mode</span><span class="settings-row-sub">Tighter spacing</span></div>
-          <label class="toggle"><input type="checkbox" id="sCompact"><span class="toggle-track"><span class="toggle-thumb"></span></span></label></div>
-        <div class="settings-row"><div><span class="settings-row-label">Order status emails</span><span class="settings-row-sub">Email me when my order status changes</span></div>
-          <label class="toggle"><input type="checkbox" id="sOrderMail" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label></div>
-        <div class="settings-row"><div><span class="settings-row-label">Launch announcements</span><span class="settings-row-sub">Be first to know when SafeFlame ships</span></div>
-          <label class="toggle"><input type="checkbox" id="sLaunchMail" checked><span class="toggle-track"><span class="toggle-thumb"></span></span></label></div>
-      </div>
-
-      <div class="card">
-        <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.4 3.1 8 7.5 9.5 4.4-1.5 7.5-5.1 7.5-9.5V6L12 3Z"/><rect x="9.2" y="10.8" width="5.6" height="4.4" rx="1"/><path d="M10.6 10.8V9.6a1.4 1.4 0 0 1 2.8 0v1.2"/></svg> Security</div>
-        <div style="display:flex;gap:.8rem;flex-wrap:wrap">
-          <button class="btn-secondary js-signout" type="button">Sign out</button>
-          <button class="btn-secondary" id="pwBtn" type="button">Change password</button>
-          <button class="btn-secondary btn-danger" id="delBtn" type="button">Delete account</button>
+      <!-- ORDERS -->
+      <div class="sec hidden" data-sec="orders">
+        <div class="card">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg> My orders</div>
+          <div id="orders"><div class="skel skel-card"></div><div class="skel skel-card"></div></div>
+          <a class="btn-secondary" href="/prebook" style="margin-top:.4rem"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Pre-book another unit</a>
         </div>
-        <div class="msg-error" id="secErr"></div><div class="msg-ok" id="secOk"></div>
+      </div>
+
+      <!-- NOTIFICATIONS -->
+      <div class="sec hidden" data-sec="notifications">
+        <div class="card">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg> Notifications <button class="link-btn" id="markAllRead" type="button" style="margin-left:auto">Mark all as read</button></div>
+          <div id="notifs"><div class="skel skel-card"></div></div>
+        </div>
+      </div>
+
+      <!-- ADDRESSES -->
+      <div class="sec hidden" data-sec="addresses">
+        <div class="card">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.4"/></svg> Saved addresses</div>
+          <div id="addrList"></div>
+          <button class="btn-secondary" id="addAddrBtn" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add an address</button>
+        </div>
+      </div>
+
+      <!-- CHATS -->
+      <div class="sec hidden" data-sec="chats">
+        <div class="card">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg> Chat history</div>
+          <div id="chatList"><div class="skel skel-card"></div></div>
+          <a class="btn-secondary" href="/chat" style="margin-top:.4rem"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg> Start a chat</a>
+        </div>
+      </div>
+
+      <!-- REFERRALS -->
+      <div class="sec hidden" data-sec="referrals">
+        <div class="card">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 5.5a3 3 0 0 1 0 6M18 14.8c1.8.7 3 2.4 3 5.2"/></svg> Refer friends</div>
+          <p class="page-sub" style="margin-bottom:1rem">Share your link. When a friend pre-books through it, they show up here.</p>
+          <div class="field"><label>Your referral link</label>
+            <div style="display:flex;gap:.6rem"><input id="refLink" readonly style="flex:1"><button class="btn-secondary" id="copyRef" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="8.5" y="8.5" width="11" height="11" rx="2"/><path d="M15.5 8.5V6A1.5 1.5 0 0 0 14 4.5H6A1.5 1.5 0 0 0 4.5 6v8A1.5 1.5 0 0 0 6 15.5h2.5"/></svg> Copy</button></div></div>
+          <div class="stat-row"><span>Your code</span><span id="refCode">—</span></div>
+          <div class="stat-row"><span>Friends who pre-booked</span><span id="refCount">0</span></div>
+          <div id="refList" style="margin-top:.8rem"></div>
+        </div>
+      </div>
+
+      <!-- DEVICES -->
+      <div class="sec hidden" data-sec="devices">
+        <div class="card">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.6" width="18" height="7" rx="2.2"></rect><rect x="3" y="13.4" width="18" height="7" rx="2.2"></rect><path d="M14.6 7.1h3.2M14.6 16.9h3.2" stroke-width="1.5"></path><g fill="currentColor" stroke="none"><circle cx="6.9" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.35s" repeatCount="indefinite"></animate></circle><circle cx="6.9" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.7s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="1.05s" repeatCount="indefinite"></animate></circle></g></svg> My devices &amp; warranty <button class="btn-secondary" id="regDevBtn" type="button" style="margin-left:auto;padding:.4rem .9rem;font-size:.8rem"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Register device</button></div>
+          <div id="devList"></div>
+        </div>
+        <div class="card" style="margin-top:1.4rem">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.2-4.5L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14.2 4.5l1.8-2M20 20v-4.5h-4.5"/></svg> Firmware</div>
+          <div id="fwBox"></div>
+        </div>
+      </div>
+
+      <!-- GUIDES -->
+      <div class="sec hidden" data-sec="guides">
+        <div class="card">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg> Setup guides &amp; troubleshooting</div>
+          <div id="guideList"></div>
+        </div>
+      </div>
+
+      <!-- TICKETS -->
+      <div class="sec hidden" data-sec="tickets">
+        <div class="card">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg> Support tickets <button class="btn-secondary" id="newTicketBtn" type="button" style="margin-left:auto;padding:.4rem .9rem;font-size:.8rem"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> New ticket</button></div>
+          <div id="ticketList"></div>
+        </div>
+      </div>
+
+      <!-- COMMUNITY -->
+      <div class="sec hidden" data-sec="community">
+        <div class="card">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8L12 3.5Z"/></svg> Share your setup <button class="btn-secondary" id="newStoryBtn" type="button" style="margin-left:auto;padding:.4rem .9rem;font-size:.8rem"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Share</button></div>
+          <p class="page-sub" style="margin-bottom:1rem">Tell us how SafeFlame AI fits in your kitchen. Stories appear on the website only after we approve them.</p>
+          <div id="storyList"></div>
+        </div>
+        <div class="card" style="margin-top:1.4rem">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h3l8 4V6L7 10H4ZM18 9.5a3.5 3.5 0 0 1 0 5"/></svg> Ideas &amp; roadmap</div>
+          <p class="page-sub" style="margin-bottom:1rem">Suggest features and vote on what we should build next.</p>
+          <a class="btn-secondary" href="/help#ideas">Open ideas board</a>
+        </div>
+      </div>
+
+      <!-- SECURITY -->
+      <div class="sec hidden" data-sec="security">
+        <div class="card">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="3.8"/><path d="m10.8 12.2 8.2-8.2M16 7l2.5 2.5M14 9l2 2"/></svg> Change password</div>
+          <div id="pwForm">
+            <div class="field"><label for="pwCur">Current password</label><input type="password" id="pwCur" autocomplete="current-password"></div>
+            <div class="form-row">
+              <div class="field"><label for="pwNew">New password</label><input type="password" id="pwNew" autocomplete="new-password" placeholder="Min 6 characters"></div>
+              <div class="field"><label for="pwNew2">Confirm new password</label><input type="password" id="pwNew2" autocomplete="new-password"></div>
+            </div>
+            <button class="btn-primary" id="pwBtn" type="button">Update password</button>
+          </div>
+          <p class="hint hidden" id="pwGoogle">You signed in with Google, so your password is managed in your Google account.</p>
+          <div class="msg-error" id="pwErr"></div><div class="msg-ok" id="pwOk"></div>
+        </div>
+        <div class="card" style="margin-top:1.4rem">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg> Sign-in methods</div>
+          <div id="linkedBox"></div><div class="msg-error" id="lkErr"></div><div class="msg-ok" id="lkOk"></div>
+        </div>
+        <div class="card" style="margin-top:1.4rem">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14"/></svg> Your data</div>
+          <p class="page-sub" style="margin-bottom:1rem">Download a copy of your profile, addresses, orders, chats and notifications.</p>
+          <button class="btn-secondary" id="dlData" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14"/></svg> Download my data</button>
+          <div class="msg-error" id="dlErr"></div>
+        </div>
+        <div class="card" style="margin-top:1.4rem">
+          <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg> Danger zone</div>
+          <div style="display:flex;gap:.8rem;flex-wrap:wrap">
+            <button class="btn-secondary js-signout" type="button">Sign out</button>
+            <button class="btn-secondary btn-danger" id="delBtn" type="button">Delete account</button>
+          </div>
+          <div class="msg-error" id="secErr"></div>
+        </div>
       </div>
     </div>
   </div>
 </div>
+
+<!-- generic modal -->
+<div class="modal-back hidden" id="mdl" role="dialog" aria-modal="true"><div class="card modal-card" id="mdlCard" style="max-height:92vh;overflow:auto"></div></div>
+
+<!-- delete account -->
 <div class="modal-back hidden" id="delModal" role="dialog" aria-modal="true" aria-labelledby="delTitle">
   <div class="card modal-card">
     <div class="card-icon" style="color:var(--red)"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg></div>
@@ -299,6 +510,8 @@ html.reduce-motion *{transition:none!important;animation:none!important}
   </div>
 </div>
 </main>
+<footer class="sf-foot"><a href="/privacy">Privacy</a> · <a href="/refund">Refunds</a> · <a href="/warranty">Warranty</a> · <a href="/help">Help</a></footer>
+
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
@@ -333,11 +546,42 @@ const DEFAULT_SETTINGS = {
   baseStock: -1, proStock: -1, eliteStock: -1, orderNumberStart: 100000,
   geminiApiKey: '', geminiApiKeys: [], geminiModel: 'gemini-3.5-flash',
   emailjsServiceId: '', emailjsTemplateId: '', emailjsPublicKey: '',
+  announcement: { enabled: false, text: '', link: '' },
+  maintenance: { enabled: false, message: "We're making a few improvements. Please check back shortly." },
+  addons: [
+    { id: 'warranty', name: 'Extended warranty (+1 year)', price: 1499, enabled: true },
+    { id: 'install', name: 'Professional installation', price: 999, enabled: true }
+  ],
+  eta: { base: 'Within 3–4 weeks of launch', pro: 'Within 3–4 weeks of launch', elite: 'Within 4–5 weeks of launch' },
+  lowStockThreshold: 3, warrantyMonths: 12, firmware: [], knowledge: '',
+  awayMode: { enabled: false, startHour: 9, endHour: 21, message: 'Our team is away right now. Leave your message and we will reply as soon as we are back.', notifyEmail: '' },
+  seo: { title: '', description: '', image: '' },
+  guides: [
+    { id: 'safety', category: 'Getting started', title: 'Before you start: safety first', body: '## Before installation\n- Turn off the gas supply at the cylinder before anything is connected or moved.\n- Keep the unit away from water, steam and direct flame.\n- Never block kitchen ventilation.\n- Do not modify gas fittings yourself — ask us to help with installation.' },
+    { id: 'box', category: 'Getting started', title: 'Unboxing checklist', body: 'Check everything in the box against the list you received. Keep the packaging until your device is registered, and tell us straight away (with a photo) if anything is damaged or missing.' },
+    { id: 'setup', category: 'Setup', title: 'Powering on and connecting', body: 'Your unit shows its setup instructions on the touchscreen. If a step does not work, open a support ticket from this account and attach a photo of the screen — we will walk you through it.' },
+    { id: 'alerts', category: 'Troubleshooting', title: 'Alerts keep triggering', body: '- Check the room is ventilated and the sensor area is clean and dust-free.\n- Make sure nothing is leaking: if you smell gas, turn off the cylinder and leave the room, then contact us.\n- If it keeps happening, open a ticket so we can look at the readings.' },
+    { id: 'offline', category: 'Troubleshooting', title: 'Unit shows offline', body: '- Check your Wi-Fi router is on and the password has not changed.\n- Restart the unit once, then wait a minute.\n- Still offline? Open a ticket with a photo of the status screen.' }
+  ],
+  cannedReplies: ['Thanks for reaching out — let me check that for you.', 'Your order status is in your account under My orders.', 'Is there anything else I can help you with?'],
+  faq: [
+    { q: 'When will SafeFlame AI ship?', a: 'Pre-bookings ship in launch order. Each order shows an estimated delivery window in your account.' },
+    { q: 'Do I pay when I pre-book?', a: 'No. Pre-booking only reserves your unit — nothing is charged now.' },
+    { q: 'Can I change or cancel my order?', a: 'Yes, while it is still Pending. Open your account, go to My orders and choose Edit or Cancel.' },
+    { q: 'Which tier should I choose?', a: 'Base suits one kitchen with one camera. Pro adds a second camera and gas-weight display. Elite adds four cameras and multi-room support.' },
+    { q: 'How does the safety shut-off work?', a: 'Gas, flame and pressure sensors watch the kitchen. If something is wrong the valve closes automatically and you get an alert.' },
+    { q: 'How do I reach a person?', a: 'Open Chat and ask for a human — our team replies in the same window.' }
+  ],
   statusEmails: {
     pending: { subject: "We've received your SafeFlame AI order", message: "Hi {{name}}, thanks for pre-booking! Your order {{order_id}} for {{tier}} (x{{quantity}}) is currently Pending — total {{total_price}}. We'll email you again once it's confirmed.", serviceId: '', templateId: '', publicKey: '' }
   },
   otpEmail: { subject: 'Your SafeFlame AI verification code', message: 'Hi {{name}}, your SafeFlame AI verification code is {{otp}}. It expires in 10 minutes. Never share this code with anyone.', serviceId: '', templateId: '', publicKey: '' },
   verifyEmail: { subject: 'Verify your SafeFlame AI account', message: 'Hi {{name}}, welcome to SafeFlame AI! Please confirm your email address to activate your account: {{link}}', serviceId: '', templateId: '', publicKey: '' }
+};
+const DEFAULT_PAGES = {
+  privacy: { title: 'Privacy policy', body: '## What we collect\n- Account details: your name and email, plus phone, date of birth and gender if you choose to add them.\n- Orders: delivery addresses, order history and delivery notes.\n- Support: chat messages, support tickets and any photos you attach.\n- Technical: basic usage and error information that keeps the site working.\n\n## How we use it\nTo take and deliver your pre-booking, support you, send order emails and improve SafeFlame AI. We do not sell your data.\n\n## Who helps us run the service\nGoogle Firebase (accounts and database), EmailJS (sending emails) and Google Gemini (the AI chat assistant). If you pick a language other than English, the page text is translated by Google Translate.\n\n## Your choices\nYou can download your data or delete your account at any time from your account page. For anything else, contact us through the chat.' },
+  refund: { title: 'Refund & cancellation policy', body: '## Pre-booking\nPre-booking does not charge anything. You can edit or cancel an order for free while it is Pending, from My orders in your account.\n\n## After an order is confirmed or shipped\nOpen a support ticket from your account and we will review the request with you.\n\n## Refunds\nIf a payment has been taken and the order is cancelled or cannot be fulfilled, the amount is returned to the original payment method. Bank timelines vary.\n\n## Damaged or wrong items\nTell us as soon as possible through a support ticket and attach photos.' },
+  warranty: { title: 'Warranty', body: '## Coverage\nEach unit comes with a warranty from the start date you register in your account. The Extended warranty add-on lengthens it by 12 months. Your exact end date is shown under Devices & warranty.\n\n## What is covered\nFaults in materials and workmanship under normal home use.\n\n## What is not covered\n- Damage from water, misuse or accidents.\n- Changes to gas fittings or the unit\'s electronics by anyone other than our team.\n\n## How to claim\nRegister your device, then choose Claim warranty on its card. We will reply in your support ticket.' }
 };
 let siteSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
 function mergeSettings(data) {
@@ -346,14 +590,66 @@ function mergeSettings(data) {
     ...DEFAULT_SETTINGS, ...data,
     statusEmails: { ...DEFAULT_SETTINGS.statusEmails, ...(data.statusEmails || {}) },
     otpEmail: { ...DEFAULT_SETTINGS.otpEmail, ...(data.otpEmail || {}) },
-    verifyEmail: { ...DEFAULT_SETTINGS.verifyEmail, ...(data.verifyEmail || {}) }
+    verifyEmail: { ...DEFAULT_SETTINGS.verifyEmail, ...(data.verifyEmail || {}) },
+    announcement: { ...DEFAULT_SETTINGS.announcement, ...(data.announcement || {}) },
+    maintenance: { ...DEFAULT_SETTINGS.maintenance, ...(data.maintenance || {}) },
+    eta: { ...DEFAULT_SETTINGS.eta, ...(data.eta || {}) },
+    addons: Array.isArray(data.addons) ? data.addons : DEFAULT_SETTINGS.addons,
+    faq: Array.isArray(data.faq) && data.faq.length ? data.faq : DEFAULT_SETTINGS.faq,
+    cannedReplies: Array.isArray(data.cannedReplies) ? data.cannedReplies : DEFAULT_SETTINGS.cannedReplies,
+    guides: Array.isArray(data.guides) ? data.guides : DEFAULT_SETTINGS.guides,
+    firmware: Array.isArray(data.firmware) ? data.firmware : [],
+    awayMode: { ...DEFAULT_SETTINGS.awayMode, ...(data.awayMode || {}) },
+    seo: { ...DEFAULT_SETTINGS.seo, ...(data.seo || {}) },
+    pages: { privacy: { ...DEFAULT_PAGES.privacy, ...((data.pages || {}).privacy || {}) }, refund: { ...DEFAULT_PAGES.refund, ...((data.pages || {}).refund || {}) }, warranty: { ...DEFAULT_PAGES.warranty, ...((data.pages || {}).warranty || {}) } }
   };
 }
-async function loadSiteSettings() {
-  try { const d = await db.collection('settings').doc('site').get(); if (d.exists) siteSettings = mergeSettings(d.data()); }
-  catch (e) { console.warn('Settings load failed, using defaults:', e); }
-  return siteSettings;
+let _settingsP = null;
+function loadSiteSettings(force) {
+  if (_settingsP && !force) return _settingsP;
+  _settingsP = (async () => {
+    try { const d = await db.collection('settings').doc('site').get(); if (d.exists) siteSettings = mergeSettings(d.data()); }
+    catch (e) { console.warn('Settings load failed, using defaults:', e); }
+    if (!window.SF_APP_NAME) applySiteControls(siteSettings);
+    return siteSettings;
+  })();
+  return _settingsP;
 }
+
+/* ── site controls: announcement bar + maintenance mode (set in Admin > Site) ── */
+function applySiteControls(s) {
+  try {
+    const a = s.announcement || {};
+    if (a.enabled && a.text && !sessionStorage.getItem('sf_banner_closed') && !document.getElementById('sfBanner')) {
+      const b = document.createElement('div'); b.id = 'sfBanner';
+      b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9000;background:linear-gradient(90deg,#FF5722,#FF8A65);color:#fff;font:600 .85rem Inter,system-ui,sans-serif;padding:.65rem 4.5rem .65rem 1rem;text-align:center';
+      const txt = document.createElement(a.link ? 'a' : 'span'); txt.textContent = a.text; if (a.link) { txt.href = a.link; txt.style.cssText = 'color:#fff;text-decoration:underline'; }
+      const x = document.createElement('button'); x.textContent = '✕'; x.setAttribute('aria-label', 'Dismiss');
+      x.style.cssText = 'position:absolute;right:4.6rem;top:50%;transform:translateY(-50%);background:none;border:none;color:#fff;cursor:pointer;font-size:1rem';
+      x.onclick = () => { sessionStorage.setItem('sf_banner_closed', '1'); b.remove(); };
+      b.append(txt, x); document.body.appendChild(b);
+    }
+    const m = s.maintenance || {};
+    if (m.enabled && !document.getElementById('sfMaint')) {
+      const o = document.createElement('div'); o.id = 'sfMaint';
+      o.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#08080f;color:#f0f0f8;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:Inter,system-ui,sans-serif';
+      const d = document.createElement('div'); const h = document.createElement('h1'); h.textContent = 'Back soon'; h.style.cssText = 'margin:0 0 .7rem;font-size:1.8rem';
+      const p = document.createElement('p'); p.textContent = m.message || ''; p.style.cssText = 'color:#a0a0b8;max-width:420px;margin:0 auto';
+      d.append(h, p); o.appendChild(d); document.body.appendChild(o);
+      // admins can still use the site while it is in maintenance mode
+      try { auth.onAuthStateChanged(u => { if (u && isAdminEmail(u.email)) o.remove(); }); } catch (_) {}
+    }
+  } catch (e) { console.warn('site controls', e); }
+}
+
+/* ── shared order/notification/log helpers ── */
+const orderTotal = o => (Number(o.unitPrice) || 0) * (Number(o.quantity) || 1) + (Number(o.addonsTotal) || 0);
+function fmtAddress(a) { return a ? [a.name, a.line1, a.line2, [a.city, a.state].filter(Boolean).join(', '), a.pin, a.phone && ('Ph: ' + a.phone)].filter(Boolean).join(', ') : ''; }
+function pushNotification(n) { return db.collection('notifications').add({ read: false, createdAt: TS(), ...n, email: String(n.email || '').toLowerCase() }).catch(e => console.warn('notification failed', e)); }
+function logEmail(kind, to, subject, ok, error, orderId) { try { db.collection('emailLog').add({ kind: kind || 'email', to: String(to || '').toLowerCase(), subject: String(subject || '').slice(0, 140), ok: !!ok, error: error ? String(error).slice(0, 300) : '', orderId: orderId || '', at: TS() }).catch(() => {}); } catch (_) {} }
+/* referrals: ?ref=CODE is remembered and attached to a later pre-booking */
+function refCodeFor(uid) { let h = 5381; for (let i = 0; i < uid.length; i++) h = ((h << 5) + h + uid.charCodeAt(i)) >>> 0; return 'SF' + h.toString(36).toUpperCase().padStart(6, '0').slice(0, 6); }
+(function captureRef() { try { const r = new URLSearchParams(location.search).get('ref'); if (r && /^[A-Z0-9]{4,12}$/i.test(r)) localStorage.setItem('sf_ref', r.toUpperCase()); } catch (_) {} })();
 
 /* ── helpers ── */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -401,37 +697,40 @@ function qs(name) { return new URLSearchParams(location.search).get(name); }
 function safeNext(n) { return n && /^\/?[a-z0-9_-]*(\.html)?(\?[\w=&%.-]*)?$/i.test(n) ? n : null; }
 
 /* ── EmailJS ── */
-async function sendWithCfg(cfg, params) {
+async function sendWithCfg(cfg, params, kind, orderId) {
   cfg = cfg || {};
   const svc = cfg.serviceId || siteSettings.emailjsServiceId;
   const tpl = cfg.templateId || siteSettings.emailjsTemplateId;
   const key = cfg.publicKey || siteSettings.emailjsPublicKey;
-  if (!svc || !tpl || !key) throw new Error('EMAILJS_NOT_CONFIGURED');
-  return emailjs.send(svc, tpl, params, { publicKey: key });
+  if (!svc || !tpl || !key) { logEmail(kind, params.to_email, params.subject, false, 'EmailJS not configured', orderId); throw new Error('EMAILJS_NOT_CONFIGURED'); }
+  try { const r = await emailjs.send(svc, tpl, params, { publicKey: key }); logEmail(kind, params.to_email, params.subject, true, '', orderId); return r; }
+  catch (e) { logEmail(kind, params.to_email, params.subject, false, (e && (e.text || e.message)) || 'send failed', orderId); throw e; }
 }
 async function sendOtpEmail(email, name, otp) {
   const cfg = siteSettings.otpEmail;
   const tokens = { name: name || 'there', otp, email };
-  return sendWithCfg(cfg, { to_email: email, to_name: name || 'there', name: name || 'there', email, otp, subject: renderTokens(cfg.subject, tokens), message: renderTokens(cfg.message, tokens), order_id: '' });
+  return sendWithCfg(cfg, { to_email: email, to_name: name || 'there', name: name || 'there', email, otp, subject: renderTokens(cfg.subject, tokens), message: renderTokens(cfg.message, tokens), order_id: '' }, 'otp');
 }
 async function sendVerifyEmail(email, name, link) {
   const cfg = siteSettings.verifyEmail;
   const tokens = { name: name || 'there', email, link };
-  return sendWithCfg(cfg, { to_email: email, to_name: name || 'there', name: name || 'there', email, link, subject: renderTokens(cfg.subject, tokens), message: renderTokens(cfg.message, tokens), order_id: '' });
+  return sendWithCfg(cfg, { to_email: email, to_name: name || 'there', name: name || 'there', email, link, subject: renderTokens(cfg.subject, tokens), message: renderTokens(cfg.message, tokens), order_id: '' }, 'verify');
 }
-function sendOrderConfirmationEmail(order) {
-  if (!order.email) return;
-  const cfg = (siteSettings.statusEmails && siteSettings.statusEmails.pending) || DEFAULT_SETTINGS.statusEmails.pending;
-  const tierLabel = tierLabelFor(order.tier), qty = Number(order.quantity) || 1, unit = order.unitPrice, total = unit * qty;
-  const t = { name: order.name || 'there', order_id: orderNumberFor(order), tier: tierLabel, quantity: qty, unit_price: fmtINR(unit), total_price: fmtINR(total), status: 'Pending', phone: order.phone || '' };
-  sendWithCfg(cfg, {
+function sendOrderEmail(order, status) {
+  status = status || 'pending';
+  if (!order.email) return Promise.resolve();
+  const cfg = (siteSettings.statusEmails && siteSettings.statusEmails[status]) || DEFAULT_SETTINGS.statusEmails[status] || DEFAULT_SETTINGS.statusEmails.pending;
+  const tierLabel = tierLabelFor(order.tier), qty = Number(order.quantity) || 1, unit = Number(order.unitPrice) || 0, total = orderTotal(order);
+  const t = { name: order.name || 'there', order_id: orderNumberFor(order), tier: tierLabel, quantity: qty, unit_price: fmtINR(unit), total_price: fmtINR(total), status: status.charAt(0).toUpperCase() + status.slice(1), phone: order.phone || '', address: fmtAddress(order.shipping) || order.address || '', tracking: order.tracking || '', eta: order.eta || '' };
+  const lines = [{ name: 'SafeFlame AI — ' + tierLabel, units: qty, price: (unit * qty).toLocaleString('en-IN') }].concat((order.addons || []).map(a => ({ name: a.name, units: 1, price: Number(a.price).toLocaleString('en-IN') })));
+  return sendWithCfg(cfg, {
     to_email: order.email, to_name: t.name, subject: renderTokens(cfg.subject, t), email: order.email, order_id: t.order_id,
-    orders: [{ name: 'SafeFlame AI — ' + tierLabel, units: qty, price: total.toLocaleString('en-IN') }],
-    cost: { shipping: '0', tax: '0', total: total.toLocaleString('en-IN') },
+    orders: lines, cost: { shipping: '0', tax: '0', total: total.toLocaleString('en-IN') },
     product_name: 'SafeFlame AI — ' + tierLabel, tier: tierLabel, quantity: qty, unit_price: t.unit_price, total_price: t.total_price,
-    status: 'pending', phone: t.phone, message: renderTokens(cfg.message, t)
-  }).catch(e => console.warn('Confirmation email failed:', e));
+    status, phone: t.phone, address: t.address, tracking: t.tracking, eta: t.eta, message: renderTokens(cfg.message, t)
+  }, 'order-' + status, order.id).catch(e => console.warn('Order email failed:', e));
 }
+const sendOrderConfirmationEmail = o => sendOrderEmail(o, 'pending');
 
 /* ── Gemini (used by chat page) ── */
 function getGeminiKeys() {
@@ -504,28 +803,96 @@ async function createAndSendVerification(user, name) {
 }
 
 /* ── top bar account button ── */
+let _unreadUnsub = null;
 function initNavAccount(sel) {
   const el = document.querySelector(sel || '#navAccount'); if (!el) return;
   auth.onAuthStateChanged(async user => {
+    if (_unreadUnsub) { _unreadUnsub(); _unreadUnsub = null; }
     if (!user) { el.className = 'nav-account'; el.href = '/login'; el.textContent = 'Sign In'; return; }
     let name = user.displayName || user.email.split('@')[0], photo = user.photoURL;
     try { const d = await db.collection('users').doc(user.uid).get(); if (d.exists) { name = d.data().displayName || name; photo = d.data().photoURL || photo; } } catch (_) {}
     el.className = 'nav-account signed-in'; el.href = '/account'; el.title = 'Your account';
-    el.innerHTML = (photo ? `<img src="${esc(photo)}" alt="">` : `<span class="nav-initial">${esc(name.charAt(0).toUpperCase())}</span>`) + esc(name.split(' ')[0]);
+    const base = (photo ? `<img src="${esc(photo)}" alt="">` : `<span class="nav-initial">${esc(name.charAt(0).toUpperCase())}</span>`) + esc(name.split(' ')[0]);
+    el.innerHTML = base;
+    try {
+      _unreadUnsub = db.collection('notifications').where('email', '==', String(user.email).toLowerCase()).where('read', '==', false).onSnapshot(s => {
+        el.innerHTML = base + (s.size ? '<span class="nav-badge">' + s.size + '</span>' : '');
+        el.href = s.size ? '/account#notifications' : '/account';
+      }, () => {});
+    } catch (_) {}
   });
 }
 const GOOGLE_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58Z" fill="#EA4335"/></svg>';
 const HEAD_LIBS = '';
+if (!window.SF_APP_NAME) loadSiteSettings();
+/* ── language picker (Google Website Translator: ~130 languages, machine translation) ── */
+const SF_LANGS = [['en','English'],['af','Afrikaans'],['sq','Albanian'],['am','Amharic'],['ar','Arabic'],['hy','Armenian'],['as','Assamese'],['ay','Aymara'],['az','Azerbaijani'],['bm','Bambara'],['eu','Basque'],['be','Belarusian'],['bn','Bengali'],['bho','Bhojpuri'],['bs','Bosnian'],['bg','Bulgarian'],['ca','Catalan'],['ceb','Cebuano'],['ny','Chichewa'],['zh-CN','Chinese (Simplified)'],['zh-TW','Chinese (Traditional)'],['co','Corsican'],['hr','Croatian'],['cs','Czech'],['da','Danish'],['dv','Dhivehi'],['doi','Dogri'],['nl','Dutch'],['eo','Esperanto'],['et','Estonian'],['ee','Ewe'],['tl','Filipino'],['fi','Finnish'],['fr','French'],['fy','Frisian'],['gl','Galician'],['ka','Georgian'],['de','German'],['el','Greek'],['gn','Guarani'],['gu','Gujarati'],['ht','Haitian Creole'],['ha','Hausa'],['haw','Hawaiian'],['iw','Hebrew'],['hi','Hindi'],['hmn','Hmong'],['hu','Hungarian'],['is','Icelandic'],['ig','Igbo'],['ilo','Ilocano'],['id','Indonesian'],['ga','Irish'],['it','Italian'],['ja','Japanese'],['jw','Javanese'],['kn','Kannada'],['kk','Kazakh'],['km','Khmer'],['rw','Kinyarwanda'],['gom','Konkani'],['ko','Korean'],['kri','Krio'],['ku','Kurdish (Kurmanji)'],['ckb','Kurdish (Sorani)'],['ky','Kyrgyz'],['lo','Lao'],['la','Latin'],['lv','Latvian'],['ln','Lingala'],['lt','Lithuanian'],['lg','Luganda'],['lb','Luxembourgish'],['mk','Macedonian'],['mai','Maithili'],['mg','Malagasy'],['ms','Malay'],['ml','Malayalam'],['mt','Maltese'],['mi','Maori'],['mr','Marathi'],['mni-Mtei','Meiteilon (Manipuri)'],['lus','Mizo'],['mn','Mongolian'],['my','Myanmar (Burmese)'],['ne','Nepali'],['no','Norwegian'],['or','Odia (Oriya)'],['om','Oromo'],['ps','Pashto'],['fa','Persian'],['pl','Polish'],['pt','Portuguese'],['pa','Punjabi'],['qu','Quechua'],['ro','Romanian'],['ru','Russian'],['sm','Samoan'],['sa','Sanskrit'],['gd','Scots Gaelic'],['nso','Sepedi'],['sr','Serbian'],['st','Sesotho'],['sn','Shona'],['sd','Sindhi'],['si','Sinhala'],['sk','Slovak'],['sl','Slovenian'],['so','Somali'],['es','Spanish'],['su','Sundanese'],['sw','Swahili'],['sv','Swedish'],['tg','Tajik'],['ta','Tamil'],['tt','Tatar'],['te','Telugu'],['th','Thai'],['ti','Tigrinya'],['ts','Tsonga'],['tr','Turkish'],['tk','Turkmen'],['ak','Twi'],['uk','Ukrainian'],['ur','Urdu'],['ug','Uyghur'],['uz','Uzbek'],['vi','Vietnamese'],['cy','Welsh'],['xh','Xhosa'],['yi','Yiddish'],['yo','Yoruba'],['zu','Zulu']];
+function sfSetLangCookie(code) {
+  const v = code === 'en' ? '' : '/en/' + code, exp = code === 'en' ? ';expires=Thu, 01 Jan 1970 00:00:00 GMT' : '';
+  document.cookie = 'googtrans=' + v + ';path=/' + exp; document.cookie = 'googtrans=' + v + ';path=/;domain=' + location.hostname + exp;
+}
+function sfLoadTranslator() {
+  if (window.__sfGt) return; window.__sfGt = 1;
+  const d = document.createElement('div'); d.id = 'sf_gt'; d.style.display = 'none'; document.body.appendChild(d);
+  const st = document.createElement('style'); st.textContent = '.goog-te-banner-frame,.skiptranslate>iframe{display:none!important}body{top:0!important}.goog-tooltip{display:none!important}.goog-text-highlight{background:none!important;box-shadow:none!important}'; document.head.appendChild(st);
+  window.googleTranslateElementInit = () => { try { new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false }, 'sf_gt'); } catch (_) {} };
+  const s = document.createElement('script'); s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'; s.async = true; document.head.appendChild(s);
+}
+function initLanguage() {
+  const sel = document.getElementById('langSel'), saved = localStorage.getItem('sf_lang') || 'en';
+  if (sel) {
+    sel.innerHTML = SF_LANGS.map(l => '<option value="' + l[0] + '">' + l[1] + '</option>').join(''); sel.value = saved; sel.setAttribute('translate', 'no');
+    sel.onchange = () => { localStorage.setItem('sf_lang', sel.value); sfSetLangCookie(sel.value); location.reload(); };
+  }
+  if (saved !== 'en') { sfSetLangCookie(saved); sfLoadTranslator(); }
+}
+
+if (!window.SF_APP_NAME) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initLanguage); else initLanguage(); }
+/* tiny safe text formatter for guides and policy pages: ## heading, - bullets, 1. numbers, **bold**, blank line = new paragraph */
+function richText(src) {
+  let out = '', list = null; const close = () => { if (list) { out += '</' + list + '>'; list = null; } }, inl = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  String(src || '').replace(/\r/g, '').split('\n').forEach(l => {
+    const t = l.trim(); if (!t) { close(); return; } let m;
+    if ((m = t.match(/^##\s+(.*)/))) { close(); out += '<h3>' + inl(m[1]) + '</h3>'; }
+    else if ((m = t.match(/^[-*]\s+(.*)/))) { if (list !== 'ul') { close(); out += '<ul>'; list = 'ul'; } out += '<li>' + inl(m[1]) + '</li>'; }
+    else if ((m = t.match(/^\d+[.)]\s+(.*)/))) { if (list !== 'ol') { close(); out += '<ol>'; list = 'ol'; } out += '<li>' + inl(m[1]) + '</li>'; }
+    else { close(); out += '<p>' + inl(t) + '</p>'; }
+  });
+  close(); return out;
+}
+if ('serviceWorker' in navigator && !window.SF_APP_NAME) navigator.serviceWorker.register('/sw.js').catch(() => {});
 </script>
 <script>
 initNavAccount();
 const $ = id => document.getElementById(id);
-let user = null, profile = {};
-
+let user = null, profile = {}, orders = [], notifs = [], leaving = false;
+const rs = n => 'Rs. ' + Number(n || 0).toLocaleString('en-IN');
+const inr = n => fmtINR(n || 0);
+const fmtD = ms => ms ? new Date(ms).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : '';
+const tsMs = t => t && t.toMillis ? t.toMillis() : (t && t.__ts) || 0;
 function chip(el, state, text) { el.className = 'save-chip ' + (state || ''); el.textContent = text || ''; if (state === 'ok') setTimeout(() => { if (el.textContent === text) { el.textContent = ''; el.className = 'save-chip'; } }, 2000); }
 function ageFrom(dob) { return dob ? Math.floor((Date.now() - new Date(dob)) / 31557600000) + ' yrs' : '—'; }
 function setAvatar(url, name) { $('avatar').innerHTML = url ? '<img src="' + esc(url) + '" alt="">' : esc((name || '?').charAt(0).toUpperCase()); }
+const isPasswordUser = () => user.providerData.some(p => p.providerId === 'password');
 
+/* ── sections ── */
+function showSec(name) {
+  if (!document.querySelector('.sec[data-sec="' + name + '"]')) name = 'profile';
+  document.querySelectorAll('.sec').forEach(s => s.classList.toggle('hidden', s.dataset.sec !== name));
+  document.querySelectorAll('#accNav button').forEach(b => b.classList.toggle('active', b.dataset.sec === name));
+  if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name);
+}
+document.querySelectorAll('#accNav button').forEach(b => b.addEventListener('click', () => showSec(b.dataset.sec)));
+window.addEventListener('hashchange', () => showSec(location.hash.slice(1)));
+
+/* ── modal ── */
+function openModal(html) { $('mdlCard').innerHTML = html; $('mdl').classList.remove('hidden'); }
+function closeModal() { $('mdl').classList.add('hidden'); $('mdlCard').innerHTML = ''; }
+$('mdl').addEventListener('click', e => { if (e.target === $('mdl')) closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); closeDel(); } });
+const mHead = (icon, title, sub) => '<div class="card-icon">' + icon + '</div><h2 class="page-title center" style="font-size:1.25rem">' + title + '</h2>' + (sub ? '<p class="page-sub center">' + sub + '</p>' : '');
+
+/* ── load everything ── */
 async function loadAll() {
   try { const d = await db.collection('users').doc(user.uid).get(); profile = d.exists ? d.data() : {}; } catch (_) {}
   const name = profile.displayName || user.displayName || '';
@@ -533,31 +900,18 @@ async function loadAll() {
   $('dName').textContent = name || user.email.split('@')[0]; $('dEmail').textContent = user.email; $('sAge').textContent = ageFrom(profile.dob);
   $('sSince').textContent = user.metadata.creationTime ? new Date(user.metadata.creationTime).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : '—';
   setAvatar(profile.photoURL || user.photoURL, name || user.email);
-  // settings
   const local = getLocalPrefs(), p = { ...(profile.prefs || {}), ...local };
   $('sFont').value = p.fontSize || '16px'; $('sMotion').checked = !!p.reduceMotion; $('sCompact').checked = !!p.compact;
   $('sOrderMail').checked = p.orderEmails !== false; $('sLaunchMail').checked = p.launchEmails !== false;
   applyAppearance(p);
   if (qs('welcome') === '1' && !profile.profileComplete) $('welcome').classList.remove('hidden');
-  loadOrders();
-}
-
-async function loadOrders() {
   await loadSiteSettings();
-  try {
-    const snap = await db.collection('preBookings').where('email', '==', user.email.toLowerCase()).get();
-    $('sOrders').textContent = snap.size;
-    if (snap.empty) { $('orders').innerHTML = '<div class="empty">No orders yet.</div>'; return; }
-    const rows = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0));
-    $('orders').innerHTML = rows.map(o => {
-      const st = (o.status || 'pending').toLowerCase(), qty = Number(o.quantity) || 1, unit = typeof o.unitPrice === 'number' ? o.unitPrice : tierPriceFor(o.tier);
-      const date = o.createdAt?.toDate ? o.createdAt.toDate().toLocaleDateString() : '—';
-      return '<div class="t-order-card"><div class="t-order-top"><span class="t-order-id">Order #' + esc(orderNumberFor(o)) + '</span><span class="t-status ' + esc(st) + '">' + esc(st) + '</span></div><div class="t-order-details"><div><span>Product</span>SafeFlame AI — ' + esc(tierLabelFor(o.tier)) + '</div><div><span>Qty</span>' + qty + '</div><div><span>Total</span>' + fmtINR(unit * qty) + '</div><div><span>Ordered</span>' + esc(date) + '</div></div></div>';
-    }).join('');
-  } catch (e) { $('orders').innerHTML = '<div class="empty">Could not load orders.</div>'; $('sOrders').textContent = '—'; }
+  showSec(location.hash.slice(1) || 'profile');
+  renderAddresses(); renderCompleteness(); renderLinked(); loadOrders(); watchNotifs(); loadChats(); setupReferral(); loadTickets(); loadStories();
+  $('pwForm').classList.toggle('hidden', !isPasswordUser()); $('pwGoogle').classList.toggle('hidden', isPasswordUser());
 }
 
-/* ── autosave: profile ── */
+/* ── profile + settings autosave ── */
 let profTimer = null;
 async function saveProfile() {
   chip($('profChip'), '', 'Saving…');
@@ -568,86 +922,490 @@ async function saveProfile() {
     profile = { ...profile, ...data };
     $('dName').textContent = data.displayName || user.email.split('@')[0]; $('sAge').textContent = ageFrom(data.dob);
     if (!profile.photoURL && !user.photoURL) setAvatar('', data.displayName || user.email);
-    $('welcome').classList.add('hidden');
-    chip($('profChip'), 'ok', 'Saved ✓');
+    $('welcome').classList.add('hidden'); chip($('profChip'), 'ok', 'Saved'); renderCompleteness();
   } catch (e) { chip($('profChip'), 'err', 'Could not save'); }
 }
 ['pName', 'pPhone', 'pDob', 'pGender'].forEach(id => { const el = $(id); el.addEventListener('input', () => { clearTimeout(profTimer); chip($('profChip'), '', 'Typing…'); profTimer = setTimeout(saveProfile, 800); }); el.addEventListener('change', () => { clearTimeout(profTimer); profTimer = setTimeout(saveProfile, 300); }); });
 $('skipWelcome').onclick = async () => { await db.collection('users').doc(user.uid).set({ profileComplete: true }, { merge: true }).catch(() => {}); $('welcome').classList.add('hidden'); };
-
-/* ── autosave: settings ── */
 async function saveSettings() {
   const p = { fontSize: $('sFont').value, reduceMotion: $('sMotion').checked, compact: $('sCompact').checked, orderEmails: $('sOrderMail').checked, launchEmails: $('sLaunchMail').checked };
-  localStorage.setItem(USER_SETTINGS_KEY, JSON.stringify(p)); applyAppearance(p);
-  chip($('setChip'), '', 'Saving…');
-  try { await db.collection('users').doc(user.uid).set({ prefs: p }, { merge: true }); chip($('setChip'), 'ok', 'Saved ✓'); }
+  localStorage.setItem(USER_SETTINGS_KEY, JSON.stringify(p)); applyAppearance(p); chip($('setChip'), '', 'Saving…');
+  try { await db.collection('users').doc(user.uid).set({ prefs: p }, { merge: true }); chip($('setChip'), 'ok', 'Saved'); }
   catch (_) { chip($('setChip'), 'err', 'Saved on this device only'); }
 }
 ['sFont', 'sMotion', 'sCompact', 'sOrderMail', 'sLaunchMail'].forEach(id => $(id).addEventListener('change', saveSettings));
-
-/* ── avatar (resized to keep the Firestore doc small) ── */
 $('avatarBtn').onclick = () => $('avatarInput').click();
 $('avatarInput').onchange = function () {
-  const f = this.files[0]; if (!f) return;
-  const img = new Image(), r = new FileReader();
-  r.onload = e => { img.onload = async () => {
-    const S = 256, c = document.createElement('canvas'); c.width = c.height = S;
-    const m = Math.min(img.width, img.height), sx = (img.width - m) / 2, sy = (img.height - m) / 2;
-    c.getContext('2d').drawImage(img, sx, sy, m, m, 0, 0, S, S);
-    const url = c.toDataURL('image/jpeg', 0.85);
-    try { await db.collection('users').doc(user.uid).set({ photoURL: url }, { merge: true }); profile.photoURL = url; setAvatar(url); }
-    catch (_) { alert('Could not save the picture.'); }
-  }; img.src = e.target.result; };
+  const f = this.files[0]; if (!f) return; const img = new Image(), r = new FileReader();
+  r.onload = e => { img.onload = async () => { const S = 256, c = document.createElement('canvas'); c.width = c.height = S; const m = Math.min(img.width, img.height); c.getContext('2d').drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, S, S); const url = c.toDataURL('image/jpeg', 0.85); try { await db.collection('users').doc(user.uid).set({ photoURL: url }, { merge: true }); profile.photoURL = url; setAvatar(url); } catch (_) { alert('Could not save the picture.'); } }; img.src = e.target.result; };
   r.readAsDataURL(f);
 };
 
-/* ── security ── */
-let leaving = false;
+/* ═════════ ORDERS ═════════ */
+const STEPS = ['pending', 'confirmed', 'shipped'];
+const stepLabel = { pending: 'Order placed', confirmed: 'Confirmed', shipped: 'Shipped', cancelled: 'Cancelled' };
+async function loadOrders() {
+  try {
+    const snap = await db.collection('preBookings').where('email', '==', user.email.toLowerCase()).get();
+    orders = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+    $('sOrders').textContent = orders.length;
+  } catch (e) { orders = []; $('sOrders').textContent = '—'; $('orders').innerHTML = '<div class="empty">Could not load orders.</div>'; return; }
+  renderOrders(); loadReferrals(); renderGuides(); loadDevices(); renderCompleteness();
+}
+function timelineHtml(o) {
+  const st = (o.status || 'pending').toLowerCase(), hist = o.statusHistory || [];
+  const when = s => { const h = hist.slice().reverse().find(x => x.status === s); return h ? fmtD(h.at) : (s === 'pending' ? fmtD(tsMs(o.createdAt)) : ''); };
+  const steps = st === 'cancelled' ? ['pending', 'cancelled'] : STEPS, cur = steps.indexOf(st);
+  return '<div class="tl">' + steps.map((s, i) => '<div class="tl-step ' + (i <= cur ? 'done' : '') + (s === 'cancelled' ? ' bad' : '') + '"><span class="tl-dot"></span><b>' + stepLabel[s] + '</b><small>' + esc(when(s) || (i <= cur ? '' : '—')) + '</small></div>').join('') + '</div>';
+}
+function orderCard(o) {
+  const st = (o.status || 'pending').toLowerCase(), mine = o.uid === user.uid, total = orderTotal(o);
+  const ship = o.shipping ? fmtAddress(o.shipping) : (o.address || '');
+  const inst = o.installation;
+  let actions = '';
+  if (st === 'pending' && mine) actions += '<button class="btn-secondary" data-act="edit"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/></svg> Edit</button><button class="btn-secondary btn-danger" data-act="cancel">Cancel order</button>';
+  actions += '<button class="btn-secondary" data-act="details"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5M3.5 4v4.5H8M12 7.5V12l3 2"/></svg> Details</button><button class="btn-secondary" data-act="receipt"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2V3Z"/><path d="M9 8h6M9 12h6"/></svg> Receipt</button>';
+  if (st === 'shipped' && !o.reviewed && mine) actions += '<button class="btn-secondary" data-act="rate"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8L12 3.5Z"/></svg> Rate</button>';
+  if (st === 'shipped' && mine) actions += '<button class="btn-secondary" data-act="install"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> ' + (inst ? 'Installation' : 'Book installation') + '</button>';
+  return '<div class="t-order-card" data-id="' + esc(o.id) + '"><div class="t-order-top"><span class="t-order-id">Order #' + esc(orderNumberFor(o)) + '</span><span class="t-status ' + esc(st) + '">' + esc(st) + '</span></div>' +
+    timelineHtml(o) +
+    '<div class="t-order-details"><div><span>Product</span>SafeFlame AI — ' + esc(tierLabelFor(o.tier)) + '</div><div><span>Qty</span>' + (Number(o.quantity) || 1) + '</div><div><span>Total</span>' + inr(total) + '</div><div><span>Ordered</span>' + esc(fmtD(tsMs(o.createdAt)) || '—') + '</div>' +
+    (o.eta && st !== 'cancelled' ? '<div><span>Estimated delivery</span>' + esc(o.eta) + '</div>' : '') +
+    (o.tracking ? '<div><span>Tracking number</span>' + esc(o.tracking) + '</div>' : '') + '</div>' +
+    ((o.addons || []).length ? '<div class="hint" style="margin-top:.6rem">Add-ons: ' + o.addons.map(a => esc(a.name)).join(', ') + '</div>' : '') +
+    (ship ? '<div class="hint" style="margin-top:.4rem">Deliver to: ' + esc(ship) + '</div>' : '') +
+    (o.gift ? '<div class="hint">Gift for ' + esc(o.gift.name) + '</div>' : '') +
+    (o.deliveryNotes ? '<div class="hint">Instructions: ' + esc(o.deliveryNotes) + '</div>' : '') +
+    (inst ? '<div class="hint" style="color:var(--teal2)">Installation ' + esc(inst.status) + ': ' + esc(inst.date) + ', ' + esc(inst.slot) + '</div>' : '') +
+    (st === 'pending' && !mine ? '<div class="hint" style="margin-top:.4rem">To change this order, <a href="/chat">chat with us</a>.</div>' : '') +
+    '<div class="order-actions">' + actions + '</div></div>';
+}
+function renderOrders() {
+  $('orders').innerHTML = orders.length ? orders.map(orderCard).join('') : emptyBox('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg>', 'No orders yet', 'Pre-book your SafeFlame AI unit and it will show up here with live status.', '<a class="btn-primary" href="/prebook">Pre-book now</a>');
+}
+$('orders').addEventListener('click', e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const o = orders.find(x => x.id === b.closest('.t-order-card').dataset.id); if (!o) return;
+  ({ edit: editOrder, cancel: cancelOrder, receipt: () => downloadReceipt(o), rate: rateOrder, install: installOrder, details: orderDetails })[b.dataset.act](o);
+});
+
+/* address block shared by edit + address book forms */
+const addrFormHtml = (a, p) => '<div class="field"><label>Address line 1</label><input id="' + p + 'L1" maxlength="120" value="' + esc(a.line1 || '') + '"></div><div class="field"><label>Address line 2 (optional)</label><input id="' + p + 'L2" maxlength="120" value="' + esc(a.line2 || '') + '"></div><div class="form-row"><div class="field"><label>City</label><input id="' + p + 'City" maxlength="60" value="' + esc(a.city || '') + '"></div><div class="field"><label>State</label><input id="' + p + 'State" maxlength="60" value="' + esc(a.state || '') + '"></div><div class="field" style="max-width:130px;min-width:110px"><label>PIN code</label><input id="' + p + 'Pin" inputmode="numeric" maxlength="6" value="' + esc(a.pin || '') + '"></div></div>';
+function readAddr(p) { const g = id => sanitize($(p + id).value); return { line1: g('L1'), line2: g('L2'), city: g('City'), state: g('State'), pin: g('Pin') }; }
+function addrError(a) { if (!a.line1 || !a.city || !a.state) return 'Enter line 1, city and state.'; if (!/^\d{6}$/.test(a.pin)) return 'Enter a valid 6-digit PIN code.'; return ''; }
+
+function editOrder(o) {
+  const ship = o.shipping || {}, ao = (siteSettings.addons || []).filter(a => a.enabled);
+  openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/></svg>', 'Edit order #' + esc(orderNumberFor(o)), 'You can change this order while it is pending.') +
+    '<div class="form-row"><div class="field"><label>Tier</label><select id="eTier"><option value="base">4" Base</option><option value="pro">7" Pro</option><option value="elite">9" Elite</option></select></div><div class="field" style="max-width:110px;min-width:90px"><label>Qty</label><input id="eQty" type="number" min="1" max="10" value="' + (Number(o.quantity) || 1) + '"></div></div>' +
+    '<p class="hint" style="margin:-.4rem 0 .8rem">Changing the tier uses today\'s price for that tier.</p>' +
+    addrFormHtml(ship, 'e') +
+    '<label class="check-row"><input type="checkbox" id="eGift" ' + (o.gift ? 'checked' : '') + '> <svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="9" width="17" height="11" rx="1.5"/><path d="M12 9v11M3.5 13h17M12 9c-1.5-4-5.5-4-5.5-1.3S10 9 12 9Zm0 0c1.5-4 5.5-4 5.5-1.3S14 9 12 9Z"/></svg> Gift / ship to someone else</label><div class="form-row ' + (o.gift ? '' : 'hidden') + '" id="eGiftF"><div class="field"><label>Recipient name</label><input id="eGN" maxlength="80" value="' + esc(o.gift ? o.gift.name : '') + '"></div><div class="field"><label>Recipient mobile</label><input id="eGP" maxlength="16" value="' + esc(o.gift ? o.gift.phone : '') + '"></div></div>' +
+    '<div class="field"><label>Delivery instructions</label><input id="eNotes" maxlength="200" value="' + esc(o.deliveryNotes || '') + '"></div>' +
+    (ao.length ? ao.map(a => '<label class="check-row"><input type="checkbox" class="e-ao" value="' + esc(a.id) + '" ' + ((o.addons || []).some(x => x.id === a.id) ? 'checked' : '') + '> ' + esc(a.name) + ' <span style="margin-left:auto;color:var(--flame2)">+' + inr(a.price) + '</span></label>').join('') : '') +
+    '<div class="msg-error" id="eErr"></div><div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Close</button><button class="btn-primary" style="flex:1" id="eSave">Save changes</button></div>');
+  $('eTier').value = o.tier || 'base';
+  $('eGift').onchange = () => $('eGiftF').classList.toggle('hidden', !$('eGift').checked);
+  $('eSave').onclick = async () => {
+    const a = readAddr('e'), er = addrError(a); if (er) return $('eErr').textContent = er;
+    const gift = $('eGift').checked, gN = sanitize($('eGN').value), gP = sanitize($('eGP').value);
+    if (gift && (!gN || !gP)) return $('eErr').textContent = 'Enter the recipient\'s name and mobile number.';
+    const qty = Math.min(Math.max(parseInt($('eQty').value, 10) || 1, 1), 10), tier = $('eTier').value;
+    const unit = tier === o.tier ? Number(o.unitPrice) : tierPriceFor(tier);
+    const addons = ao.filter(x => document.querySelector('.e-ao[value="' + x.id + '"]').checked).map(x => ({ id: x.id, name: x.name, price: Number(x.price) || 0 }));
+    const addonsTotal = addons.reduce((s, x) => s + x.price, 0), shipping = { name: gift ? gN : o.name, phone: gift ? gP : o.phone, ...a };
+    const upd = { quantity: qty, tier, unitPrice: unit, shipping, address: fmtAddress(shipping), gift: gift ? { name: gN, phone: gP } : null, addons, addonsTotal, total: unit * qty + addonsTotal, deliveryNotes: sanitize($('eNotes').value), eta: (siteSettings.eta || {})[tier] || o.eta || '', statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: 'pending', at: Date.now(), note: 'Edited by customer' }), editedAt: TS() };
+    $('eSave').disabled = true;
+    try { await db.collection('preBookings').doc(o.id).update(upd); closeModal(); await loadOrders(); }
+    catch (e) { $('eErr').textContent = 'Could not save: ' + (e.message || 'try again.'); $('eSave').disabled = false; }
+  };
+}
+function cancelOrder(o) {
+  openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', 'Cancel order #' + esc(orderNumberFor(o)) + '?', 'This can\'t be undone. Nothing has been charged.') +
+    '<div class="field"><label>Reason</label><select id="cReason"><option>Changed my mind</option><option>Ordered by mistake</option><option>Found a better option</option><option>Delivery takes too long</option><option>Other</option></select></div><div class="msg-error" id="cErr"></div>' +
+    '<div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Keep order</button><button class="btn-primary btn-danger-solid" style="flex:1" id="cGo">Cancel order</button></div>');
+  $('cGo').onclick = async () => {
+    $('cGo').disabled = true; const reason = $('cReason').value;
+    try {
+      await db.collection('preBookings').doc(o.id).update({ status: 'cancelled', cancelReason: reason, cancelledBy: 'customer', statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: 'cancelled', at: Date.now(), note: 'Cancelled by customer: ' + reason }) });
+      sendOrderEmail({ ...o, status: 'cancelled' }, 'cancelled'); closeModal(); await loadOrders();
+    } catch (e) { $('cErr').textContent = 'Could not cancel: ' + (e.message || 'try again.'); $('cGo').disabled = false; }
+  };
+}
+function rateOrder(o) {
+  let stars = 0;
+  openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8L12 3.5Z"/></svg>', 'Rate order #' + esc(orderNumberFor(o)), 'How was your SafeFlame AI?') +
+    '<div class="stars" id="stars">' + [1, 2, 3, 4, 5].map(n => '<button type="button" data-n="' + n + '" aria-label="' + n + ' stars"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8L12 3.5Z"/></svg></button>').join('') + '</div>' +
+    '<div class="field"><label>Comment (optional)</label><textarea id="rText" rows="3" maxlength="500" class="input"></textarea></div><div class="msg-error" id="rErr"></div>' +
+    '<div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Not now</button><button class="btn-primary" style="flex:1" id="rGo">Submit</button></div>');
+  $('stars').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; stars = +b.dataset.n; $('stars').querySelectorAll('button').forEach(x => x.classList.toggle('on', +x.dataset.n <= stars)); });
+  $('rGo').onclick = async () => {
+    if (!stars) return $('rErr').textContent = 'Tap a star rating first.';
+    $('rGo').disabled = true;
+    try {
+      await db.collection('reviews').doc(o.id).set({ orderId: o.id, orderNumber: orderNumberFor(o), uid: user.uid, email: user.email, name: o.name, tier: o.tier, rating: stars, comment: sanitize($('rText').value), createdAt: TS() });
+      await db.collection('preBookings').doc(o.id).update({ reviewed: true });
+      closeModal(); await loadOrders();
+    } catch (e) { $('rErr').textContent = 'Could not send: ' + (e.message || 'try again.'); $('rGo').disabled = false; }
+  };
+}
+function installOrder(o) {
+  const i = o.installation, today = new Date().toISOString().slice(0, 10);
+  openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>', 'Installation', i ? 'Status: <b>' + esc(i.status) + '</b>' : 'Pick a day and time window that suits you — we\'ll confirm it.') +
+    '<div class="form-row"><div class="field"><label>Preferred date</label><input type="date" id="iDate" min="' + today + '" value="' + esc(i ? i.date : '') + '"></div><div class="field"><label>Time window</label><select id="iSlot"><option>Morning (9am–12pm)</option><option>Afternoon (12pm–4pm)</option><option>Evening (4pm–7pm)</option></select></div></div><div class="msg-error" id="iErr"></div>' +
+    '<div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Close</button><button class="btn-primary" style="flex:1" id="iGo">' + (i ? 'Update request' : 'Request installation') + '</button></div>');
+  if (i) $('iSlot').value = i.slot;
+  $('iGo').onclick = async () => {
+    if (!$('iDate').value) return $('iErr').textContent = 'Choose a date.';
+    $('iGo').disabled = true;
+    try { await db.collection('preBookings').doc(o.id).update({ installation: { date: $('iDate').value, slot: $('iSlot').value, status: 'requested', requestedAt: Date.now() }, statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: o.status || 'shipped', at: Date.now(), note: 'Installation requested for ' + $('iDate').value }) }); closeModal(); await loadOrders(); }
+    catch (e) { $('iErr').textContent = 'Could not save: ' + (e.message || 'try again.'); $('iGo').disabled = false; }
+  };
+}
+
+/* ── receipt PDF (built in the browser, no library) ── */
+function pdfText(s) { return String(s == null ? '' : s).replace(/[—–]/g, '-').replace(/×/g, 'x').replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/₹/g, 'Rs. ').normalize('NFKD').replace(/[^\x20-\x7e]/g, '').replace(/([\\()])/g, '\\$1'); }
+function makeReceipt(o) {
+  const ops = []; let y = 790;
+  const T = (t, x, yy, size, bold) => ops.push('BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + x + ' ' + yy + ' Td (' + pdfText(t) + ') Tj ET');
+  const L = yy => ops.push('0.8 G 50 ' + yy + ' m 545 ' + yy + ' l S');
+  const wrap = (t, n) => { const out = []; let cur = ''; String(t || '').split(/\s+/).forEach(w => { if ((cur + ' ' + w).trim().length > n) { out.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); }); if (cur) out.push(cur); return out; };
+  T('SafeFlame AI', 50, y, 24, true); T('Pre-booking receipt', 50, y - 20, 11, false); T('Order #' + orderNumberFor(o), 545 - 150, y, 14, true); y -= 36; L(y); y -= 24;
+  const row = (k, v) => { T(k, 50, y, 10, false); T(v, 170, y, 11, true); y -= 18; };
+  row('Date', fmtD(tsMs(o.createdAt)) || '-'); row('Status', String(o.status || 'pending').toUpperCase()); row('Customer', o.name || ''); row('Email', o.email || ''); row('Phone', o.phone || '');
+  const ship = o.shipping ? fmtAddress(o.shipping) : (o.address || ''); if (ship) wrap(ship, 62).forEach((ln, i) => { T(i ? '' : 'Deliver to', 50, y, 10, false); T(ln, 170, y, 11, true); y -= 16; });
+  if (o.eta) row('Est. delivery', o.eta); if (o.tracking) row('Tracking no.', o.tracking);
+  y -= 8; L(y); y -= 22; T('Item', 50, y, 10, true); T('Qty', 380, y, 10, true); T('Amount', 480, y, 10, true); y -= 8; L(y); y -= 20;
+  const qty = Number(o.quantity) || 1, unit = Number(o.unitPrice) || 0;
+  T('SafeFlame AI - ' + tierLabelFor(o.tier), 50, y, 11, false); T(String(qty), 385, y, 11, false); T(rs(unit * qty), 470, y, 11, false); y -= 20;
+  (o.addons || []).forEach(a => { T(a.name, 50, y, 11, false); T('1', 385, y, 11, false); T(rs(a.price), 470, y, 11, false); y -= 20; });
+  L(y + 8); y -= 14; T('Total', 380, y, 13, true); T(rs(orderTotal(o)), 470, y, 13, true); y -= 40;
+  T('No payment has been collected yet - this receipt confirms your pre-booking.', 50, y, 9, false); y -= 14; T('Questions? Open the chat on safeflame.github.io and we will help.', 50, y, 9, false);
+  const stream = ops.join('\n');
+  const objs = ['<< /Type /Catalog /Pages 2 0 R >>', '<< /Type /Pages /Kids [3 0 R] /Count 1 >>', '<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>', '<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>', '<< /Length ' + stream.length + ' >>\nstream\n' + stream + '\nendstream'];
+  let pdf = '%PDF-1.4\n'; const offs = [];
+  objs.forEach((ob, i) => { offs.push(pdf.length); pdf += (i + 1) + ' 0 obj\n' + ob + '\nendobj\n'; });
+  const xr = pdf.length; pdf += 'xref\n0 ' + (objs.length + 1) + '\n0000000000 65535 f \n' + offs.map(x => String(x).padStart(10, '0') + ' 00000 n \n').join('') + 'trailer\n<< /Size ' + (objs.length + 1) + ' /Root 1 0 R >>\nstartxref\n' + xr + '\n%%EOF';
+  return new Blob([pdf], { type: 'application/pdf' });
+}
+function downloadBlob(blob, name) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+function downloadReceipt(o) { downloadBlob(makeReceipt(o), 'SafeFlame-receipt-' + orderNumberFor(o) + '.pdf'); }
+
+/* ═════════ NOTIFICATIONS ═════════ */
+function watchNotifs() {
+  db.collection('notifications').where('email', '==', user.email.toLowerCase()).onSnapshot(s => {
+    notifs = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt));
+    const unread = notifs.filter(n => !n.read).length; $('notifCount').textContent = unread; $('notifCount').classList.toggle('hidden', !unread); renderNotifs();
+  }, () => { $('notifs').innerHTML = '<div class="empty">Could not load notifications.</div>'; });
+}
+function renderNotifs() {
+  const a = siteSettings.announcement;
+  const top = a && a.enabled && a.text ? '<div class="notif announce"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h3l8 4V6L7 10H4ZM18 9.5a3.5 3.5 0 0 1 0 5"/></svg><div><b>Announcement</b><p>' + esc(a.text) + '</p></div></div>' : '';
+  $('notifs').innerHTML = top + (notifs.length ? notifs.map(n => '<div class="notif ' + (n.read ? '' : 'unread') + '" data-id="' + esc(n.id) + '">' + (n.type === 'chat' ? '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg>' : '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3Z"/><path d="m3.5 7.5 8.5 4.5 8.5-4.5M12 12v9"/></svg>') + '<div><b>' + esc(n.title) + '</b><p>' + esc(n.body || '') + '</p><small>' + esc(fmtD(tsMs(n.createdAt))) + '</small></div>' + (n.read ? '' : '<button class="link-btn" data-read="1">Mark read</button>') + '</div>').join('') : (top ? '' : emptyBox('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>', 'All caught up', 'Order updates and replies from our team will show up here.')));
+}
+$('notifs').addEventListener('click', e => { const b = e.target.closest('[data-read]'); if (!b) return; db.collection('notifications').doc(b.closest('.notif').dataset.id).update({ read: true }).catch(() => {}); });
+$('markAllRead').onclick = async () => { const batch = db.batch(); notifs.filter(n => !n.read).forEach(n => batch.update(db.collection('notifications').doc(n.id), { read: true })); try { await batch.commit(); } catch (_) {} };
+
+/* ═════════ ADDRESSES ═════════ */
+const addrs = () => profile.addresses || [];
+function renderAddresses() {
+  $('addrList').innerHTML = addrs().length ? addrs().map(a => '<div class="t-order-card" data-id="' + esc(a.id) + '"><div class="t-order-top"><span class="t-order-id">' + esc(a.label || 'Address') + (a.isDefault ? ' <span class="t-status confirmed">Default</span>' : '') + '</span><span><button class="link-btn" data-a="edit">Edit</button> · <button class="link-btn" data-a="del">Delete</button></span></div><div class="hint" style="font-size:.85rem;color:var(--text2)">' + esc(fmtAddress(a)) + '</div></div>').join('') : emptyBox('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>', 'No saved addresses', 'Add one to speed up your next order.');
+}
+async function saveAddrs(list) { profile.addresses = list; await db.collection('users').doc(user.uid).set({ addresses: list }, { merge: true }); renderAddresses(); renderCompleteness(); }
+function addrModal(a) {
+  a = a || {};
+  openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-6.5-5.6-6.5-11a6.5 6.5 0 0 1 13 0c0 5.4-6.5 11-6.5 11Z"/><circle cx="12" cy="10" r="2.4"/></svg>', a.id ? 'Edit address' : 'New address') + '<div class="form-row"><div class="field"><label>Label</label><input id="adLabel" maxlength="30" placeholder="Home, Office…" value="' + esc(a.label || '') + '"></div><div class="field"><label>Name</label><input id="adName" maxlength="80" value="' + esc(a.name || profile.displayName || '') + '"></div><div class="field"><label>Mobile</label><input id="adPhone" maxlength="16" value="' + esc(a.phone || profile.phone || '') + '"></div></div>' + addrFormHtml(a, 'ad') +
+    '<label class="check-row"><input type="checkbox" id="adDef" ' + (a.isDefault || !addrs().length ? 'checked' : '') + '> Make this my default address</label><div class="msg-error" id="adErr"></div><div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button><button class="btn-primary" style="flex:1" id="adSave">Save address</button></div>');
+  $('adSave').onclick = async () => {
+    const f = readAddr('ad'), er = addrError(f); if (er) return $('adErr').textContent = er;
+    const rec = { id: a.id || 'a' + Date.now().toString(36), label: sanitize($('adLabel').value) || 'Address', name: sanitize($('adName').value), phone: sanitize($('adPhone').value), isDefault: $('adDef').checked, ...f };
+    let list = addrs().filter(x => x.id !== rec.id); if (rec.isDefault) list = list.map(x => ({ ...x, isDefault: false }));
+    list.push(rec); if (!list.some(x => x.isDefault)) list[0].isDefault = true;
+    try { await saveAddrs(list); closeModal(); } catch (e) { $('adErr').textContent = 'Could not save: ' + (e.message || ''); }
+  };
+}
+$('addAddrBtn').onclick = () => addrModal();
+$('addrList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-a]'); if (!b) return; const id = b.closest('.t-order-card').dataset.id, a = addrs().find(x => x.id === id);
+  if (b.dataset.a === 'edit') addrModal(a);
+  else if (confirm('Delete this address?')) { let list = addrs().filter(x => x.id !== id); if (list.length && !list.some(x => x.isDefault)) list[0].isDefault = true; await saveAddrs(list).catch(() => {}); }
+});
+
+/* ═════════ CHAT HISTORY ═════════ */
+async function loadChats() {
+  try {
+    const s = await db.collection('chats').where('uid', '==', user.uid).get();
+    const list = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => tsMs(b.updatedAt) - tsMs(a.updatedAt));
+    $('chatList').innerHTML = list.length ? list.map(c => '<div class="t-order-card" data-id="' + esc(c.id) + '"><div class="t-order-top"><span class="t-order-id">' + esc(fmtD(tsMs(c.createdAt)) || 'Chat') + '</span><span class="t-status ' + (c.status === 'closed' ? 'cancelled' : 'confirmed') + '">' + esc(({ ai: 'AI assistant', waiting_human: 'Waiting for team', human: 'With our team', closed: 'Closed' })[c.status] || c.status) + '</span></div><div class="hint" style="color:var(--text2)">' + esc(c.lastMessage || '') + '</div><div class="order-actions"><button class="btn-secondary" data-c="view">View transcript</button>' + (c.status !== 'closed' ? '<a class="btn-secondary" href="/chat?id=' + esc(c.id) + '">Continue chat</a>' : '') + '</div></div>').join('') : emptyBox('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg>', 'No chats yet', 'Start a chat any time — our assistant replies instantly.');
+  } catch (_) { $('chatList').innerHTML = '<div class="empty">Could not load chats.</div>'; }
+}
+$('chatList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-c]'); if (!b) return; const id = b.closest('.t-order-card').dataset.id;
+  openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg>', 'Transcript') + '<div class="empty">Loading…</div>');
+  try {
+    const s = await db.collection('chats').doc(id).collection('messages').orderBy('createdAt').get();
+    $('mdlCard').innerHTML = mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg>', 'Transcript') + '<div class="transcript">' + s.docs.map(d => { const m = d.data(); return m.role === 'system' ? '<div class="tr-sys">' + esc(m.text) + '</div>' : '<div class="tr-msg ' + esc(m.role) + '"><b>' + (m.role === 'user' ? 'You' : m.role === 'admin' ? 'SafeFlame team' : 'Assistant') + '</b>' + esc(m.text) + '</div>'; }).join('') + '</div><button class="btn-secondary btn-block" style="margin-top:1rem" onclick="closeModal()">Close</button>';
+  } catch (_) { $('mdlCard').innerHTML = mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', 'Could not load') + '<button class="btn-secondary btn-block" onclick="closeModal()">Close</button>'; }
+});
+
+/* ═════════ REFERRALS ═════════ */
+let myRef = '';
+function setupReferral() {
+  myRef = refCodeFor(user.uid); $('refCode').textContent = myRef; $('refLink').value = location.origin + '/?ref=' + myRef;
+  if (profile.refCode !== myRef) db.collection('users').doc(user.uid).set({ refCode: myRef }, { merge: true }).catch(() => {});
+}
+$('copyRef').onclick = async () => { try { await navigator.clipboard.writeText($('refLink').value); $('copyRef').lastChild.textContent = ' Copied'; setTimeout(() => $('copyRef').lastChild.textContent = ' Copy', 1800); } catch (_) { $('refLink').select(); } };
+async function loadReferrals() {
+  try {
+    const s = await db.collection('preBookings').where('referredBy', '==', myRef).get(); const list = s.docs.map(d => d.data());
+    $('refCount').textContent = list.length;
+    $('refList').innerHTML = list.map(o => '<div class="stat-row"><span>' + esc(String(o.name || 'Friend').split(' ')[0]) + '</span><span>' + esc(o.status || 'pending') + '</span></div>').join('');
+  } catch (_) {}
+}
+
+/* ═════════ SECURITY + DATA ═════════ */
 document.querySelectorAll('.js-signout').forEach(b => b.addEventListener('click', async () => { leaving = true; await auth.signOut(); go('/'); }));
 $('pwBtn').onclick = async () => {
-  $('secErr').textContent = ''; $('secOk').textContent = '';
-  if (!user.providerData.some(p => p.providerId === 'password')) return $('secErr').textContent = 'You signed in with Google — manage your password in your Google account.';
-  try { await auth.sendPasswordResetEmail(user.email); $('secOk').textContent = 'Password reset email sent to ' + user.email + '.'; } catch (e) { $('secErr').textContent = e.message; }
+  $('pwErr').textContent = ''; $('pwOk').textContent = '';
+  const cur = $('pwCur').value, n1 = $('pwNew').value, n2 = $('pwNew2').value;
+  if (!cur || !n1) return $('pwErr').textContent = 'Enter your current and new password.';
+  if (n1.length < 6) return $('pwErr').textContent = 'New password must be at least 6 characters.';
+  if (n1 !== n2) return $('pwErr').textContent = 'The new passwords do not match.';
+  if (n1 === cur) return $('pwErr').textContent = 'Choose a password different from the current one.';
+  $('pwBtn').disabled = true;
+  try { await user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, cur)); await user.updatePassword(n1); $('pwOk').textContent = 'Password updated.'; ['pwCur', 'pwNew', 'pwNew2'].forEach(i => $(i).value = ''); }
+  catch (e) { $('pwErr').textContent = ({ 'auth/wrong-password': 'Current password is incorrect.', 'auth/invalid-credential': 'Current password is incorrect.', 'auth/weak-password': 'That password is too weak.', 'auth/too-many-requests': 'Too many attempts. Try again later.' })[e.code] || e.message || 'Could not update the password.'; }
+  $('pwBtn').disabled = false;
 };
-/* ── delete account: type the phrase (shown as un-copyable text) to confirm ── */
+$('dlData').onclick = async () => {
+  $('dlErr').textContent = ''; $('dlData').disabled = true;
+  try {
+    const clean = d => JSON.parse(JSON.stringify(d, (k, v) => (v && typeof v === 'object' && v.toMillis) ? new Date(v.toMillis()).toISOString() : v));
+    const email = user.email.toLowerCase(), out = { exportedAt: new Date().toISOString(), account: { email: user.email, uid: user.uid, created: user.metadata.creationTime }, profile: clean(profile), addresses: addrs(), orders: orders.map(clean), notifications: notifs.map(clean), chats: [], reviews: [] };
+    const cs = await db.collection('chats').where('uid', '==', user.uid).get();
+    for (const d of cs.docs) { const ms = await d.ref.collection('messages').orderBy('createdAt').get(); out.chats.push({ ...clean(d.data()), id: d.id, messages: ms.docs.map(m => clean(m.data())) }); }
+    for (const o of orders.filter(x => x.reviewed)) { const r = await db.collection('reviews').doc(o.id).get(); if (r.exists) out.reviews.push(clean(r.data())); }
+    delete out.profile.photoURL;
+    downloadBlob(new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' }), 'safeflame-my-data.json');
+  } catch (e) { $('dlErr').textContent = 'Could not prepare your data: ' + (e.message || 'try again.'); }
+  $('dlData').disabled = false;
+};
+
+/* delete account: type the phrase (shown as un-copyable text) to confirm */
 const PHRASE = 'delete my account';
-const isPasswordUser = () => user.providerData.some(p => p.providerId === 'password');
 const closeDel = () => $('delModal').classList.add('hidden');
-$('delBtn').onclick = () => {
-  $('delPhrase').value = ''; $('delPw').value = ''; $('delErr').textContent = ''; $('delConfirm').disabled = true;
-  $('delPwWrap').classList.toggle('hidden', !isPasswordUser());
-  $('delModal').classList.remove('hidden'); $('delPhrase').focus();
-};
+$('delBtn').onclick = () => { $('delPhrase').value = ''; $('delPw').value = ''; $('delErr').textContent = ''; $('delConfirm').disabled = true; $('delPwWrap').classList.toggle('hidden', !isPasswordUser()); $('delModal').classList.remove('hidden'); $('delPhrase').focus(); };
 $('delPhrase').addEventListener('input', () => { $('delConfirm').disabled = $('delPhrase').value !== PHRASE; });
 ['paste', 'drop'].forEach(ev => $('delPhrase').addEventListener(ev, e => e.preventDefault()));
 ['copy', 'cut', 'contextmenu', 'dragstart', 'selectstart', 'mousedown'].forEach(ev => $('delPhraseBox').addEventListener(ev, e => e.preventDefault()));
 $('delCancel').onclick = closeDel;
 $('delModal').addEventListener('click', e => { if (e.target === $('delModal')) closeDel(); });
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDel(); });
 $('delConfirm').onclick = async () => {
   if ($('delPhrase').value !== PHRASE) return;
   const btn = $('delConfirm'); btn.disabled = true; $('delErr').textContent = '';
   try {
-    // Firebase needs a fresh sign-in before it will delete an account
-    if (isPasswordUser()) {
-      const pw = $('delPw').value; if (!pw) { const e = new Error('Enter your password to confirm.'); e.code = 'sf/need-password'; throw e; }
-      await user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, pw));
-    } else await user.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider());
-    leaving = true;
-    await db.collection('users').doc(user.uid).delete();
-    await user.delete();
-    go('/');
+    if (isPasswordUser()) { const pw = $('delPw').value; if (!pw) { const e = new Error('Enter your password to confirm.'); e.code = 'sf/need-password'; throw e; } await user.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, pw)); }
+    else await user.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider());
+    leaving = true; await db.collection('users').doc(user.uid).delete(); await user.delete(); go('/');
   } catch (e) {
     leaving = false; btn.disabled = $('delPhrase').value !== PHRASE;
-    const m = { 'sf/need-password': 'Enter your password to confirm.', 'auth/wrong-password': 'Incorrect password.', 'auth/invalid-credential': 'Incorrect password.', 'auth/popup-closed-by-user': 'Google confirmation was cancelled.', 'auth/too-many-requests': 'Too many attempts. Try again later.' };
-    $('delErr').textContent = m[e.code] || e.message || 'Could not delete the account.';
+    $('delErr').textContent = ({ 'sf/need-password': 'Enter your password to confirm.', 'auth/wrong-password': 'Incorrect password.', 'auth/invalid-credential': 'Incorrect password.', 'auth/popup-closed-by-user': 'Google confirmation was cancelled.', 'auth/too-many-requests': 'Too many attempts. Try again later.' })[e.code] || e.message || 'Could not delete the account.';
   }
 };
+
+/* ═════════ ACCOUNT EXTRAS: completeness, order details, devices, guides, tickets, community, linked sign-in ═════════ */
+const skel = n => Array.from({ length: n || 2 }, () => '<div class="skel skel-card"></div>').join('');
+const emptyBox = (icon, title, sub, cta) => '<div class="empty-rich">' + icon + '<b>' + title + '</b><p>' + sub + '</p>' + (cta || '') + '</div>';
+function shrinkImage(file, max, q) {
+  return new Promise((res, rej) => {
+    if (!file || !/^image\//.test(file.type)) return rej(new Error('Please choose an image file.'));
+    const img = new Image(), r = new FileReader();
+    r.onerror = () => rej(new Error('Could not read that file.'));
+    r.onload = e => { img.onload = () => { const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement('canvas'); c.width = Math.round(img.width * k); c.height = Math.round(img.height * k); c.getContext('2d').drawImage(img, 0, 0, c.width, c.height); let url = c.toDataURL('image/jpeg', q || 0.7); if (url.length > 600000) url = c.toDataURL('image/jpeg', 0.45); res(url); }; img.onerror = () => rej(new Error('That image could not be opened.')); img.src = e.target.result; };
+    r.readAsDataURL(file);
+  });
+}
+
+/* ── profile completeness ── */
+function renderCompleteness() {
+  const items = [['Display name', !!$('pName').value.trim(), 'profile'], ['Phone number', !!$('pPhone').value.trim(), 'profile'], ['Date of birth', !!$('pDob').value, 'profile'], ['Profile photo', !!(profile.photoURL || user.photoURL), 'profile'], ['Saved address', addrs().length > 0, 'addresses']];
+  const done = items.filter(i => i[1]).length, pct = Math.round(100 * done / items.length), box = $('completeCard');
+  box.classList.toggle('hidden', pct === 100);
+  $('completeBar').style.width = pct + '%'; $('completePct').textContent = pct + '%';
+  $('completeMissing').innerHTML = items.filter(i => !i[1]).map(i => '<button class="link-btn" data-go="' + i[2] + '">+ ' + i[0] + '</button>').join(' ');
+}
+$('completeCard').addEventListener('click', e => { const b = e.target.closest('[data-go]'); if (b) showSec(b.dataset.go); });
+
+/* ── order details (customer view of the full history) ── */
+async function orderDetails(o) {
+  openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg>', 'Order #' + esc(orderNumberFor(o))) + skel(2));
+  let mails = [];
+  try { const s = await db.collection('emailLog').where('to', '==', user.email.toLowerCase()).where('orderId', '==', o.id).get(); mails = s.docs.map(d => d.data()).sort((a, b) => tsMs(b.at) - tsMs(a.at)); } catch (_) {}
+  const hist = (o.statusHistory || []).slice().sort((a, b) => a.at - b.at), ship = o.shipping ? fmtAddress(o.shipping) : (o.address || '');
+  const row = (k, v) => v ? '<div class="stat-row"><span>' + k + '</span><span style="text-align:right;max-width:65%">' + v + '</span></div>' : '';
+  $('mdlCard').innerHTML = mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg>', 'Order #' + esc(orderNumberFor(o)), esc((o.status || 'pending').toUpperCase())) +
+    row('Product', 'SafeFlame AI — ' + esc(tierLabelFor(o.tier)) + ' × ' + (Number(o.quantity) || 1)) + row('Add-ons', (o.addons || []).map(a => esc(a.name)).join(', ')) + row('Total', inr(orderTotal(o))) + row('Placed', esc(fmtD(tsMs(o.createdAt)))) +
+    row('Estimated delivery', esc(o.eta || '')) + row('Tracking', esc(o.tracking || '')) + row('Deliver to', esc(ship)) + row('Gift for', o.gift ? esc(o.gift.name + ' · ' + o.gift.phone) : '') + row('Instructions', esc(o.deliveryNotes || '')) +
+    row('Installation', o.installation ? esc(o.installation.status + ' — ' + o.installation.date + ', ' + o.installation.slot) : '') + row('Device', esc(o.device || '')) + row('Cancel reason', esc(o.cancelReason || '')) +
+    '<div class="section-title" style="margin-top:1.2rem"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5M3.5 4v4.5H8M12 7.5V12l3 2"/></svg> Everything that happened</div><div class="tl-list">' +
+    '<div class="tl-item"><b>Order placed</b><small>' + esc(fmtD(tsMs(o.createdAt))) + '</small></div>' +
+    hist.filter((h, i) => !(i === 0 && h.status === 'pending' && !h.note)).map(h => '<div class="tl-item"><b>' + esc(({ pending: 'Pending', confirmed: 'Confirmed', shipped: 'Shipped', cancelled: 'Cancelled' })[h.status] || h.status) + (h.note ? ' — ' + esc(h.note) : '') + '</b><small>' + esc(fmtD(h.at)) + (h.by ? (/@/.test(h.by) ? ' · by the SafeFlame team' : '') : '') + '</small></div>').join('') + '</div>' +
+    '<div class="section-title" style="margin-top:1.2rem"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 9.8 21 3Z"/></svg> Emails we sent about this order</div>' + (mails.length ? mails.map(m => '<div class="stat-row"><span>' + esc(m.subject || m.kind) + '</span><span>' + (m.ok ? 'sent' : 'failed') + ' · ' + esc(fmtD(tsMs(m.at))) + '</span></div>').join('') : '<p class="hint">No emails recorded for this order yet.</p>') +
+    '<button class="btn-secondary btn-block" style="margin-top:1.2rem" onclick="closeModal()">Close</button>';
+}
+
+/* ── devices, warranty, firmware ── */
+let devices = [];
+async function loadDevices() {
+  $('devList').innerHTML = skel(1);
+  try { const s = await db.collection('devices').where('uid', '==', user.uid).get(); devices = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => b.registeredAt - a.registeredAt); } catch (_) { devices = []; }
+  renderDevices();
+}
+function warrantyOf(d) {
+  const order = orders.find(o => o.id === d.orderId) || {}, ext = (order.addons || []).some(a => a.id === 'warranty');
+  const months = (Number(siteSettings.warrantyMonths) || 12) + (ext ? 12 : 0), end = new Date(d.warrantyStart); end.setMonth(end.getMonth() + months);
+  const days = Math.ceil((end - Date.now()) / 864e5), total = Math.max(1, Math.round((end - d.warrantyStart) / 864e5));
+  return { months, ext, end, days, pct: Math.max(0, Math.min(100, Math.round(100 * days / total))) };
+}
+const fwList = () => (siteSettings.firmware || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+function renderDevices() {
+  $('devList').innerHTML = devices.length ? devices.map(d => { const w = warrantyOf(d), latest = fwList()[0], upd = latest && d.firmware !== latest.version;
+    return '<div class="t-order-card" data-id="' + esc(d.id) + '"><div class="t-order-top"><span class="t-order-id">' + esc(d.serial) + '</span><span class="t-status ' + (w.days > 0 ? 'confirmed' : 'cancelled') + '">' + (w.days > 0 ? 'In warranty' : 'Warranty ended') + '</span></div>' +
+      '<div class="t-order-details"><div><span>Model</span>' + esc(tierLabelFor(d.tier)) + '</div><div><span>Registered</span>' + esc(fmtD(d.registeredAt)) + '</div><div><span>Warranty from</span>' + esc(fmtD(d.warrantyStart)) + '</div><div><span>Warranty until</span>' + esc(fmtD(w.end.getTime())) + '</div></div>' +
+      '<div class="warr-bar"><div style="width:' + w.pct + '%"></div></div><div class="hint">' + (w.days > 0 ? w.days + ' days left · ' + w.months + ' months' + (w.ext ? ' (incl. extended warranty)' : '') : 'Your ' + w.months + '-month warranty has ended.') + '</div>' +
+      '<div class="hint" style="margin-top:.5rem">Firmware: ' + (d.firmware ? 'v' + esc(d.firmware) : 'not set') + (upd ? ' — <b style="color:var(--yellow)">update available (v' + esc(latest.version) + ')</b>' : (latest && d.firmware ? ' — up to date' : '')) + '</div>' +
+      '<div class="order-actions"><button class="btn-secondary" data-dv="claim"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg> Claim warranty</button><button class="btn-secondary" data-dv="fw">Set firmware version</button></div></div>'; }).join('')
+    : emptyBox('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.6" width="18" height="7" rx="2.2"></rect><rect x="3" y="13.4" width="18" height="7" rx="2.2"></rect><path d="M14.6 7.1h3.2M14.6 16.9h3.2" stroke-width="1.5"></path><g fill="currentColor" stroke="none"><circle cx="6.9" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.35s" repeatCount="indefinite"></animate></circle><circle cx="6.9" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.7s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="1.05s" repeatCount="indefinite"></animate></circle></g></svg>', 'No devices registered', 'Register your unit once it arrives to activate your warranty and get firmware news.', '<button class="btn-primary" id="regDevBtn2" type="button">Register a device</button>');
+  const f = fwList(); $('fwBox').innerHTML = f.length ? f.slice(0, 3).map((r, i) => '<div class="notif ' + (i === 0 ? 'unread' : '') + '"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.2-4.5L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14.2 4.5l1.8-2M20 20v-4.5h-4.5"/></svg><div><b>Version ' + esc(r.version) + (i === 0 ? ' (latest)' : '') + '</b><p style="white-space:pre-wrap">' + esc(r.notes || '') + '</p><small>' + esc(r.date || '') + '</small></div></div>').join('') : emptyBox('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.2-4.5L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14.2 4.5l1.8-2M20 20v-4.5h-4.5"/></svg>', 'No releases yet', 'New firmware versions and release notes will appear here.');
+}
+function registerDevice() {
+  const free = orders.filter(o => (o.status || 'pending') !== 'cancelled' && !o.device && o.uid === user.uid), today = new Date().toISOString().slice(0, 10);
+  if (!free.length) return openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.6" width="18" height="7" rx="2.2"></rect><rect x="3" y="13.4" width="18" height="7" rx="2.2"></rect><path d="M14.6 7.1h3.2M14.6 16.9h3.2" stroke-width="1.5"></path><g fill="currentColor" stroke="none"><circle cx="6.9" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.35s" repeatCount="indefinite"></animate></circle><circle cx="6.9" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.7s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="1.05s" repeatCount="indefinite"></animate></circle></g></svg>', 'Register a device', 'You need an order (not cancelled) that has no device registered yet.') + '<button class="btn-secondary btn-block" onclick="closeModal()">Close</button>');
+  openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.6" width="18" height="7" rx="2.2"></rect><rect x="3" y="13.4" width="18" height="7" rx="2.2"></rect><path d="M14.6 7.1h3.2M14.6 16.9h3.2" stroke-width="1.5"></path><g fill="currentColor" stroke="none"><circle cx="6.9" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.35s" repeatCount="indefinite"></animate></circle><circle cx="6.9" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.7s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="1.05s" repeatCount="indefinite"></animate></circle></g></svg>', 'Register your device', 'Find the serial number on the label at the back of the unit.') +
+    '<div class="field"><label>Order</label><select id="dvOrder">' + free.map(o => '<option value="' + esc(o.id) + '">#' + esc(orderNumberFor(o)) + ' — ' + esc(tierLabelFor(o.tier)) + '</option>').join('') + '</select></div>' +
+    '<div class="form-row"><div class="field"><label>Serial number</label><input id="dvSerial" maxlength="24" autocapitalize="characters" placeholder="e.g. SF-1234-ABCD"></div><div class="field"><label>Warranty start date</label><input type="date" id="dvDate" max="' + today + '" value="' + today + '"></div></div><div class="msg-error" id="dvErr"></div>' +
+    '<div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button><button class="btn-primary" style="flex:1" id="dvGo">Register</button></div>');
+  $('dvGo').onclick = async () => {
+    const serial = $('dvSerial').value.trim().toUpperCase().replace(/\s+/g, ''), start = new Date($('dvDate').value).getTime(), o = orders.find(x => x.id === $('dvOrder').value);
+    if (!/^[A-Z0-9][A-Z0-9-]{5,23}$/.test(serial)) return $('dvErr').textContent = 'Enter a valid serial number (6–24 letters, numbers or dashes).';
+    if (!start || start > Date.now() + 864e5) return $('dvErr').textContent = 'Choose a valid start date that is not in the future.';
+    $('dvGo').disabled = true;
+    try {
+      let taken = false; try { taken = (await db.collection('devices').doc(serial).get()).exists; } catch (pe) { taken = pe.code === 'permission-denied'; } // rules hide other owners' devices, so a denied read means it exists
+      if (taken) { $('dvErr').textContent = 'That serial number is already registered.'; $('dvGo').disabled = false; return; }
+      await db.collection('devices').doc(serial).set({ serial, uid: user.uid, email: user.email.toLowerCase(), orderId: o.id, tier: o.tier, registeredAt: Date.now(), warrantyStart: start, firmware: '' });
+      await db.collection('preBookings').doc(o.id).update({ device: serial });
+      closeModal(); await loadOrders(); await loadDevices();
+    } catch (e) { $('dvErr').textContent = 'Could not register: ' + (e.message || 'try again.'); $('dvGo').disabled = false; }
+  };
+}
+$('regDevBtn').onclick = registerDevice;
+$('devList').addEventListener('click', e => {
+  if (e.target.id === 'regDevBtn2') return registerDevice();
+  const b = e.target.closest('[data-dv]'); if (!b) return; const d = devices.find(x => x.id === b.closest('.t-order-card').dataset.id);
+  if (b.dataset.dv === 'claim') ticketModal({ category: 'Warranty claim', subject: 'Warranty claim — ' + d.serial, orderId: d.orderId });
+  else { const f = fwList(); openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.2-4.5L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14.2 4.5l1.8-2M20 20v-4.5h-4.5"/></svg>', 'Installed firmware', 'Which version is on ' + esc(d.serial) + '?') + '<div class="field"><select id="fwSel"><option value="">Not sure</option>' + f.map(r => '<option value="' + esc(r.version) + '">v' + esc(r.version) + '</option>').join('') + '</select></div><div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button><button class="btn-primary" style="flex:1" id="fwGo">Save</button></div>'); $('fwSel').value = d.firmware || ''; $('fwGo').onclick = async () => { await db.collection('devices').doc(d.id).update({ firmware: $('fwSel').value }).catch(() => {}); closeModal(); loadDevices(); }; }
+});
+
+/* ── guides ── */
+function renderGuides() {
+  const shipped = orders.some(o => (o.status || '') === 'shipped'), g = siteSettings.guides || [];
+  if (!shipped) { $('guideList').innerHTML = emptyBox('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg>', 'Guides unlock when your order ships', 'Setup steps, safety notes and troubleshooting will appear here.'); return; }
+  const cats = [...new Set(g.map(x => x.category || 'General'))];
+  $('guideList').innerHTML = cats.map(c => '<div class="hint" style="text-transform:uppercase;letter-spacing:.08em;margin:1rem 0 .4rem">' + esc(c) + '</div>' + g.filter(x => (x.category || 'General') === c).map(x => '<details class="faq-item"><summary>' + esc(x.title) + '</summary><div class="rich">' + richText(x.body) + '</div></details>').join('')).join('') || emptyBox('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg>', 'No guides yet', 'Check back soon.');
+}
+
+/* ── support tickets ── */
+let tickets = [];
+async function loadTickets() {
+  $('ticketList').innerHTML = skel(2);
+  try { const s = await db.collection('tickets').where('uid', '==', user.uid).get(); tickets = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => tsMs(b.updatedAt) - tsMs(a.updatedAt)); } catch (_) { tickets = []; }
+  $('ticketList').innerHTML = tickets.length ? tickets.map(t => '<div class="t-order-card" data-id="' + esc(t.id) + '" style="cursor:pointer"><div class="t-order-top"><span class="t-order-id">' + (t.unreadUser ? '<span class="unread-dot"></span> ' : '') + esc(t.subject) + '</span><span class="t-status ' + ({ open: 'pending', pending: 'confirmed', resolved: 'shipped', closed: 'cancelled' })[t.status] + '">' + esc(t.status) + '</span></div><div class="hint">' + esc(t.category) + (t.orderNumber ? ' · order #' + esc(t.orderNumber) : '') + ' · ' + esc(fmtD(tsMs(t.updatedAt))) + '</div><div class="hint" style="color:var(--text2)">' + esc(t.lastMessage || '') + '</div></div>').join('')
+    : emptyBox('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg>', 'No tickets yet', 'Need help with an order, delivery or your device? Open a ticket and we will reply here.', '<button class="btn-primary" id="newTicketBtn2" type="button">Open a ticket</button>');
+}
+function ticketModal(pre) {
+  pre = pre || {};
+  openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg>', 'New support ticket') +
+    '<div class="form-row"><div class="field"><label>Topic</label><select id="tkCat">' + ['Order', 'Delivery', 'Installation', 'Technical problem', 'Warranty claim', 'Billing', 'Other'].map(c => '<option>' + c + '</option>').join('') + '</select></div><div class="field"><label>Related order</label><select id="tkOrder"><option value="">None</option>' + orders.map(o => '<option value="' + esc(o.id) + '">#' + esc(orderNumberFor(o)) + '</option>').join('') + '</select></div></div>' +
+    '<div class="field"><label>Subject</label><input id="tkSubj" maxlength="100"></div><div class="field"><label>Describe the problem</label><textarea id="tkMsg" class="input" rows="4" maxlength="1500"></textarea></div>' +
+    '<div class="field"><label>Photo (optional)</label><input type="file" id="tkImg" accept="image/*"></div><div class="msg-error" id="tkErr"></div>' +
+    '<div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button><button class="btn-primary" style="flex:1" id="tkGo">Send ticket</button></div>');
+  if (pre.category) $('tkCat').value = pre.category; if (pre.subject) $('tkSubj').value = pre.subject; if (pre.orderId) $('tkOrder').value = pre.orderId;
+  $('tkGo').onclick = async () => {
+    const subject = sanitize($('tkSubj').value), text = sanitize($('tkMsg').value); if (!subject || text.length < 5) return $('tkErr').textContent = 'Add a subject and describe the problem.';
+    $('tkGo').disabled = true;
+    try {
+      let image = ''; const f = $('tkImg').files[0]; if (f) image = await shrinkImage(f, 900, 0.7);
+      const o = orders.find(x => x.id === $('tkOrder').value) || null, name = profile.displayName || user.displayName || '';
+      const ref = await db.collection('tickets').add({ uid: user.uid, email: user.email.toLowerCase(), name, category: $('tkCat').value, subject, orderId: o ? o.id : '', orderNumber: o ? String(orderNumberFor(o)) : '', status: 'open', priority: $('tkCat').value === 'Warranty claim' || $('tkCat').value === 'Technical problem' ? 'high' : 'normal', assignee: '', lastMessage: text.slice(0, 120), unreadAdmin: true, unreadUser: false, createdAt: TS(), updatedAt: TS() });
+      await ref.collection('messages').add({ role: 'user', text, image, by: user.email, createdAt: TS() });
+      closeModal(); showSec('tickets'); await loadTickets(); openTicket(ref.id);
+    } catch (e) { $('tkErr').textContent = e.message || 'Could not send the ticket.'; $('tkGo').disabled = false; }
+  };
+}
+async function openTicket(id) {
+  openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg>', 'Ticket') + skel(2));
+  const draw = async () => {
+    const t = (await db.collection('tickets').doc(id).get()).data() || {}, ms = (await db.collection('tickets').doc(id).collection('messages').orderBy('createdAt').get()).docs.map(d => d.data());
+    if (t.unreadUser) db.collection('tickets').doc(id).update({ unreadUser: false }).catch(() => {});
+    $('mdlCard').innerHTML = mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg>', esc(t.subject), esc(t.category) + (t.orderNumber ? ' · order #' + esc(t.orderNumber) : '') + ' · <b>' + esc(t.status) + '</b>') +
+      '<div class="transcript">' + ms.map(m => '<div class="tr-msg ' + (m.role === 'user' ? 'user' : '') + '"><b>' + (m.role === 'user' ? 'You' : 'SafeFlame team') + '</b>' + esc(m.text) + (m.image ? '<img src="' + esc(m.image) + '" alt="attachment" style="display:block;max-width:100%;border-radius:8px;margin-top:.5rem">' : '') + '</div>').join('') + '</div>' +
+      (t.status === 'closed' ? '<p class="hint" style="margin-top:1rem">This ticket is closed. Open a new one if you still need help.</p>' : '<div class="field" style="margin-top:1rem"><textarea id="tkReply" class="input" rows="2" maxlength="1500" placeholder="Write a reply…"></textarea></div><div class="field"><input type="file" id="tkRImg" accept="image/*"></div><div class="msg-error" id="tkRErr"></div>') +
+      '<div style="display:flex;gap:.7rem;margin-top:.6rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Close</button>' + (t.status === 'closed' ? '' : '<button class="btn-secondary" style="flex:1" id="tkCloseBtn">Mark resolved &amp; close</button><button class="btn-primary" style="flex:1" id="tkSend">Send</button>') + '</div>';
+    if (t.status !== 'closed') {
+      $('tkSend').onclick = async () => { const text = sanitize($('tkReply').value); if (!text) return; $('tkSend').disabled = true; try { const f = $('tkRImg').files[0], image = f ? await shrinkImage(f, 900, 0.7) : ''; await db.collection('tickets').doc(id).collection('messages').add({ role: 'user', text, image, by: user.email, createdAt: TS() }); await db.collection('tickets').doc(id).update({ lastMessage: text.slice(0, 120), status: 'open', unreadAdmin: true, updatedAt: TS() }); await draw(); loadTickets(); } catch (e) { $('tkRErr').textContent = e.message || 'Could not send.'; $('tkSend').disabled = false; } };
+      $('tkCloseBtn').onclick = async () => { await db.collection('tickets').doc(id).update({ status: 'closed', unreadAdmin: true, updatedAt: TS() }).catch(() => {}); closeModal(); loadTickets(); };
+    }
+  };
+  try { await draw(); } catch (_) { $('mdlCard').innerHTML = mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', 'Could not load ticket') + '<button class="btn-secondary btn-block" onclick="closeModal()">Close</button>'; }
+}
+$('newTicketBtn').onclick = () => ticketModal();
+$('ticketList').addEventListener('click', e => { if (e.target.id === 'newTicketBtn2') return ticketModal(); const c = e.target.closest('.t-order-card'); if (c) openTicket(c.dataset.id); });
+
+/* ── community: share your setup ── */
+async function loadStories() {
+  $('storyList').innerHTML = skel(1); let list = [];
+  try { const s = await db.collection('stories').where('uid', '==', user.uid).get(); list = s.docs.map(d => d.data()).sort((a, b) => tsMs(b.createdAt) - tsMs(a.createdAt)); } catch (_) {}
+  $('storyList').innerHTML = list.length ? list.map(x => '<div class="t-order-card"><div class="t-order-top"><span class="t-order-id">' + esc(x.title || 'My setup') + '</span><span class="t-status ' + ({ pending: 'pending', approved: 'shipped', rejected: 'cancelled' })[x.status] + '">' + esc(x.status === 'pending' ? 'awaiting approval' : x.status) + '</span></div><div class="hint" style="color:var(--text2)">' + esc(x.story) + '</div></div>').join('') : emptyBox('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8L12 3.5Z"/></svg>', 'No stories yet', 'Share a photo and a few words about your kitchen setup.');
+}
+$('newStoryBtn').onclick = () => {
+  openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8L12 3.5Z"/></svg>', 'Share your setup', 'We review every story before it is shown.') + '<div class="field"><label>Title</label><input id="stTitle" maxlength="80" placeholder="e.g. Small kitchen, big peace of mind"></div><div class="field"><label>Your story</label><textarea id="stText" class="input" rows="4" maxlength="600"></textarea></div><div class="field"><label>Photo (optional)</label><input type="file" id="stImg" accept="image/*"></div><div class="msg-error" id="stErr"></div><div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button><button class="btn-primary" style="flex:1" id="stGo">Submit</button></div>');
+  $('stGo').onclick = async () => {
+    const story = sanitize($('stText').value); if (story.length < 20) return $('stErr').textContent = 'Please write at least a couple of sentences.';
+    $('stGo').disabled = true;
+    try { const f = $('stImg').files[0], photo = f ? await shrinkImage(f, 900, 0.7) : ''; await db.collection('stories').add({ uid: user.uid, email: user.email.toLowerCase(), name: profile.displayName || user.displayName || 'Customer', title: sanitize($('stTitle').value), story, photo, status: 'pending', createdAt: TS() }); closeModal(); loadStories(); }
+    catch (e) { $('stErr').textContent = e.message || 'Could not submit.'; $('stGo').disabled = false; }
+  };
+};
+
+/* ── linked sign-in methods ── */
+function renderLinked() {
+  const has = p => user.providerData.some(x => x.providerId === p), n = user.providerData.length;
+  $('linkedBox').innerHTML = [['google.com', 'Google', has('google.com')], ['password', 'Email & password', has('password')]].map(m => '<div class="settings-row"><div><span class="settings-row-label">' + m[1] + '</span><span class="settings-row-sub">' + (m[2] ? 'Connected' : 'Not connected') + '</span></div>' + (m[2] ? (n > 1 ? '<button class="btn-secondary" data-lk="unlink:' + m[0] + '" style="padding:.4rem .9rem;font-size:.8rem">Disconnect</button>' : '<span class="hint">Only sign-in method</span>') : '<button class="btn-secondary" data-lk="link:' + m[0] + '" style="padding:.4rem .9rem;font-size:.8rem">Connect</button>') + '</div>').join('');
+}
+$('linkedBox').addEventListener('click', async e => {
+  const b = e.target.closest('[data-lk]'); if (!b) return; const [act, prov] = b.dataset.lk.split(':'); $('lkErr').textContent = ''; $('lkOk').textContent = '';
+  try {
+    if (act === 'unlink') { if (!confirm('Disconnect this sign-in method?')) return; await user.unlink(prov); $('lkOk').textContent = 'Disconnected.'; }
+    else if (prov === 'google.com') { await user.linkWithPopup(new firebase.auth.GoogleAuthProvider()); $('lkOk').textContent = 'Google connected.'; }
+    else {
+      openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="3.8"/><path d="m10.8 12.2 8.2-8.2M16 7l2.5 2.5M14 9l2 2"/></svg>', 'Add a password', 'So you can also sign in with ' + esc(user.email)) + '<div class="field"><label>New password</label><input type="password" id="lkPw" autocomplete="new-password" placeholder="Min 6 characters"></div><div class="msg-error" id="lkPErr"></div><div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button><button class="btn-primary" style="flex:1" id="lkGo">Add password</button></div>');
+      $('lkGo').onclick = async () => { const pw = $('lkPw').value; if (pw.length < 6) return $('lkPErr').textContent = 'Use at least 6 characters.'; try { await user.linkWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, pw)); closeModal(); $('lkOk').textContent = 'Password added.'; user = auth.currentUser; renderLinked(); $('pwForm').classList.remove('hidden'); $('pwGoogle').classList.add('hidden'); } catch (x) { $('lkPErr').textContent = x.message || 'Could not add the password.'; } };
+      return;
+    }
+    user = auth.currentUser; renderLinked(); $('pwForm').classList.toggle('hidden', !isPasswordUser()); $('pwGoogle').classList.toggle('hidden', isPasswordUser());
+  } catch (x) { $('lkErr').textContent = ({ 'auth/popup-closed-by-user': 'Cancelled.', 'auth/credential-already-in-use': 'That Google account is already used by another SafeFlame account.', 'auth/requires-recent-login': 'Please sign out and sign in again, then retry.' })[x.code] || x.message || 'That did not work.'; }
+});
+
+/* ── install as an app (PWA) ── */
+let _instEvt = null;
+window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); _instEvt = e; $('installRow').style.display = ''; });
+$('installBtn').onclick = async () => { if (!_instEvt) return; _instEvt.prompt(); await _instEvt.userChoice.catch(() => {}); _instEvt = null; $('installRow').style.display = 'none'; };
 
 auth.onAuthStateChanged(async u => {
   if (!u) { if (!leaving) go('/login?next=/account'); return; }
   if (!(await isVerified(u))) { go('/verify?pending=1&next=/account'); return; }
-  user = u; loadAll();
+  if (user && user.uid === u.uid) return; user = u; loadAll();
 });
 </script>
 </body>
