@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script>
+(function () {
+  /* Only run on the official site. A copy saved with Ctrl+S (opened from disk or another host) shows an error instead. */
+  var ALLOWED = ['safeflame.github.io'];
+  if (ALLOWED.indexOf(location.hostname) === -1) {
+    try { window.stop(); } catch (e) {}
+    document.documentElement.innerHTML = '<head><meta charset="utf-8"><title>Not available</title></head><body style="margin:0;background:#08080f;color:#f0f0f8;font-family:system-ui,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;padding:2rem"><div><h1 style="margin:0 0 .6rem;font-size:1.5rem">This copy can\u2019t be used</h1><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">SafeFlame AI only works on its official website.</p><a href="https://safeflame.github.io" style="color:#ff8a65">safeflame.github.io</a></div></body>';
+    throw new Error('Blocked: unauthorised origin');
+  }
+  try { var th = localStorage.getItem('sf_theme') || 'dark'; if (location.pathname.indexOf('/admin') !== 0 && (th === 'light' || (th === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches))) document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
+  document.addEventListener('keydown', function (e) {
+    if ((e.ctrlKey || e.metaKey) && String(e.key).toLowerCase() === 's') {
+      e.preventDefault(); e.stopPropagation();
+      var t = document.createElement('div');
+      t.textContent = 'Error: saving this page is not allowed.';
+      t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);z-index:2147483647;background:#ef5350;color:#fff;padding:.75rem 1.3rem;border-radius:10px;font:600 14px system-ui,sans-serif;box-shadow:0 10px 30px rgba(0,0,0,.5)';
+      document.body.appendChild(t); setTimeout(function () { t.remove(); }, 3200);
+    }
+  }, true);
+})();
+</script>
+
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help centre | SafeFlame AI</title>
+<meta name="theme-color" content="#08080f">
+<link rel="icon" type="image/png" href="/Logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* SafeFlame AI — shared styles for login / verify / prebook / account pages */
+:root{
+  --flame:#FF5722;--flame2:#FF8A65;--teal:#26C6DA;--teal2:#80DEEA;--green:#66BB6A;--yellow:#FFA726;--red:#EF5350;
+  --bg:#08080f;--bg2:#0d0d1a;--surface:rgba(255,255,255,0.04);--surface2:rgba(255,255,255,0.07);
+  --border:rgba(255,255,255,0.09);--border2:rgba(255,87,34,0.3);
+  --text:#f0f0f8;--text2:#a0a0b8;--text3:#606078;--radius:16px;--radius2:12px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);line-height:1.65;overflow-x:hidden;padding-top:70px;min-height:100vh}
+::selection{background:rgba(255,87,34,.35);color:#fff}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  radial-gradient(ellipse 80% 50% at 10% -10%,rgba(255,87,34,.12),transparent 60%),
+  radial-gradient(ellipse 60% 40% at 90% 5%,rgba(38,198,218,.09),transparent 55%),
+  radial-gradient(ellipse 50% 60% at 50% 100%,rgba(255,87,34,.06),transparent 60%)}
+main{position:relative;z-index:1}
+a{color:var(--flame2)}
+
+/* top bar */
+.topbar{position:fixed;top:0;left:0;right:0;height:70px;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(1rem,4vw,3rem);background:rgba(8,8,15,.75);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border);z-index:100}
+.nav-brand{display:flex;align-items:center;gap:.7rem;text-decoration:none}
+.nav-brand img{height:30px;width:auto;border-radius:8px}
+.nav-brand .name{font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:1.05rem;background:linear-gradient(135deg,#fff 30%,var(--flame2));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.topbar-right{display:flex;align-items:center;gap:.5rem}
+.topbar-link{color:var(--text2);text-decoration:none;font-size:.82rem;font-weight:500;padding:.45rem .8rem;border-radius:8px;transition:color .2s,background .2s}
+.topbar-link:hover{color:var(--text);background:var(--surface2)}
+.nav-account{display:inline-flex;align-items:center;gap:.45rem;border:1px solid var(--border);color:var(--text2);padding:.4rem .85rem;border-radius:8px;font-size:.82rem;font-weight:500;text-decoration:none;transition:border-color .2s,color .2s,background .2s}
+.nav-account:hover{border-color:var(--flame);color:var(--text);background:rgba(255,87,34,.08)}
+.nav-account.signed-in{border-color:rgba(102,187,106,.4);color:var(--green);background:rgba(102,187,106,.08)}
+.nav-account img,.nav-account .nav-initial{width:22px;height:22px;border-radius:50%;object-fit:cover}
+.nav-account .nav-initial{display:inline-flex;align-items:center;justify-content:center;background:var(--flame);color:#fff;font-size:.65rem;font-weight:700}
+
+/* layout */
+.page{max-width:560px;margin:0 auto;padding:2.5rem 1.2rem 4rem}
+.page.wide{max-width:980px}
+.card{background:rgba(13,13,26,.92);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(255,255,255,.1);border-radius:20px;padding:2.2rem 2rem;box-shadow:0 40px 80px rgba(0,0,0,.45),0 0 0 1px rgba(255,255,255,.04);animation:fadeUp .35s ease forwards}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.page-title{font-family:'Space Grotesk',sans-serif;font-size:1.6rem;font-weight:700;margin-bottom:.3rem}
+.page-sub{font-size:.88rem;color:var(--text2);margin-bottom:1.6rem}
+.center{text-align:center}
+.hidden{display:none!important}
+
+/* forms */
+.field{margin-bottom:1rem;text-align:left}
+.field label{display:block;font-size:.7rem;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--text3);margin-bottom:.35rem}
+.input,.field input,.field select{display:block;width:100%;padding:.78rem 1rem;border-radius:9px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text);font-size:.9rem;outline:none;font-family:'Inter',sans-serif;transition:border-color .2s,background .2s}
+.input:focus,.field input:focus,.field select:focus{border-color:var(--flame);background:rgba(255,87,34,.05)}
+.field select option{background:#1a1a2e}
+.field input:disabled{opacity:.55;cursor:not-allowed}
+.form-row{display:flex;gap:.8rem;flex-wrap:wrap}
+.form-row .field{flex:1;min-width:200px}
+.btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;background:var(--flame);color:#fff;padding:.85rem 2rem;border-radius:10px;font-weight:600;font-size:.95rem;text-decoration:none;border:none;cursor:pointer;position:relative;overflow:hidden;font-family:'Inter',sans-serif;transition:background .2s,transform .15s,box-shadow .2s}
+.btn-primary::after{content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;background:linear-gradient(120deg,transparent,rgba(255,255,255,.35),transparent);transform:skewX(-20deg);transition:left .6s}
+.btn-primary:hover::after{left:130%}
+.btn-primary:hover{background:#e04a1a;transform:translateY(-2px);box-shadow:0 10px 28px rgba(255,87,34,.4)}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;box-shadow:none}
+.btn-block{width:100%}
+.btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:.5rem;background:transparent;color:var(--text);padding:.8rem 1.6rem;border-radius:10px;font-weight:500;font-size:.9rem;text-decoration:none;border:1px solid var(--border);cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s,border-color .2s}
+.btn-secondary:hover{background:var(--surface2);border-color:var(--border2)}
+.btn-danger{color:var(--red);border-color:rgba(239,83,80,.3)}
+.btn-danger:hover{background:rgba(239,83,80,.1);border-color:var(--red)}
+.link-btn{background:none;border:none;color:var(--flame2);cursor:pointer;font-size:.8rem;font-family:'Inter',sans-serif;text-decoration:underline;padding:0}
+.link-btn:hover{color:var(--flame)}
+.google-btn{display:flex;align-items:center;justify-content:center;gap:.7rem;width:100%;padding:.8rem;border-radius:9px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);color:var(--text);font-size:.9rem;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s,transform .15s}
+.google-btn:hover{background:rgba(255,255,255,.1);transform:translateY(-1px)}
+.google-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.divider{display:flex;align-items:center;gap:.8rem;font-size:.72rem;color:var(--text3);margin:1.2rem 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.msg-error{font-size:.82rem;color:#ff6b6b;min-height:1.2em;margin:.4rem 0;line-height:1.5}
+.msg-ok{font-size:.82rem;color:var(--green);min-height:1.2em;margin:.4rem 0;line-height:1.5}
+.hint{font-size:.72rem;color:var(--text3);line-height:1.5}
+
+/* tabs (login/register) */
+.seg{display:flex;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:10px;padding:4px;margin-bottom:1.4rem}
+.seg button{flex:1;background:none;border:none;color:var(--text2);padding:.55rem;border-radius:7px;font-size:.85rem;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .2s,color .2s}
+.seg button.active{background:var(--flame);color:#fff}
+
+/* pre-book */
+.countdown{display:flex;gap:.8rem;justify-content:center;margin-bottom:1.8rem;flex-wrap:wrap}
+.cd-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:.8rem 1.1rem;min-width:70px;text-align:center}
+.cd-num{display:block;font-family:'Space Grotesk',sans-serif;font-size:1.7rem;font-weight:700;color:var(--flame2);line-height:1}
+.cd-label{display:block;font-size:.6rem;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;margin-top:.3rem}
+.tier-selector{display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1.4rem}
+.tier-opt{flex:1;min-width:140px;border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:.9rem 1rem;cursor:pointer;text-align:left;transition:border-color .2s,background .2s;position:relative}
+.tier-opt input{position:absolute;opacity:0;width:0;height:0}
+.tier-opt.selected{border-color:var(--flame);background:rgba(255,87,34,.08)}
+.tier-opt.sold-out{opacity:.4;cursor:not-allowed;filter:grayscale(.5)}
+.tier-opt-name{font-family:'Space Grotesk',sans-serif;font-size:.9rem;font-weight:700}
+.tier-opt-price{font-size:.78rem;color:var(--flame2);font-weight:600;margin-top:.15rem}
+.channel{display:flex;gap:.8rem;flex-wrap:wrap;margin-bottom:1rem}
+.channel label{flex:1;min-width:150px;border:1px solid var(--border);background:var(--surface);border-radius:10px;padding:.75rem .9rem;cursor:pointer;font-size:.85rem;display:flex;align-items:center;gap:.6rem;transition:border-color .2s,background .2s}
+.channel label.selected{border-color:var(--flame);background:rgba(255,87,34,.08)}
+.channel input{accent-color:var(--flame)}
+.otp-inputs{display:flex;gap:.6rem;justify-content:center;margin:1.2rem 0}
+.otp-digit{width:46px;height:56px;border-radius:10px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text);font-size:1.4rem;font-weight:700;text-align:center;outline:none;font-family:'Space Grotesk','Inter',sans-serif;transition:border-color .2s,background .2s}
+.otp-digit:focus{border-color:var(--flame);background:rgba(255,87,34,.07)}
+.summary{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.2rem;margin:1.2rem 0;font-size:.88rem;text-align:left}
+.summary div{display:flex;justify-content:space-between;padding:.25rem 0}
+.summary div span:first-child{color:var(--text3)}
+.big-icon{font-size:2.6rem;margin-bottom:.8rem}
+
+/* account */
+.account-grid{display:grid;grid-template-columns:300px 1fr;gap:1.4rem;align-items:start}
+@media(max-width:820px){.account-grid{grid-template-columns:1fr}}
+.avatar-wrap{position:relative;display:inline-block;margin-bottom:.8rem}
+.big-avatar{width:92px;height:92px;border-radius:50%;background:linear-gradient(135deg,var(--flame),var(--teal));display:flex;align-items:center;justify-content:center;font-size:2rem;font-weight:700;color:#fff;overflow:hidden}
+.big-avatar img{width:100%;height:100%;object-fit:cover}
+.avatar-edit{position:absolute;right:-2px;bottom:-2px;width:30px;height:30px;border-radius:50%;border:2px solid var(--bg2);background:var(--flame);color:#fff;cursor:pointer;font-size:.8rem}
+.stat-row{display:flex;justify-content:space-between;padding:.55rem 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.85rem}
+.stat-row:last-child{border-bottom:none}
+.stat-row span:first-child{color:var(--text3)}
+.section-title{font-family:'Space Grotesk',sans-serif;font-size:.78rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin:0 0 1rem;display:flex;align-items:center;gap:.7rem}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.stack{display:flex;flex-direction:column;gap:1.4rem}
+.settings-row{display:flex;align-items:center;justify-content:space-between;gap:1rem;padding:.8rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.settings-row:last-child{border-bottom:none}
+.settings-row-label{display:block;font-size:.88rem;font-weight:500}
+.settings-row-sub{display:block;font-size:.72rem;color:var(--text3);margin-top:.15rem}
+.settings-select{background:rgba(255,255,255,.06);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:.45rem .7rem;font-size:.82rem;font-family:'Inter',sans-serif;outline:none}
+.settings-select option{background:#0d0d1a}
+.toggle{display:inline-flex;cursor:pointer;position:relative}
+.toggle input{position:absolute;opacity:0;width:0;height:0}
+.toggle-track{width:38px;height:22px;border-radius:50px;background:rgba(255,255,255,.12);position:relative;transition:background .2s}
+.toggle-thumb{position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;transition:transform .2s}
+.toggle input:checked + .toggle-track{background:var(--flame)}
+.toggle input:checked + .toggle-track .toggle-thumb{transform:translateX(16px)}
+.save-chip{display:inline-flex;align-items:center;gap:.4rem;font-size:.74rem;color:var(--text3);min-height:1.4em;transition:color .2s}
+.save-chip.ok{color:var(--green)}.save-chip.err{color:var(--red)}
+.t-order-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:1rem 1.1rem;margin-bottom:.8rem}
+.t-order-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:.7rem}
+.t-order-id{font-family:'Space Grotesk',sans-serif;font-size:.95rem;font-weight:700}
+.t-status{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:.2rem .65rem;border-radius:50px}
+.t-status.pending{background:rgba(255,167,38,.15);color:var(--yellow)}
+.t-status.confirmed{background:rgba(38,198,218,.15);color:var(--teal2)}
+.t-status.shipped{background:rgba(102,187,106,.15);color:var(--green)}
+.t-status.cancelled{background:rgba(239,83,80,.15);color:var(--red)}
+.t-order-details{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:.7rem;font-size:.83rem}
+.t-order-details div span{display:block;color:var(--text3);font-size:.67rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:.2rem}
+.empty{font-size:.85rem;color:var(--text3);text-align:center;padding:1.2rem}
+.banner{background:rgba(255,167,38,.1);border:1px solid rgba(255,167,38,.3);color:var(--yellow);border-radius:10px;padding:.8rem 1rem;font-size:.82rem;margin-bottom:1.2rem}
+html.compact-mode .card{padding:1.4rem 1.3rem}
+html.reduce-motion *{transition:none!important;animation:none!important}
+@media(max-width:480px){.card{padding:1.6rem 1.2rem}.otp-digit{width:40px;height:50px}}
+
+/* icons */
+.ic{width:1em;height:1em;display:inline-block;vertical-align:-.15em;flex-shrink:0}
+.big-icon{color:var(--flame2);line-height:1;display:flex;justify-content:center}
+.big-icon .ic{width:3rem;height:3rem}
+.big-icon.ok{color:var(--green)}.big-icon.warn{color:var(--yellow)}.big-icon.teal{color:var(--teal)}
+.section-title .ic{width:1.15em;height:1.15em;color:var(--flame2)}
+.channel label .ic{width:1.15rem;height:1.15rem;color:var(--flame2)}
+.card-icon{display:flex;justify-content:center;margin-bottom:.8rem;color:var(--flame2)}
+.card-icon .ic{width:2.4rem;height:2.4rem}
+.avatar-edit .ic{width:.9rem;height:.9rem}
+
+/* modal + type-to-confirm */
+.modal-back{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:1rem}
+.modal-card{max-width:440px;width:100%}
+.confirm-phrase{user-select:none;-webkit-user-select:none;-moz-user-select:none;pointer-events:none;background:rgba(239,83,80,.08);border:1px dashed rgba(239,83,80,.4);border-radius:9px;padding:.7rem 1rem;margin-bottom:.7rem;text-align:center;font-family:ui-monospace,Consolas,monospace;font-size:.95rem;color:#ff8a80;letter-spacing:.02em}
+.confirm-phrase::before{content:'delete my account'}
+.btn-danger-solid{background:var(--red)}
+.btn-danger-solid:hover{background:#d84340;box-shadow:0 10px 28px rgba(239,83,80,.35)}
+
+#delConfirm,#delCancel{white-space:nowrap;padding:.8rem .6rem}
+
+.nav-badge{background:var(--red);color:#fff;font-size:.62rem;font-weight:700;min-width:18px;height:18px;border-radius:50px;display:inline-flex;align-items:center;justify-content:center;padding:0 .3rem;margin-left:.15rem}
+
+.check-row{display:flex;align-items:center;gap:.6rem;font-size:.85rem;padding:.55rem .8rem;border:1px solid var(--border);background:var(--surface);border-radius:10px;margin-bottom:.6rem;cursor:pointer;color:var(--text2)}
+.check-row input{accent-color:var(--flame)}
+.check-row .ic{width:1.1rem;height:1.1rem;color:var(--flame2)}
+
+/* account sections */
+.acc-nav{display:flex;flex-direction:column;gap:.2rem}
+.acc-nav button{display:flex;align-items:center;gap:.6rem;background:none;border:none;color:var(--text2);padding:.65rem .8rem;border-radius:10px;font:500 .88rem Inter,sans-serif;cursor:pointer;text-align:left;transition:background .2s,color .2s}
+.acc-nav button:hover{background:var(--surface2);color:var(--text)}
+.acc-nav button.active{background:rgba(255,87,34,.12);color:var(--flame2)}
+.acc-nav .nav-badge{margin-left:auto}
+@media(max-width:820px){.acc-nav{flex-direction:row;overflow-x:auto;padding-bottom:.2rem}.acc-nav button{white-space:nowrap}}
+.order-actions{display:flex;gap:.6rem;flex-wrap:wrap;margin-top:.9rem}
+.order-actions .btn-secondary{padding:.5rem .9rem;font-size:.8rem}
+.tl{display:flex;margin:.2rem 0 1rem}
+.tl-step{flex:1;position:relative;text-align:center;font-size:.72rem;color:var(--text3)}
+.tl-step::before{content:'';position:absolute;top:7px;left:-50%;width:100%;height:2px;background:var(--border)}
+.tl-step:first-child::before{display:none}
+.tl-dot{display:block;width:16px;height:16px;border-radius:50%;background:var(--bg2);border:2px solid var(--border);margin:0 auto .35rem;position:relative;z-index:1}
+.tl-step b{display:block;font-weight:600;color:var(--text2)}
+.tl-step small{display:block;font-size:.66rem}
+.tl-step.done .tl-dot{background:var(--green);border-color:var(--green)}
+.tl-step.done::before{background:var(--green)}
+.tl-step.done b{color:var(--text)}
+.tl-step.bad .tl-dot{background:var(--red);border-color:var(--red)}
+.tl-step.bad::before{background:var(--red)}
+.notif{display:flex;gap:.8rem;align-items:flex-start;padding:.85rem .9rem;border:1px solid var(--border);border-radius:12px;margin-bottom:.6rem;background:var(--surface)}
+.notif .ic{width:1.3rem;height:1.3rem;color:var(--flame2);margin-top:.15rem}
+.notif div{flex:1}.notif b{font-size:.9rem}.notif p{font-size:.82rem;color:var(--text2);margin:.1rem 0}.notif small{font-size:.7rem;color:var(--text3)}
+.notif.unread{border-color:var(--border2);background:rgba(255,87,34,.06)}
+.notif.announce{border-color:rgba(255,167,38,.35);background:rgba(255,167,38,.07)}
+.stars{display:flex;gap:.3rem;justify-content:center;margin-bottom:1rem}
+.stars button{background:none;border:none;cursor:pointer;color:var(--text3);font-size:2rem;padding:.1rem}
+.stars button.on{color:var(--yellow)}
+.stars .ic{width:1em;height:1em;fill:currentColor}
+.transcript{max-height:55vh;overflow:auto;display:flex;flex-direction:column;gap:.5rem}
+.tr-msg{max-width:85%;padding:.55rem .8rem;border-radius:10px;font-size:.84rem;white-space:pre-wrap;background:var(--surface2)}
+.tr-msg b{display:block;font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;color:var(--teal2);margin-bottom:.15rem}
+.tr-msg.user{align-self:flex-end;background:rgba(255,87,34,.18)}
+.tr-sys{text-align:center;font-size:.72rem;color:var(--text3)}
+textarea.input{resize:vertical;font-family:'Inter',sans-serif}
+
+.faq-item{border:1px solid var(--border);border-radius:12px;background:var(--surface);margin-bottom:.6rem;padding:.2rem 1rem}
+.faq-item summary{cursor:pointer;padding:.8rem 0;font-weight:600;font-size:.92rem;list-style:none;display:flex;justify-content:space-between;gap:1rem}
+.faq-item summary::after{content:'+';color:var(--flame2);font-size:1.2rem;line-height:1}
+.faq-item[open] summary::after{content:'−'}
+.faq-item p{color:var(--text2);font-size:.88rem;padding-bottom:.9rem}
+
+.rate-btn{background:none!important;border:none!important;color:var(--text3)!important;font-size:1.3rem!important;padding:0 .1rem!important;cursor:pointer}
+.rate-btn:hover{color:var(--yellow)!important}
+.rate-btn .ic{fill:currentColor}
+
+.lang-select{background:rgba(255,255,255,.05);border:1px solid var(--border);color:var(--text2);border-radius:8px;padding:.4rem .5rem;font-size:.78rem;max-width:130px;font-family:'Inter',sans-serif;outline:none;cursor:pointer}
+.lang-select option{background:#0d0d1a}
+.skel{border-radius:12px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.09),rgba(255,255,255,.04));background-size:200% 100%;animation:skel 1.2s linear infinite}
+.skel-card{height:110px;margin-bottom:.8rem}.skel-line{height:14px;margin:.5rem 0}
+@keyframes skel{from{background-position:200% 0}to{background-position:-200% 0}}
+.empty-rich{text-align:center;padding:2rem 1rem;color:var(--text3)}
+.empty-rich .ic{width:2.4rem;height:2.4rem;color:var(--text3);opacity:.7;margin-bottom:.6rem}
+.empty-rich b{display:block;color:var(--text2);font-size:.95rem;margin-bottom:.2rem}
+.empty-rich p{font-size:.82rem;margin-bottom:.9rem}
+html.reduce-motion .skel{animation:none}
+
+.rich h3{font-size:.95rem;margin:.8rem 0 .3rem}.rich p{margin:.4rem 0}.rich ul,.rich ol{margin:.4rem 0 .6rem 1.2rem}.rich li{margin:.2rem 0}
+.tl-list{border-left:2px solid var(--border);margin:.4rem 0 .4rem .4rem;padding-left:1rem}
+.tl-item{position:relative;padding:.35rem 0;font-size:.85rem}.tl-item::before{content:'';position:absolute;left:-1.37rem;top:.7rem;width:10px;height:10px;border-radius:50%;background:var(--flame)}
+.tl-item small{display:block;color:var(--text3);font-size:.72rem}
+.warr-bar{height:6px;background:var(--surface2);border-radius:6px;margin:.8rem 0 .3rem;overflow:hidden}.warr-bar div{height:100%;background:linear-gradient(90deg,var(--green),var(--teal));border-radius:6px}
+.unread-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--flame)}
+.complete-bar{height:8px;background:var(--surface2);border-radius:8px;overflow:hidden;margin:.5rem 0}.complete-bar div{height:100%;background:linear-gradient(90deg,var(--flame),var(--yellow));width:0;transition:width .4s}
+
+.vote{display:flex;flex-direction:column;align-items:center;gap:.1rem;min-width:48px;padding:.4rem .5rem;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;font-family:'Inter',sans-serif}
+.vote b{font-size:.9rem}.vote .ic{width:1.2rem;height:1.2rem}.vote:hover{border-color:var(--border2)}
+.vote.on{background:rgba(255,87,34,.14);border-color:var(--flame);color:var(--flame2)}
+
+.sf-foot{position:relative;z-index:1;text-align:center;font-size:.76rem;color:var(--text3);padding:1.6rem 1rem 2rem}.sf-foot a{color:var(--text3)}.sf-foot a:hover{color:var(--flame2)}
+
+/* ── light theme ── */
+html[data-theme="light"]{color-scheme:light;--bg:#f4f5fa;--bg2:#ffffff;--surface:rgba(20,20,40,.04);--surface2:rgba(20,20,40,.07);--border:rgba(20,20,40,.13);--border2:rgba(255,87,34,.4);--text:#15151f;--text2:#4b4b60;--text3:#77778c}
+html[data-theme="light"] body::before{background:radial-gradient(ellipse 80% 50% at 10% -10%,rgba(255,87,34,.07),transparent 60%),radial-gradient(ellipse 60% 40% at 90% 5%,rgba(38,198,218,.08),transparent 55%)}
+html[data-theme="light"] .topbar,html[data-theme="light"] nav{background:rgba(255,255,255,.85)}
+html[data-theme="light"] .nav-brand .name{background:linear-gradient(135deg,#15151f 35%,#FF5722);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+html[data-theme="light"] .card,html[data-theme="light"] .modal-card,html[data-theme="light"] .signin-card,html[data-theme="light"] .chat-card,html[data-theme="light"] .sticky-cta{background:rgba(255,255,255,.97);border-color:rgba(20,20,40,.1);box-shadow:0 18px 50px rgba(20,20,60,.09)}
+html[data-theme="light"] .input,html[data-theme="light"] .field input,html[data-theme="light"] .field select,html[data-theme="light"] .settings-select,html[data-theme="light"] .otp-digit,html[data-theme="light"] .composer input,html[data-theme="light"] .lang-select{background:#fff;color:var(--text);border-color:rgba(20,20,40,.16)}
+html[data-theme="light"] select option,html[data-theme="light"] .field select option,html[data-theme="light"] .settings-select option,html[data-theme="light"] .lang-select option{background:#fff;color:#15151f}
+html[data-theme="light"] .field input:disabled{background:rgba(20,20,40,.05)}
+html[data-theme="light"] .google-btn{background:#fff;border-color:rgba(20,20,40,.16);color:var(--text)}
+html[data-theme="light"] .seg{background:rgba(20,20,40,.05)}
+html[data-theme="light"] .toggle-track{background:rgba(20,20,40,.2)}
+html[data-theme="light"] .modal-back{background:rgba(20,20,40,.45)}
+html[data-theme="light"] .m.ai,html[data-theme="light"] .m.admin{background:rgba(20,20,40,.06)}
+html[data-theme="light"] .m.admin{background:rgba(102,187,106,.16)}
+html[data-theme="light"] .tr-msg{background:rgba(20,20,40,.06)}
+html[data-theme="light"] .cd-item,html[data-theme="light"] .tier-opt,html[data-theme="light"] .check-row{background:rgba(20,20,40,.035)}
+html[data-theme="light"] .confirm-phrase{background:rgba(239,83,80,.08);color:#c62828}
+html[data-theme="light"] .skel{background:linear-gradient(90deg,rgba(20,20,40,.05),rgba(20,20,40,.11),rgba(20,20,40,.05));background-size:200% 100%}
+html[data-theme="light"] .big-avatar,html[data-theme="light"] .avatar-edit{border-color:#fff}
+html[data-theme="light"] .t-status.pending{color:#b26a00}html[data-theme="light"] .t-status.confirmed{color:#00838f}html[data-theme="light"] .t-status.shipped{color:#2e7d32}html[data-theme="light"] .t-status.cancelled{color:#c62828}
+html[data-theme="light"] .btn-secondary{color:var(--text)}
+html[data-theme="light"] .cd-num,html[data-theme="light"] .tier-opt-price{color:#e64a19}
+html[data-theme="light"] .nav-account.signed-in{color:#2e7d32}
+html[data-theme="light"] .banner{color:#8a5a00}
+.theme-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:background .2s,color .2s}
+.theme-btn:hover{background:var(--surface2);color:var(--text)}
+.theme-btn .ic{width:1.1rem;height:1.1rem}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a href="/" class="nav-brand"><img src="/Logo.png" alt="SafeFlame AI"><span class="name">SafeFlame AI</span></a>
+  <div class="topbar-right">
+    <a class="topbar-link" href="/">← Home</a>
+    <button class="theme-btn" id="themeBtn" type="button" aria-label="Theme"></button><select class="lang-select" id="langSel" aria-label="Language" translate="no"></select><a class="nav-account" id="navAccount" href="/login">Sign In</a>
+  </div>
+</header>
+<main>
+<div class="page" style="max-width:720px">
+  <div class="card-icon"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg></div>
+  <h1 class="page-title center">How can we help?</h1>
+  <p class="page-sub center">Search the answers below, chat with us, or send feedback.</p>
+  <div class="seg" id="helpTabs"><button class="active" data-t="faqTab" type="button">Answers</button><button data-t="ideasTab" type="button">Ideas &amp; roadmap</button></div>
+  <div id="faqTab">
+  <div class="field" style="position:relative"><input id="q" class="input" placeholder="Search questions…" autocomplete="off" style="padding-left:2.6rem"><span style="position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:var(--text3)"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></span></div>
+  <div id="faq" class="faq"></div>
+  <div class="card center" style="margin:1.6rem 0">
+    <div class="card-icon"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg></div>
+    <h2 class="page-title" style="font-size:1.1rem">Still stuck?</h2>
+    <p class="page-sub" style="margin-bottom:1rem">Our assistant answers instantly, and you can ask for a person any time.</p>
+    <a class="btn-primary" href="/chat">Ask the assistant</a>
+  </div>
+  <div class="card">
+    <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M21 3 10.5 13.5M21 3l-6.8 18-3.7-7.5L3 9.8 21 3Z"/></svg> Send feedback</div>
+    <form id="fbForm" novalidate>
+      <input type="text" id="fbHp" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;opacity:0">
+      <div class="form-row">
+        <div class="field"><label for="fbCat">Topic</label><select id="fbCat"><option>Question</option><option>Problem</option><option>Idea</option><option>Compliment</option></select></div>
+        <div class="field"><label for="fbName">Name</label><input id="fbName" maxlength="60" autocomplete="name"></div>
+      </div>
+      <div class="field"><label for="fbEmail">Email (so we can reply)</label><input id="fbEmail" type="email" maxlength="100" autocomplete="email"></div>
+      <div class="field"><label for="fbMsg">Message</label><textarea id="fbMsg" class="input" rows="4" maxlength="1000"></textarea></div>
+      <div class="msg-error" id="fbErr"></div><div class="msg-ok" id="fbOk"></div>
+      <button class="btn-primary" id="fbBtn" type="submit">Send</button>
+    </form>
+  </div>
+  </div>
+
+  <div id="ideasTab" class="hidden">
+    <div class="card">
+      <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h3l8 4V6L7 10H4ZM18 9.5a3.5 3.5 0 0 1 0 5"/></svg> Suggest a feature <span class="hint" id="ideaSignin"></span></div>
+      <div class="field"><label for="ideaTitle">Idea</label><input id="ideaTitle" maxlength="90" placeholder="One line — what should we build?"></div>
+      <div class="field"><label for="ideaDesc">Details (optional)</label><textarea id="ideaDesc" class="input" rows="3" maxlength="500"></textarea></div>
+      <div class="msg-error" id="ideaErr"></div><button class="btn-primary" id="ideaBtn" type="button">Submit idea</button>
+    </div>
+    <div style="margin-top:1.4rem" id="ideaList"></div>
+  </div>
+  <p class="hint center" style="margin-top:2rem"><a href="/privacy">Privacy</a> · <a href="/refund">Refunds</a> · <a href="/warranty">Warranty</a></p>
+</div>
+</main>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+/* SafeFlame AI — shared JS (Firebase, settings, helpers, email). Load AFTER firebase + emailjs scripts. */
+const firebaseConfig = {
+  apiKey: "AIzaSyAbN8vlXGE_pu54TcNCiV_5r7riTzRaXUs",
+  authDomain: "skill-expo-873ad.firebaseapp.com",
+  databaseURL: "https://skill-expo-873ad-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "skill-expo-873ad",
+  storageBucket: "skill-expo-873ad.firebasestorage.app",
+  messagingSenderId: "289575463177",
+  appId: "1:289575463177:web:027602df29e192940acbd8",
+  measurementId: "G-BWPGYM9SPM"
+};
+/* The admin pages set window.SF_APP_NAME = 'admin' so the admin login lives in its own Firebase app and never signs anyone in on the public site. */
+const _fbApp = window.SF_APP_NAME
+  ? (firebase.apps.find(a => a.name === window.SF_APP_NAME) || firebase.initializeApp(firebaseConfig, window.SF_APP_NAME))
+  : (firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig));
+const ADMIN_EMAILS = ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com'];
+const isAdminEmail = e => ADMIN_EMAILS.includes(String(e || '').toLowerCase());
+const db = _fbApp.firestore();
+try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {} // avoids long hangs on networks that block Firestore streaming
+const auth = _fbApp.auth();
+const TS = () => firebase.firestore.FieldValue.serverTimestamp();
+
+/* ── DEFAULT SETTINGS (same shape the admin saves to settings/site) ── */
+const DEFAULT_SETTINGS = {
+  launchDate: '2026-12-01T00:00',
+  basePrice: 24999, baseOriginalPrice: 29999, proPrice: 39999, proOriginalPrice: 46999, elitePrice: 54999, eliteOriginalPrice: 64999,
+  baseStock: -1, proStock: -1, eliteStock: -1, orderNumberStart: 100000,
+  geminiApiKey: '', geminiApiKeys: [], geminiModel: 'gemini-3.5-flash',
+  emailjsServiceId: '', emailjsTemplateId: '', emailjsPublicKey: '',
+  announcement: { enabled: false, text: '', link: '' },
+  maintenance: { enabled: false, message: "We're making a few improvements. Please check back shortly." },
+  addons: [
+    { id: 'warranty', name: 'Extended warranty (+1 year)', price: 1499, enabled: true },
+    { id: 'install', name: 'Professional installation', price: 999, enabled: true }
+  ],
+  eta: { base: 'Within 3–4 weeks of launch', pro: 'Within 3–4 weeks of launch', elite: 'Within 4–5 weeks of launch' },
+  lowStockThreshold: 3, warrantyMonths: 12, firmware: [], knowledge: '',
+  awayMode: { enabled: false, startHour: 9, endHour: 21, message: 'Our team is away right now. Leave your message and we will reply as soon as we are back.', notifyEmail: '' },
+  seo: { title: '', description: '', image: '' },
+  guides: [
+    { id: 'safety', category: 'Getting started', title: 'Before you start: safety first', body: '## Before installation\n- Turn off the gas supply at the cylinder before anything is connected or moved.\n- Keep the unit away from water, steam and direct flame.\n- Never block kitchen ventilation.\n- Do not modify gas fittings yourself — ask us to help with installation.' },
+    { id: 'box', category: 'Getting started', title: 'Unboxing checklist', body: 'Check everything in the box against the list you received. Keep the packaging until your device is registered, and tell us straight away (with a photo) if anything is damaged or missing.' },
+    { id: 'setup', category: 'Setup', title: 'Powering on and connecting', body: 'Your unit shows its setup instructions on the touchscreen. If a step does not work, open a support ticket from this account and attach a photo of the screen — we will walk you through it.' },
+    { id: 'alerts', category: 'Troubleshooting', title: 'Alerts keep triggering', body: '- Check the room is ventilated and the sensor area is clean and dust-free.\n- Make sure nothing is leaking: if you smell gas, turn off the cylinder and leave the room, then contact us.\n- If it keeps happening, open a ticket so we can look at the readings.' },
+    { id: 'offline', category: 'Troubleshooting', title: 'Unit shows offline', body: '- Check your Wi-Fi router is on and the password has not changed.\n- Restart the unit once, then wait a minute.\n- Still offline? Open a ticket with a photo of the status screen.' }
+  ],
+  cannedReplies: ['Thanks for reaching out — let me check that for you.', 'Your order status is in your account under My orders.', 'Is there anything else I can help you with?'],
+  faq: [
+    { q: 'When will SafeFlame AI ship?', a: 'Pre-bookings ship in launch order. Each order shows an estimated delivery window in your account.' },
+    { q: 'Do I pay when I pre-book?', a: 'No. Pre-booking only reserves your unit — nothing is charged now.' },
+    { q: 'Can I change or cancel my order?', a: 'Yes, while it is still Pending. Open your account, go to My orders and choose Edit or Cancel.' },
+    { q: 'Which tier should I choose?', a: 'Base suits one kitchen with one camera. Pro adds a second camera and gas-weight display. Elite adds four cameras and multi-room support.' },
+    { q: 'How does the safety shut-off work?', a: 'Gas, flame and pressure sensors watch the kitchen. If something is wrong the valve closes automatically and you get an alert.' },
+    { q: 'How do I reach a person?', a: 'Open Chat and ask for a human — our team replies in the same window.' }
+  ],
+  statusEmails: {
+    pending: { subject: "We've received your SafeFlame AI order", message: "Hi {{name}}, thanks for pre-booking! Your order {{order_id}} for {{tier}} (x{{quantity}}) is currently Pending — total {{total_price}}. We'll email you again once it's confirmed.", serviceId: '', templateId: '', publicKey: '' }
+  },
+  otpEmail: { subject: 'Your SafeFlame AI verification code', message: 'Hi {{name}}, your SafeFlame AI verification code is {{otp}}. It expires in 10 minutes. Never share this code with anyone.', serviceId: '', templateId: '', publicKey: '' },
+  verifyEmail: { subject: 'Verify your SafeFlame AI account', message: 'Hi {{name}}, welcome to SafeFlame AI! Please confirm your email address to activate your account: {{link}}', serviceId: '', templateId: '', publicKey: '' }
+};
+const DEFAULT_PAGES = {
+  privacy: { title: 'Privacy policy', body: '## What we collect\n- Account details: your name and email, plus phone, date of birth and gender if you choose to add them.\n- Orders: delivery addresses, order history and delivery notes.\n- Support: chat messages, support tickets and any photos you attach.\n- Technical: basic usage and error information that keeps the site working.\n\n## How we use it\nTo take and deliver your pre-booking, support you, send order emails and improve SafeFlame AI. We do not sell your data.\n\n## Who helps us run the service\nGoogle Firebase (accounts and database), EmailJS (sending emails) and Google Gemini (the AI chat assistant). If you pick a language other than English, the page text is translated by Google Translate.\n\n## Your choices\nYou can download your data or delete your account at any time from your account page. For anything else, contact us through the chat.' },
+  refund: { title: 'Refund & cancellation policy', body: '## Pre-booking\nPre-booking does not charge anything. You can edit or cancel an order for free while it is Pending, from My orders in your account.\n\n## After an order is confirmed or shipped\nOpen a support ticket from your account and we will review the request with you.\n\n## Refunds\nIf a payment has been taken and the order is cancelled or cannot be fulfilled, the amount is returned to the original payment method. Bank timelines vary.\n\n## Damaged or wrong items\nTell us as soon as possible through a support ticket and attach photos.' },
+  warranty: { title: 'Warranty', body: '## Coverage\nEach unit comes with a warranty from the start date you register in your account. The Extended warranty add-on lengthens it by 12 months. Your exact end date is shown under Devices & warranty.\n\n## What is covered\nFaults in materials and workmanship under normal home use.\n\n## What is not covered\n- Damage from water, misuse or accidents.\n- Changes to gas fittings or the unit\'s electronics by anyone other than our team.\n\n## How to claim\nRegister your device, then choose Claim warranty on its card. We will reply in your support ticket.' }
+};
+let siteSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
+function mergeSettings(data) {
+  data = data || {};
+  return {
+    ...DEFAULT_SETTINGS, ...data,
+    statusEmails: { ...DEFAULT_SETTINGS.statusEmails, ...(data.statusEmails || {}) },
+    otpEmail: { ...DEFAULT_SETTINGS.otpEmail, ...(data.otpEmail || {}) },
+    verifyEmail: { ...DEFAULT_SETTINGS.verifyEmail, ...(data.verifyEmail || {}) },
+    announcement: { ...DEFAULT_SETTINGS.announcement, ...(data.announcement || {}) },
+    maintenance: { ...DEFAULT_SETTINGS.maintenance, ...(data.maintenance || {}) },
+    eta: { ...DEFAULT_SETTINGS.eta, ...(data.eta || {}) },
+    addons: Array.isArray(data.addons) ? data.addons : DEFAULT_SETTINGS.addons,
+    faq: Array.isArray(data.faq) && data.faq.length ? data.faq : DEFAULT_SETTINGS.faq,
+    cannedReplies: Array.isArray(data.cannedReplies) ? data.cannedReplies : DEFAULT_SETTINGS.cannedReplies,
+    guides: Array.isArray(data.guides) ? data.guides : DEFAULT_SETTINGS.guides,
+    firmware: Array.isArray(data.firmware) ? data.firmware : [],
+    awayMode: { ...DEFAULT_SETTINGS.awayMode, ...(data.awayMode || {}) },
+    seo: { ...DEFAULT_SETTINGS.seo, ...(data.seo || {}) },
+    pages: { privacy: { ...DEFAULT_PAGES.privacy, ...((data.pages || {}).privacy || {}) }, refund: { ...DEFAULT_PAGES.refund, ...((data.pages || {}).refund || {}) }, warranty: { ...DEFAULT_PAGES.warranty, ...((data.pages || {}).warranty || {}) } }
+  };
+}
+let _settingsP = null;
+function loadSiteSettings(force) {
+  if (_settingsP && !force) return _settingsP;
+  _settingsP = (async () => {
+    try { const d = await db.collection('settings').doc('site').get(); if (d.exists) siteSettings = mergeSettings(d.data()); }
+    catch (e) { console.warn('Settings load failed, using defaults:', e); }
+    if (!window.SF_APP_NAME) applySiteControls(siteSettings);
+    return siteSettings;
+  })();
+  return _settingsP;
+}
+
+/* ── site controls: announcement bar + maintenance mode (set in Admin > Site) ── */
+function applySiteControls(s) {
+  try {
+    const a = s.announcement || {};
+    if (a.enabled && a.text && !sessionStorage.getItem('sf_banner_closed') && !document.getElementById('sfBanner')) {
+      const b = document.createElement('div'); b.id = 'sfBanner';
+      b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9000;background:linear-gradient(90deg,#FF5722,#FF8A65);color:#fff;font:600 .85rem Inter,system-ui,sans-serif;padding:.65rem 4.5rem .65rem 1rem;text-align:center';
+      const txt = document.createElement(a.link ? 'a' : 'span'); txt.textContent = a.text; if (a.link) { txt.href = a.link; txt.style.cssText = 'color:#fff;text-decoration:underline'; }
+      const x = document.createElement('button'); x.textContent = '✕'; x.setAttribute('aria-label', 'Dismiss');
+      x.style.cssText = 'position:absolute;right:4.6rem;top:50%;transform:translateY(-50%);background:none;border:none;color:#fff;cursor:pointer;font-size:1rem';
+      x.onclick = () => { sessionStorage.setItem('sf_banner_closed', '1'); b.remove(); };
+      b.append(txt, x); document.body.appendChild(b);
+    }
+    const m = s.maintenance || {};
+    if (m.enabled && !document.getElementById('sfMaint')) {
+      const o = document.createElement('div'); o.id = 'sfMaint';
+      o.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#08080f;color:#f0f0f8;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:Inter,system-ui,sans-serif';
+      const d = document.createElement('div'); const h = document.createElement('h1'); h.textContent = 'Back soon'; h.style.cssText = 'margin:0 0 .7rem;font-size:1.8rem';
+      const p = document.createElement('p'); p.textContent = m.message || ''; p.style.cssText = 'color:#a0a0b8;max-width:420px;margin:0 auto';
+      d.append(h, p); o.appendChild(d); document.body.appendChild(o);
+      // admins can still use the site while it is in maintenance mode
+      try { auth.onAuthStateChanged(u => { if (u && isAdminEmail(u.email)) o.remove(); }); } catch (_) {}
+    }
+  } catch (e) { console.warn('site controls', e); }
+}
+
+/* ── shared order/notification/log helpers ── */
+const orderTotal = o => (Number(o.unitPrice) || 0) * (Number(o.quantity) || 1) + (Number(o.addonsTotal) || 0);
+function fmtAddress(a) { return a ? [a.name, a.line1, a.line2, [a.city, a.state].filter(Boolean).join(', '), a.pin, a.phone && ('Ph: ' + a.phone)].filter(Boolean).join(', ') : ''; }
+function pushNotification(n) { return db.collection('notifications').add({ read: false, createdAt: TS(), ...n, email: String(n.email || '').toLowerCase() }).catch(e => console.warn('notification failed', e)); }
+function logEmail(kind, to, subject, ok, error, orderId) { try { db.collection('emailLog').add({ kind: kind || 'email', to: String(to || '').toLowerCase(), subject: String(subject || '').slice(0, 140), ok: !!ok, error: error ? String(error).slice(0, 300) : '', orderId: orderId || '', at: TS() }).catch(() => {}); } catch (_) {} }
+/* referrals: ?ref=CODE is remembered and attached to a later pre-booking */
+function refCodeFor(uid) { let h = 5381; for (let i = 0; i < uid.length; i++) h = ((h << 5) + h + uid.charCodeAt(i)) >>> 0; return 'SF' + h.toString(36).toUpperCase().padStart(6, '0').slice(0, 6); }
+(function captureRef() { try { const r = new URLSearchParams(location.search).get('ref'); if (r && /^[A-Z0-9]{4,12}$/i.test(r)) localStorage.setItem('sf_ref', r.toUpperCase()); } catch (_) {} })();
+
+/* ── helpers ── */
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const isValidEmail = e => EMAIL_RE.test(String(e).trim());
+const sanitize = s => String(s || '').replace(/<[^>]*>/g, '').replace(/[<>"'`]/g, '').trim();
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const renderTokens = (str, t) => String(str || '').replace(/\{\{(\w+)\}\}/g, (m, k) => k in t ? t[k] : m);
+const tierPriceFor = t => Number(t === 'elite' ? siteSettings.elitePrice : t === 'pro' ? siteSettings.proPrice : siteSettings.basePrice);
+const tierLabelFor = t => t === 'elite' ? '9" Elite' : t === 'pro' ? '7" Pro' : '4" Base';
+const fmtINR = n => '₹' + Number(n).toLocaleString('en-IN');
+function orderNumberFor(o) {
+  if (o.orderNumber) return String(o.orderNumber);
+  if (!o.id) return '000000';
+  let h = 0; for (let i = 0; i < o.id.length; i++) h = (h * 31 + o.id.charCodeAt(i)) >>> 0;
+  return String(100000 + (h % 900000));
+}
+async function getNextOrderNumber() {
+  const ref = db.collection('settings').doc('orderCounter');
+  try {
+    return await db.runTransaction(async tx => {
+      const d = await tx.get(ref);
+      const next = d.exists ? (Number(d.data().lastNumber) || 0) + 1 : (Number(siteSettings.orderNumberStart) || 100000);
+      tx.set(ref, { lastNumber: next }, { merge: true });
+      return next;
+    });
+  } catch (e) { return Math.floor(100000 + Math.random() * 900000); }
+}
+/* redirect helper with a loop breaker (stops runaway reload loops instead of freezing the browser) */
+function showFatal(msg) {
+  const d = document.createElement('div');
+  d.style.cssText = 'position:fixed;inset:0;z-index:99999;background:#08080f;color:#f0f0f8;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:Inter,system-ui,sans-serif';
+  d.innerHTML = '<div><h2 style="margin-bottom:.6rem">Something went wrong</h2><p style="color:#a0a0b8;max-width:420px;margin:0 auto 1.2rem">' + msg + '</p><a href="/" style="color:#ff8a65">Back to home</a></div>';
+  document.body.appendChild(d);
+}
+function go(url) {
+  try {
+    const now = Date.now(), a = JSON.parse(sessionStorage.getItem('sf_nav') || '[]').filter(t => now - t < 8000);
+    a.push(now); sessionStorage.setItem('sf_nav', JSON.stringify(a));
+    if (a.length > 6) { sessionStorage.removeItem('sf_nav'); return showFatal('The page kept redirecting, so we stopped it. Please reload and try again.'); }
+  } catch (_) {}
+  location.href = url;
+}
+function qs(name) { return new URLSearchParams(location.search).get(name); }
+/* only allow redirects to our own pages */
+function safeNext(n) { return n && /^\/?[a-z0-9_-]*(\.html)?(\?[\w=&%.-]*)?$/i.test(n) ? n : null; }
+
+/* ── EmailJS ── */
+async function sendWithCfg(cfg, params, kind, orderId) {
+  cfg = cfg || {};
+  const svc = cfg.serviceId || siteSettings.emailjsServiceId;
+  const tpl = cfg.templateId || siteSettings.emailjsTemplateId;
+  const key = cfg.publicKey || siteSettings.emailjsPublicKey;
+  if (!svc || !tpl || !key) { logEmail(kind, params.to_email, params.subject, false, 'EmailJS not configured', orderId); throw new Error('EMAILJS_NOT_CONFIGURED'); }
+  try { const r = await emailjs.send(svc, tpl, params, { publicKey: key }); logEmail(kind, params.to_email, params.subject, true, '', orderId); return r; }
+  catch (e) { logEmail(kind, params.to_email, params.subject, false, (e && (e.text || e.message)) || 'send failed', orderId); throw e; }
+}
+async function sendOtpEmail(email, name, otp) {
+  const cfg = siteSettings.otpEmail;
+  const tokens = { name: name || 'there', otp, email };
+  return sendWithCfg(cfg, { to_email: email, to_name: name || 'there', name: name || 'there', email, otp, subject: renderTokens(cfg.subject, tokens), message: renderTokens(cfg.message, tokens), order_id: '' }, 'otp');
+}
+async function sendVerifyEmail(email, name, link) {
+  const cfg = siteSettings.verifyEmail;
+  const tokens = { name: name || 'there', email, link };
+  return sendWithCfg(cfg, { to_email: email, to_name: name || 'there', name: name || 'there', email, link, subject: renderTokens(cfg.subject, tokens), message: renderTokens(cfg.message, tokens), order_id: '' }, 'verify');
+}
+function sendOrderEmail(order, status) {
+  status = status || 'pending';
+  if (!order.email) return Promise.resolve();
+  const cfg = (siteSettings.statusEmails && siteSettings.statusEmails[status]) || DEFAULT_SETTINGS.statusEmails[status] || DEFAULT_SETTINGS.statusEmails.pending;
+  const tierLabel = tierLabelFor(order.tier), qty = Number(order.quantity) || 1, unit = Number(order.unitPrice) || 0, total = orderTotal(order);
+  const t = { name: order.name || 'there', order_id: orderNumberFor(order), tier: tierLabel, quantity: qty, unit_price: fmtINR(unit), total_price: fmtINR(total), status: status.charAt(0).toUpperCase() + status.slice(1), phone: order.phone || '', address: fmtAddress(order.shipping) || order.address || '', tracking: order.tracking || '', eta: order.eta || '' };
+  const lines = [{ name: 'SafeFlame AI — ' + tierLabel, units: qty, price: (unit * qty).toLocaleString('en-IN') }].concat((order.addons || []).map(a => ({ name: a.name, units: 1, price: Number(a.price).toLocaleString('en-IN') })));
+  return sendWithCfg(cfg, {
+    to_email: order.email, to_name: t.name, subject: renderTokens(cfg.subject, t), email: order.email, order_id: t.order_id,
+    orders: lines, cost: { shipping: '0', tax: '0', total: total.toLocaleString('en-IN') },
+    product_name: 'SafeFlame AI — ' + tierLabel, tier: tierLabel, quantity: qty, unit_price: t.unit_price, total_price: t.total_price,
+    status, phone: t.phone, address: t.address, tracking: t.tracking, eta: t.eta, message: renderTokens(cfg.message, t)
+  }, 'order-' + status, order.id).catch(e => console.warn('Order email failed:', e));
+}
+const sendOrderConfirmationEmail = o => sendOrderEmail(o, 'pending');
+
+/* ── Gemini (used by chat page) ── */
+function getGeminiKeys() {
+  let k = Array.isArray(siteSettings.geminiApiKeys) ? siteSettings.geminiApiKeys.filter(Boolean) : [];
+  if (!k.length && siteSettings.geminiApiKey) k = [siteSettings.geminiApiKey];
+  return k;
+}
+async function callGemini(system, history) {
+  const keys = getGeminiKeys(), model = siteSettings.geminiModel || 'gemini-3.5-flash';
+  if (!keys.length) throw new Error('No Gemini keys configured.');
+  let lastErr = null;
+  for (const key of keys) {
+    try {
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents: history })
+      });
+      if (!r.ok) { lastErr = new Error('Status ' + r.status); continue; }
+      const d = await r.json();
+      const reply = d?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!reply) { lastErr = new Error('Empty reply'); continue; }
+      return reply;
+    } catch (e) { lastErr = e; }
+  }
+  throw lastErr || new Error('All keys failed.');
+}
+
+/* ── user appearance prefs (saved by account page) ── */
+const USER_SETTINGS_KEY = 'sf_user_settings';
+function getLocalPrefs() { try { return JSON.parse(localStorage.getItem(USER_SETTINGS_KEY) || '{}'); } catch (_) { return {}; } }
+function applyAppearance(p) {
+  p = p || getLocalPrefs();
+  document.documentElement.style.fontSize = p.fontSize || '';
+  document.documentElement.classList.toggle('reduce-motion', !!p.reduceMotion);
+  document.documentElement.classList.toggle('compact-mode', !!p.compact);
+}
+applyAppearance();
+
+/* ── verification state ── */
+async function isVerified(user) {
+  if (!user) return false;
+  if (isAdminEmail(user.email)) return true; // admin accounts skip email verification
+  if (user.emailVerified) return true;
+  const isPasswordUser = user.providerData.some(p => p.providerId === 'password');
+  if (!isPasswordUser) return true; // Google etc.
+  try {
+    const ud = await db.collection('users').doc(user.uid).get();
+    if (ud.exists && ud.data().emailVerified === true) return true;
+    const q = await db.collection('emailVerifications').where('uid', '==', user.uid).where('verified', '==', true).limit(1).get();
+    if (!q.empty) {
+      await db.collection('users').doc(user.uid).set({ emailVerified: true }, { merge: true });
+      q.docs.forEach(d => d.ref.delete().catch(() => {}));
+      return true;
+    }
+  } catch (e) { console.warn('verify check failed', e); }
+  return false;
+}
+function randomToken() { const a = new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); }
+async function createAndSendVerification(user, name) {
+  const token = randomToken();
+  await db.collection('emailVerifications').doc(token).set({ uid: user.uid, email: user.email, verified: false, createdAt: TS(), expiresAt: Date.now() + 24 * 3600 * 1000 });
+  const base = location.origin;
+  const link = base + '/verify?token=' + token;
+  try { await sendVerifyEmail(user.email, name, link); return 'emailjs'; }
+  catch (e) {
+    if (e.message !== 'EMAILJS_NOT_CONFIGURED') throw e;
+    await user.sendEmailVerification({ url: base + '/verify?native=1' }); // fallback: Firebase's own mail
+    return 'firebase';
+  }
+}
+
+/* ── top bar account button ── */
+let _unreadUnsub = null;
+function initNavAccount(sel) {
+  const el = document.querySelector(sel || '#navAccount'); if (!el) return;
+  auth.onAuthStateChanged(async user => {
+    if (_unreadUnsub) { _unreadUnsub(); _unreadUnsub = null; }
+    if (!user) { el.className = 'nav-account'; el.href = '/login'; el.textContent = 'Sign In'; return; }
+    let name = user.displayName || user.email.split('@')[0], photo = user.photoURL;
+    try { const d = await db.collection('users').doc(user.uid).get(); if (d.exists) { name = d.data().displayName || name; photo = d.data().photoURL || photo; } } catch (_) {}
+    el.className = 'nav-account signed-in'; el.href = '/account'; el.title = 'Your account';
+    const base = (photo ? `<img src="${esc(photo)}" alt="">` : `<span class="nav-initial">${esc(name.charAt(0).toUpperCase())}</span>`) + esc(name.split(' ')[0]);
+    el.innerHTML = base;
+    try {
+      _unreadUnsub = db.collection('notifications').where('email', '==', String(user.email).toLowerCase()).where('read', '==', false).onSnapshot(s => {
+        el.innerHTML = base + (s.size ? '<span class="nav-badge">' + s.size + '</span>' : '');
+        el.href = s.size ? '/account#notifications' : '/account';
+      }, () => {});
+    } catch (_) {}
+  });
+}
+const GOOGLE_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58Z" fill="#EA4335"/></svg>';
+const HEAD_LIBS = '';
+if (!window.SF_APP_NAME) loadSiteSettings();
+/* ── language picker (Google Website Translator: ~130 languages, machine translation) ── */
+const SF_LANGS = [['en','English'],['af','Afrikaans'],['sq','Albanian'],['am','Amharic'],['ar','Arabic'],['hy','Armenian'],['as','Assamese'],['ay','Aymara'],['az','Azerbaijani'],['bm','Bambara'],['eu','Basque'],['be','Belarusian'],['bn','Bengali'],['bho','Bhojpuri'],['bs','Bosnian'],['bg','Bulgarian'],['ca','Catalan'],['ceb','Cebuano'],['ny','Chichewa'],['zh-CN','Chinese (Simplified)'],['zh-TW','Chinese (Traditional)'],['co','Corsican'],['hr','Croatian'],['cs','Czech'],['da','Danish'],['dv','Dhivehi'],['doi','Dogri'],['nl','Dutch'],['eo','Esperanto'],['et','Estonian'],['ee','Ewe'],['tl','Filipino'],['fi','Finnish'],['fr','French'],['fy','Frisian'],['gl','Galician'],['ka','Georgian'],['de','German'],['el','Greek'],['gn','Guarani'],['gu','Gujarati'],['ht','Haitian Creole'],['ha','Hausa'],['haw','Hawaiian'],['iw','Hebrew'],['hi','Hindi'],['hmn','Hmong'],['hu','Hungarian'],['is','Icelandic'],['ig','Igbo'],['ilo','Ilocano'],['id','Indonesian'],['ga','Irish'],['it','Italian'],['ja','Japanese'],['jw','Javanese'],['kn','Kannada'],['kk','Kazakh'],['km','Khmer'],['rw','Kinyarwanda'],['gom','Konkani'],['ko','Korean'],['kri','Krio'],['ku','Kurdish (Kurmanji)'],['ckb','Kurdish (Sorani)'],['ky','Kyrgyz'],['lo','Lao'],['la','Latin'],['lv','Latvian'],['ln','Lingala'],['lt','Lithuanian'],['lg','Luganda'],['lb','Luxembourgish'],['mk','Macedonian'],['mai','Maithili'],['mg','Malagasy'],['ms','Malay'],['ml','Malayalam'],['mt','Maltese'],['mi','Maori'],['mr','Marathi'],['mni-Mtei','Meiteilon (Manipuri)'],['lus','Mizo'],['mn','Mongolian'],['my','Myanmar (Burmese)'],['ne','Nepali'],['no','Norwegian'],['or','Odia (Oriya)'],['om','Oromo'],['ps','Pashto'],['fa','Persian'],['pl','Polish'],['pt','Portuguese'],['pa','Punjabi'],['qu','Quechua'],['ro','Romanian'],['ru','Russian'],['sm','Samoan'],['sa','Sanskrit'],['gd','Scots Gaelic'],['nso','Sepedi'],['sr','Serbian'],['st','Sesotho'],['sn','Shona'],['sd','Sindhi'],['si','Sinhala'],['sk','Slovak'],['sl','Slovenian'],['so','Somali'],['es','Spanish'],['su','Sundanese'],['sw','Swahili'],['sv','Swedish'],['tg','Tajik'],['ta','Tamil'],['tt','Tatar'],['te','Telugu'],['th','Thai'],['ti','Tigrinya'],['ts','Tsonga'],['tr','Turkish'],['tk','Turkmen'],['ak','Twi'],['uk','Ukrainian'],['ur','Urdu'],['ug','Uyghur'],['uz','Uzbek'],['vi','Vietnamese'],['cy','Welsh'],['xh','Xhosa'],['yi','Yiddish'],['yo','Yoruba'],['zu','Zulu']];
+function sfSetLangCookie(code) {
+  const v = code === 'en' ? '' : '/en/' + code, exp = code === 'en' ? ';expires=Thu, 01 Jan 1970 00:00:00 GMT' : '';
+  document.cookie = 'googtrans=' + v + ';path=/' + exp; document.cookie = 'googtrans=' + v + ';path=/;domain=' + location.hostname + exp;
+}
+function sfLoadTranslator() {
+  if (window.__sfGt) return; window.__sfGt = 1;
+  const d = document.createElement('div'); d.id = 'sf_gt'; d.style.display = 'none'; document.body.appendChild(d);
+  const st = document.createElement('style'); st.textContent = '.goog-te-banner-frame,.skiptranslate>iframe{display:none!important}body{top:0!important}.goog-tooltip{display:none!important}.goog-text-highlight{background:none!important;box-shadow:none!important}'; document.head.appendChild(st);
+  window.googleTranslateElementInit = () => { try { new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false }, 'sf_gt'); } catch (_) {} };
+  const s = document.createElement('script'); s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'; s.async = true; document.head.appendChild(s);
+}
+function initLanguage() {
+  const sel = document.getElementById('langSel'), saved = localStorage.getItem('sf_lang') || 'en';
+  if (sel) {
+    sel.innerHTML = SF_LANGS.map(l => '<option value="' + l[0] + '">' + l[1] + '</option>').join(''); sel.value = saved; sel.setAttribute('translate', 'no');
+    sel.onchange = () => { localStorage.setItem('sf_lang', sel.value); sfSetLangCookie(sel.value); location.reload(); };
+  }
+  if (saved !== 'en') { sfSetLangCookie(saved); sfLoadTranslator(); }
+}
+
+if (!window.SF_APP_NAME) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initLanguage); else initLanguage(); }
+/* tiny safe text formatter for guides and policy pages: ## heading, - bullets, 1. numbers, **bold**, blank line = new paragraph */
+function richText(src) {
+  let out = '', list = null; const close = () => { if (list) { out += '</' + list + '>'; list = null; } }, inl = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  String(src || '').replace(/\r/g, '').split('\n').forEach(l => {
+    const t = l.trim(); if (!t) { close(); return; } let m;
+    if ((m = t.match(/^##\s+(.*)/))) { close(); out += '<h3>' + inl(m[1]) + '</h3>'; }
+    else if ((m = t.match(/^[-*]\s+(.*)/))) { if (list !== 'ul') { close(); out += '<ul>'; list = 'ul'; } out += '<li>' + inl(m[1]) + '</li>'; }
+    else if ((m = t.match(/^\d+[.)]\s+(.*)/))) { if (list !== 'ol') { close(); out += '<ol>'; list = 'ol'; } out += '<li>' + inl(m[1]) + '</li>'; }
+    else { close(); out += '<p>' + inl(t) + '</p>'; }
+  });
+  close(); return out;
+}
+if ('serviceWorker' in navigator && !window.SF_APP_NAME) navigator.serviceWorker.register('/sw.js').catch(() => {});
+
+/* ── theme: dark (default) / light / auto ── */
+function themeIsLight(t) { t = t || localStorage.getItem('sf_theme') || 'dark'; return t === 'light' || (t === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches); }
+function applyTheme(t) {
+  if (t) localStorage.setItem('sf_theme', t);
+  const light = themeIsLight(); document.documentElement.setAttribute('data-theme', light ? 'light' : 'dark');
+  const b = document.getElementById('themeBtn'); if (b) { b.innerHTML = light ? '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.2A8 8 0 0 1 9.8 4 8 8 0 1 0 20 14.2Z"/></svg>' : '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg>'; b.title = light ? 'Switch to dark theme' : 'Switch to light theme'; b.setAttribute('aria-label', b.title); }
+  const m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', light ? '#f4f5fa' : '#08080f');
+  const s = document.getElementById('sTheme'); if (s) s.value = localStorage.getItem('sf_theme') || 'dark';
+}
+function initTheme() {
+  const b = document.getElementById('themeBtn'); if (b) b.onclick = () => { applyTheme(themeIsLight() ? 'dark' : 'light'); if (window.onThemeChosen) window.onThemeChosen(); };
+  if (window.matchMedia) matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => { if ((localStorage.getItem('sf_theme') || 'dark') === 'auto') applyTheme(); });
+  applyTheme();
+}
+if (!window.SF_APP_NAME) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initTheme); else initTheme(); }
+</script>
+<script>
+initNavAccount();
+const $ = id => document.getElementById(id);
+function renderFaq() {
+  const q = $('q').value.trim().toLowerCase(), list = (siteSettings.faq || []).filter(f => !q || (f.q + ' ' + f.a).toLowerCase().includes(q));
+  $('faq').innerHTML = list.length ? list.map(f => '<details class="faq-item"><summary>' + esc(f.q) + '</summary><p>' + esc(f.a) + '</p></details>').join('') : '<div class="empty">No matching answers. Try the chat below.</div>';
+}
+$('q').addEventListener('input', renderFaq);
+loadSiteSettings().then(renderFaq);
+auth.onAuthStateChanged(async u => {
+  if (!u) return; if (!$('fbEmail').value) $('fbEmail').value = u.email || '';
+  if (!$('fbName').value) { let n = u.displayName || ''; try { const d = await db.collection('users').doc(u.uid).get(); n = (d.data() || {}).displayName || n; } catch (_) {} $('fbName').value = n; }
+});
+$('fbForm').addEventListener('submit', async e => {
+  e.preventDefault(); $('fbErr').textContent = ''; $('fbOk').textContent = '';
+  if ($('fbHp').value) return;
+  const name = sanitize($('fbName').value), email = sanitize($('fbEmail').value).toLowerCase(), message = sanitize($('fbMsg').value);
+  if (!message || message.length < 5) return $('fbErr').textContent = 'Please write a short message.';
+  if (email && !isValidEmail(email)) return $('fbErr').textContent = 'That email looks invalid.';
+  if (Date.now() - Number(localStorage.getItem('sf_fb_t') || 0) < 30000) return $('fbErr').textContent = 'Please wait a few seconds before sending another message.';
+  $('fbBtn').disabled = true;
+  try {
+    await db.collection('feedback').add({ category: $('fbCat').value, name, email, message, uid: auth.currentUser ? auth.currentUser.uid : null, status: 'new', createdAt: TS() });
+    localStorage.setItem('sf_fb_t', Date.now()); $('fbOk').textContent = 'Thanks! We got your message.'; $('fbMsg').value = '';
+  } catch (x) { $('fbErr').textContent = 'Could not send. Please try again.'; }
+  $('fbBtn').disabled = false;
+});
+
+/* ── tabs ── */
+function helpTab(id) { ['faqTab', 'ideasTab'].forEach(t => $(t).classList.toggle('hidden', t !== id)); document.querySelectorAll('#helpTabs button').forEach(b => b.classList.toggle('active', b.dataset.t === id)); history.replaceState(null, '', id === 'ideasTab' ? '#ideas' : location.pathname); }
+document.querySelectorAll('#helpTabs button').forEach(b => b.addEventListener('click', () => helpTab(b.dataset.t)));
+if (location.hash === '#ideas') helpTab('ideasTab');
+
+/* ── ideas & voting ── */
+let ideas = [];
+const tsMs = t => t && t.toMillis ? t.toMillis() : (t && t.__ts) || 0;
+function renderIdeas() {
+  const me = auth.currentUser ? auth.currentUser.uid : null;
+  $('ideaList').innerHTML = ideas.length ? ideas.map(i => '<div class="card idea" data-id="' + esc(i.id) + '" style="margin-bottom:.8rem;padding:1rem 1.2rem;display:flex;gap:1rem;align-items:flex-start"><button class="vote ' + ((i.voters || []).includes(me) ? 'on' : '') + '" type="button" aria-label="Vote"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m6 15 6-6 6 6"/></svg><b>' + (Number(i.votes) || 0) + '</b></button><div style="flex:1"><div style="font-weight:600">' + esc(i.title) + ' ' + (i.status && i.status !== 'open' ? '<span class="t-status ' + ({ planned: 'confirmed', done: 'shipped', declined: 'cancelled' })[i.status] + '">' + esc(i.status) + '</span>' : '') + '</div>' + (i.description ? '<div class="hint" style="color:var(--text2);margin-top:.2rem">' + esc(i.description) + '</div>' : '') + '<div class="hint" style="margin-top:.3rem">by ' + esc(String(i.name || 'a customer').split(' ')[0]) + '</div></div></div>').join('') : '<div class="empty-rich"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h3l8 4V6L7 10H4ZM18 9.5a3.5 3.5 0 0 1 0 5"/></svg><b>No ideas yet</b><p>Be the first to suggest something.</p></div>';
+}
+db.collection('ideas').onSnapshot(s => { ideas = s.docs.map(d => ({ id: d.id, ...d.data() })).filter(i => i.status !== 'hidden').sort((a, b) => (Number(b.votes) || 0) - (Number(a.votes) || 0) || tsMs(b.createdAt) - tsMs(a.createdAt)); renderIdeas(); }, () => { $('ideaList').innerHTML = '<div class="empty">Could not load ideas.</div>'; });
+auth.onAuthStateChanged(u => { $('ideaSignin').innerHTML = u ? '' : '<a href="/login?next=/help">Sign in</a> to suggest and vote'; renderIdeas(); });
+$('ideaList').addEventListener('click', async e => {
+  const b = e.target.closest('.vote'); if (!b) return; const u = auth.currentUser; if (!u) return go('/login?next=/help');
+  const ref = db.collection('ideas').doc(b.closest('.idea').dataset.id);
+  try { await db.runTransaction(async tx => { const d = await tx.get(ref), v = (d.data().voters || []), has = v.includes(u.uid); tx.update(ref, { voters: has ? v.filter(x => x !== u.uid) : v.concat([u.uid]), votes: Math.max(0, (Number(d.data().votes) || 0) + (has ? -1 : 1)) }); }); } catch (_) {}
+});
+$('ideaBtn').onclick = async () => {
+  const u = auth.currentUser; if (!u) return go('/login?next=/help'); const title = sanitize($('ideaTitle').value); $('ideaErr').textContent = '';
+  if (title.length < 6) return $('ideaErr').textContent = 'Describe your idea in at least a few words.';
+  if (Date.now() - Number(localStorage.getItem('sf_idea_t') || 0) < 20000) return $('ideaErr').textContent = 'Please wait a moment before sending another idea.';
+  $('ideaBtn').disabled = true;
+  try { let name = u.displayName || ''; try { name = ((await db.collection('users').doc(u.uid).get()).data() || {}).displayName || name; } catch (_) {} await db.collection('ideas').add({ title, description: sanitize($('ideaDesc').value), uid: u.uid, name, votes: 1, voters: [u.uid], status: 'open', createdAt: TS() }); localStorage.setItem('sf_idea_t', Date.now()); $('ideaTitle').value = ''; $('ideaDesc').value = ''; }
+  catch (x) { $('ideaErr').textContent = 'Could not send your idea. Please try again.'; }
+  $('ideaBtn').disabled = false;
+};
+</script>
+</body>
+</html>
