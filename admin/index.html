@@ -860,6 +860,45 @@
 
   .ic { width: 1em; height: 1em; display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
   .chat-toggle .ic { width: 1.5rem; height: 1.5rem; }
+
+  /* ── extras ── */
+  .ic { width: 1em; height: 1em; display: inline-block; vertical-align: -0.15em; flex-shrink: 0; }
+  .ax-sub { font-size: .68rem; color: var(--muted); margin-top: .1rem; }
+  .ax-flag { display: inline-flex; align-items: center; gap: .15rem; background: rgba(232,93,93,.15); color: var(--red); border-radius: 50px; padding: .05rem .4rem; font-size: .68rem; font-weight: 700; cursor: help; }
+  .ax-tag { display: inline-flex; align-items: center; background: var(--surface3); color: var(--muted); border-radius: 50px; padding: .05rem .45rem; font-size: .66rem; }
+  .ax-tag.warn { background: rgba(232,197,71,.18); color: var(--yellow); }
+  .ax-back { position: fixed; inset: 0; z-index: 400; background: rgba(0,0,0,.65); align-items: center; justify-content: center; padding: 1rem; }
+  .ax-modal { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 1.4rem; width: 100%; max-height: 92vh; overflow-y: auto; }
+  .ax-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+  .ax-head h2 { font-size: 1.15rem; display: flex; align-items: center; gap: .6rem; }
+  .ax-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .8rem 1.2rem; margin-bottom: .6rem; }
+  .ax-grid > div > span:first-child { display: block; font-size: .66rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin-bottom: .2rem; }
+  .ax-grid .wide { grid-column: 1 / -1; }
+  .ax-grid textarea, .ax-grid input { width: 100%; }
+  .ax-sec { font-size: .72rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 1.2rem 0 .5rem; border-top: 1px solid var(--border); padding-top: .9rem; }
+  .ax-row { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: .55rem .2rem; border-bottom: 1px solid rgba(255,255,255,.05); font-size: .85rem; }
+  .ax-link { cursor: pointer; } .ax-link:hover { background: var(--surface2); }
+  .ax-alert { background: rgba(232,93,93,.1); border: 1px solid rgba(232,93,93,.3); color: var(--red); border-radius: 8px; padding: .6rem .9rem; margin-bottom: .8rem; font-size: .82rem; }
+  .ax-alert.bad { background: rgba(232,93,93,.2); }
+  .ax-actions { display: flex; gap: .6rem; flex-wrap: wrap; margin-top: 1rem; align-items: center; }
+  .ax-hist > div { padding: .45rem 0; border-bottom: 1px solid rgba(255,255,255,.05); font-size: .84rem; }
+  .ax-hist p { color: var(--muted); font-size: .78rem; }
+  .ax-card { border: 1px solid var(--border); border-radius: 10px; padding: .8rem 1rem; margin-bottom: .7rem; background: var(--surface2); }
+  .ax-card p { margin: .4rem 0; font-size: .86rem; white-space: pre-wrap; }
+  .ax-stars { color: var(--yellow); }
+  .ax-prev { background: var(--darker); border: 1px solid var(--border); border-radius: 8px; padding: .8rem 1rem; font-size: .85rem; min-height: 3rem; }
+  .ax-line { display: flex; gap: .6rem; align-items: center; flex-wrap: wrap; margin-bottom: .6rem; }
+  .ax-line.col { flex-direction: column; align-items: stretch; }
+  .ax-line .search-input { flex: 1; min-width: 150px; }
+  .ax-chk { display: inline-flex; align-items: center; gap: .4rem; font-size: .82rem; color: var(--muted); }
+  .ax-chk input[type=checkbox] { width: auto; }
+
+  .hl-row { display: flex; gap: .9rem; align-items: flex-start; padding: .8rem 1rem; border: 1px solid var(--border); border-radius: 10px; margin-bottom: .6rem; background: var(--surface2); }
+  .hl-row .hl-ic { font-size: 1.3rem; } .hl-row b { font-size: .92rem; } .hl-row p { font-size: .82rem; color: var(--muted); margin: .15rem 0; } .hl-row small { color: var(--yellow); font-size: .76rem; }
+  .hl-row.ok .hl-ic { color: var(--green); } .hl-row.warn .hl-ic { color: var(--yellow); } .hl-row.bad { border-color: rgba(232,93,93,.4); } .hl-row.bad .hl-ic { color: var(--red); }
+  .skel-line { height: 56px; border-radius: 10px; margin-bottom: .6rem; background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.09), rgba(255,255,255,.04)); background-size: 200% 100%; animation: skel 1.2s linear infinite; }
+  @keyframes skel { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+  .empty-state { color: var(--muted); text-align: center; padding: 1.4rem; font-size: .85rem; }
 </style>
 </head>
 <body>
@@ -879,6 +918,13 @@
   <button class="tab-btn" data-tab="waitlist">Waitlist</button>
   <button class="tab-btn" data-tab="customers">Customers</button>
   <button class="tab-btn" data-tab="chats">Chats <span id="chatBadge" class="chat-badge" style="display:none">0</span></button>
+  <button class="tab-btn" data-tab="tickets">Tickets <span id="axTkBadge" class="chat-badge" style="display:none">0</span></button>
+  <button class="tab-btn" data-tab="inbox">Inbox <span id="axInboxBadge" class="chat-badge" style="display:none">0</span></button>
+  <button class="tab-btn" data-tab="email">Email</button>
+  <button class="tab-btn" data-tab="site">Site</button>
+  <button class="tab-btn" data-tab="team">Team</button>
+  <button class="tab-btn" data-tab="data">Data</button>
+  <button class="tab-btn" data-tab="health">Health <span id="axHealthBadge" class="chat-badge" style="display:none">0</span></button>
   <button class="tab-btn" data-tab="settings">Settings</button>
 </div>
 
@@ -916,6 +962,16 @@
 
     <!-- OVERVIEW TAB -->
     <div class="tab-panel active" id="tab-overview">
+      <div class="panel" id="axDash">
+        <div class="panel-header"><h2>Performance</h2>
+          <select class="filter-select" id="axRange"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="0">All time</option></select></div>
+        <div class="stats-row" id="axKpis"></div>
+        <div id="axLow"></div>
+        <div class="charts-grid">
+          <div class="chart-box"><h3>Revenue per day</h3><canvas id="axRevChart" height="180"></canvas></div>
+          <div class="chart-box"><h3>Units by tier</h3><canvas id="axTierChart" height="180"></canvas></div>
+        </div>
+      </div>
       <div class="stats-row">
         <div class="stat-card"><div class="num" id="prebookCount">0</div><div class="label">Pre-Bookings</div></div>
         <div class="stat-card"><div class="num" id="unitsCount">0</div><div class="label">Units Ordered</div></div>
@@ -1062,6 +1118,7 @@
               <button class="active" data-f="all">All</button>
               <button data-f="waiting_human">Needs human <span id="waitCount"></span></button>
               <button data-f="human">Live</button>
+              <button data-f="mine">Mine</button>
               <button data-f="closed">Closed</button>
             </div>
             <div id="chatList"><div class="chat-empty">No chats yet.</div></div>
@@ -1072,18 +1129,156 @@
               <div class="chat-view-head">
                 <div><strong id="cvName">—</strong> <span class="chat-status" id="cvStatus"></span><div class="field-hint" id="cvMeta"></div></div>
                 <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                  <select id="axAssign" class="filter-select" title="Assigned to"></select>
+                  <button class="btn-small" id="axTranscript" type="button">Email transcript</button>
                   <button class="btn-small primary" id="cvJoin" type="button">Take over</button>
                   <button class="btn-small danger" id="cvClose" type="button">Close chat</button>
                 </div>
               </div>
               <div class="chat-view-msgs" id="cvMsgs"></div>
               <div class="chat-view-composer" id="cvComposer">
+                <select id="axCanned" class="filter-select" style="max-width:150px"></select>
+                <button class="btn-small" id="axSuggest" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M9.5 4.5h5M2.5 13v2M21.5 13v2"/><circle cx="9" cy="13.5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg> Suggest</button>
                 <input type="text" id="cvInput" placeholder="Reply as SafeFlame team…" maxlength="1000" autocomplete="off">
                 <button class="btn-small primary" id="cvSend" type="button">Send</button>
               </div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+
+
+    <!-- TICKETS TAB -->
+    <div class="tab-panel" id="tab-tickets">
+      <div class="panel" style="padding:0;overflow:hidden">
+        <div class="chats-layout">
+          <div class="chats-list-col">
+            <div class="chats-filter" style="gap:.4rem">
+              <select class="filter-select" id="tkStatus"><option value="active">Not closed</option><option value="all">All</option><option value="open">Open</option><option value="pending">Waiting on customer</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select>
+              <select class="filter-select" id="tkAssignee"><option value="all">Anyone</option><option value="mine">Mine</option><option value="none">Unassigned</option></select>
+              <select class="filter-select" id="tkPrio"><option value="all">Any priority</option><option>urgent</option><option>high</option><option>normal</option><option>low</option></select>
+            </div>
+            <div id="tkList"><div class="chat-empty">No tickets yet.</div></div>
+          </div>
+          <div class="chats-view-col">
+            <div id="tkPlaceholder" class="chat-empty" style="margin:auto"><div style="font-size:2.2rem;color:var(--flame);margin-bottom:.4rem"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg></div>Select a ticket to read or reply.</div>
+            <div id="tkView" style="display:none;flex-direction:column;height:100%">
+              <div class="chat-view-head"><div><strong id="tkTitle">—</strong><div class="field-hint" id="tkMeta"></div></div>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap;align-items:center"><select class="filter-select" id="tkSetStatus"><option>open</option><option>pending</option><option>resolved</option><option>closed</option></select><select class="filter-select" id="tkSetPrio"><option>low</option><option>normal</option><option>high</option><option>urgent</option></select><select class="filter-select" id="tkSetAssign"></select><button class="btn-small" id="tkAssignMe" type="button">Assign to me</button></div></div>
+              <div class="chat-view-msgs" id="tkMsgs"></div>
+              <div class="chat-view-composer"><select id="tkCanned" class="filter-select" style="max-width:150px"></select><input type="text" id="tkInput" placeholder="Reply to the customer…" maxlength="1500" autocomplete="off"><button class="btn-small primary" id="tkSend" type="button">Send</button></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- HEALTH TAB -->
+    <div class="tab-panel" id="tab-health">
+      <div class="panel">
+        <div class="panel-header"><h2>System health</h2><div class="panel-actions"><span class="hint" id="hlSummary"></span><button class="btn-small" id="hlGemini" type="button">Test Gemini</button><button class="btn-small primary" id="hlRun" type="button">Run checks</button></div></div>
+        <div id="hlList"><div class="empty-state">Press "Run checks" to look at everything.</div></div>
+      </div>
+    </div>
+
+    <!-- INBOX TAB -->
+    <div class="tab-panel" id="tab-inbox">
+      <div class="panel">
+        <div class="panel-header"><h2>Feedback</h2><div class="panel-actions"><select class="filter-select" id="axFbFilter"><option value="new">Needs reply</option><option value="done">Done</option><option value="all">All</option></select></div></div>
+        <div id="axFbList"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2>Order reviews</h2><span class="hint" id="axRvAvg"></span></div>
+        <div id="axRvList"></div>
+      </div>
+      <div class="panel"><div class="panel-header"><h2>Customer stories</h2><span class="hint" id="axStoryCount"></span></div><div id="axStoryList"></div></div>
+      <div class="panel"><div class="panel-header"><h2>Feature ideas</h2></div><div id="axIdeaList"></div></div>
+      <div class="panel"><div class="panel-header"><h2>Registered devices</h2></div><div class="table-scroll"><table><thead><tr><th>Serial</th><th>Owner</th><th>Model</th><th>Registered</th><th>Warranty until</th><th>Firmware</th></tr></thead><tbody id="axDevBody"></tbody></table></div></div>
+    </div>
+
+    <!-- EMAIL TAB -->
+    <div class="tab-panel" id="tab-email">
+      <div class="panel">
+        <div class="panel-header"><h2>Send an email</h2><span class="hint" id="axCount">0 recipients</span></div>
+        <div class="ax-grid">
+          <div><span>Audience</span><select class="filter-select" id="axAud" style="width:100%"><option value="waitlist">Waitlist — everyone</option><option value="customers">Customers — everyone</option><option value="tier:base">Customers — Base tier</option><option value="tier:pro">Customers — Pro tier</option><option value="tier:elite">Customers — Elite tier</option><option value="status:pending">Customers — pending orders</option><option value="status:confirmed">Customers — confirmed orders</option><option value="status:shipped">Customers — shipped orders</option><option value="custom">Specific addresses…</option></select></div>
+          <div id="axCustomWrap" style="display:none"><span>Addresses (comma or new line)</span><textarea class="search-input" id="axCustom" rows="2"></textarea></div>
+          <div class="wide"><span>Subject</span><input class="search-input" id="axSubj" maxlength="140" placeholder="Subject — you can use {{name}}"></div>
+          <div class="wide"><span>Message</span><textarea class="search-input" id="axMsg" rows="6" placeholder="Hi {{name}}, …"></textarea></div>
+        </div>
+        <div class="ax-sec">Preview (first recipient)</div><div class="ax-prev" id="axPrevBox"></div>
+        <div class="ax-actions"><button class="btn-small primary" id="axSendAll" type="button">Send email</button></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2>Send a test</h2></div>
+        <div class="ax-line"><select class="filter-select" id="axTestKind"><option value="otp">OTP email</option><option value="verify">Account verification</option><option value="pending">Order: pending</option><option value="confirmed">Order: confirmed</option><option value="shipped">Order: shipped</option><option value="cancelled">Order: cancelled</option><option value="launch">Launch email</option></select><input class="search-input" id="axTestTo" placeholder="Send the test to…" style="max-width:280px"><button class="btn-small primary" id="axTestSend" type="button">Send test</button></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2>Email log</h2><div class="panel-actions"><select class="filter-select" id="axLogFilter"><option value="all">All</option><option value="failed">Failed only</option><option value="sent">Sent only</option></select><button class="btn-small danger" id="axLogClear" type="button">Clear log</button></div></div>
+        <div class="table-scroll"><table><thead><tr><th>Time</th><th>Type</th><th>To</th><th>Subject</th><th>Result</th><th>Error</th></tr></thead><tbody id="axLogBody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- SITE TAB -->
+    <div class="tab-panel" id="tab-site">
+      <div class="panel">
+        <div class="panel-header"><h2>Site controls</h2><span id="siChip" class="hint"></span></div>
+        <div class="settings-grid">
+          <div class="settings-group"><h3>Announcement bar</h3>
+            <label class="ax-chk"><input type="checkbox" id="siAnnOn"> Show on every page</label>
+            <div class="field"><label>Text</label><input type="text" id="siAnnText" maxlength="160"></div>
+            <div class="field"><label>Link (optional)</label><input type="text" id="siAnnLink" placeholder="https://…"></div></div>
+          <div class="settings-group"><h3>Maintenance mode</h3>
+            <label class="ax-chk"><input type="checkbox" id="siMaintOn"> Show a "Back soon" screen</label>
+            <div class="field"><label>Message</label><textarea id="siMaintMsg" rows="3"></textarea></div></div>
+          <div class="settings-group"><h3>Estimated delivery</h3>
+            <div class="field"><label>Base</label><input type="text" id="siEtaBase"></div><div class="field"><label>Pro</label><input type="text" id="siEtaPro"></div><div class="field"><label>Elite</label><input type="text" id="siEtaElite"></div>
+            <div class="field"><label>Low-stock alert at (units left)</label><input type="number" id="siLow" min="0"></div></div>
+          <div class="settings-group"><h3>Add-ons offered at pre-book</h3><div id="siAddons"></div><button class="btn-small" id="siAddAddon" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add add-on</button></div>
+          <div class="settings-group"><h3>Chat quick replies</h3><div class="field"><label>One per line</label><textarea id="siCanned" rows="6"></textarea></div></div>
+          <div class="settings-group"><h3>AI knowledge base</h3><div class="field"><label>Facts the chat assistant should know (specs, policies, delivery, etc.)</label><textarea id="siKnow" rows="9"></textarea></div></div>
+          <div class="settings-group"><h3>Away mode (chat)</h3><label class="ax-chk"><input type="checkbox" id="siAwayOn"> Tell visitors when the team is away</label>
+            <div class="ax-line"><div class="field" style="flex:1"><label>Team online from (hour, IST)</label><input type="number" id="siAwayStart" min="0" max="23"></div><div class="field" style="flex:1"><label>until (hour)</label><input type="number" id="siAwayEnd" min="0" max="24"></div></div>
+            <div class="field"><label>Message shown when away</label><textarea id="siAwayMsg" rows="3"></textarea></div><div class="field"><label>Email me for every handoff</label><input type="text" id="siAwayMail" placeholder="you@example.com"></div></div>
+          <div class="settings-group"><h3>SEO</h3><div class="field"><label>Page title</label><input type="text" id="siSeoTitle" maxlength="70"></div><div class="field"><label>Description</label><textarea id="siSeoDesc" rows="3" maxlength="170"></textarea></div><div class="field"><label>Share image URL</label><input type="text" id="siSeoImg" placeholder="https://…"></div><div class="field"><label>Paste into index.html (for link previews)</label><textarea id="siSeoSnippet" rows="5" readonly></textarea></div></div>
+          <div class="settings-group"><h3>Warranty &amp; firmware</h3><div class="field"><label>Warranty length (months)</label><input type="number" id="siWarr" min="1"></div>
+            <div id="siFwList"></div><div id="siFwNew"><div class="field"><label>New firmware version</label><input type="text" id="siFwVer" placeholder="e.g. 1.2.0"></div><div class="field"><label>Release notes</label><textarea id="siFwNotes" rows="3"></textarea></div><button class="btn-small primary" id="siFwPublish" type="button">Publish and notify owners</button></div></div>
+          <div class="settings-group" style="grid-column:1/-1"><h3>Pages: privacy, refunds, warranty</h3><div id="siPages"></div></div>
+          <div class="settings-group" style="grid-column:1/-1"><h3>Setup guides (shown to customers after shipping)</h3><div id="siGuides"></div><button class="btn-small" id="siAddGuide" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add guide</button></div>
+          <div class="settings-group" style="grid-column:1/-1"><h3>Help centre FAQ</h3><div id="siFaq"></div><button class="btn-small" id="siAddFaq" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add question</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEAM TAB -->
+    <div class="tab-panel" id="tab-team">
+      <div class="panel">
+        <div class="panel-header"><h2>Admins</h2></div>
+        <div id="tmList"></div>
+        <div class="ax-sec">Add an admin</div>
+        <div class="ax-line"><input class="search-input" id="tmId" placeholder="ID or email (e.g. priya)" autocomplete="off"><input class="search-input" id="tmPw" type="password" placeholder="Password (min 6)" autocomplete="new-password"><button class="btn-small primary" id="tmAdd" type="button">Add admin</button></div>
+        <div class="msg-error" id="tmErr" style="color:var(--red);font-size:.82rem;min-height:1.2em"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2>Activity log</h2><div class="panel-actions"><input class="search-input" id="actSearch" placeholder="Search activity…"></div></div>
+        <div class="table-scroll"><table><thead><tr><th>Time</th><th>Admin</th><th>Action</th><th>Target</th><th>Detail</th></tr></thead><tbody id="actBody"></tbody></table></div>
+      </div>
+    </div>
+
+    <!-- DATA TAB -->
+    <div class="tab-panel" id="tab-data">
+      <div class="panel"><div class="panel-header"><h2>Cancellations &amp; refunds</h2></div><div id="cnSummary" style="margin-bottom:.8rem"></div><div class="table-scroll"><table><thead><tr><th>Order</th><th>Customer</th><th>Value</th><th>Reason</th><th>By</th><th>Refund</th><th></th></tr></thead><tbody id="cnBody"></tbody></table></div></div>
+      <div class="panel">
+        <div class="panel-header"><h2>Export to CSV</h2></div>
+        <div class="ax-line"><select class="filter-select" id="dtSet"><option value="orders">Orders</option><option value="waitlist">Waitlist</option><option value="customers">Customers</option><option value="chats">Chats (summary)</option><option value="messages">Chat messages</option><option value="feedback">Feedback</option><option value="reviews">Reviews</option><option value="emaillog">Email log</option><option value="activity">Activity log</option></select>
+          <label class="ax-chk">From <input type="date" id="dtFrom" class="search-input"></label><label class="ax-chk">To <input type="date" id="dtTo" class="search-input"></label><button class="btn-small primary" id="dtExport" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14"/></svg> Export</button></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2>Backup &amp; restore</h2><span class="hint" id="bkStatus"></span></div>
+        <div class="ax-actions"><button class="btn-small primary" id="bkDownload" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7.5 11 12 15.5 16.5 11M5 20h14"/></svg> Download full backup</button>
+          <label class="btn-small" style="cursor:pointer"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V5M7.5 9 12 4.5 16.5 9M5 20h14"/></svg> Restore from file<input type="file" id="bkRestore" accept="application/json,.json" style="display:none"></label></div>
       </div>
     </div>
 
@@ -1157,6 +1352,7 @@
   </div>
 </main>
 
+<div class="ax-back" id="axModal" style="display:none"><div class="ax-modal" id="axModalBody"></div></div>
 <div id="toastContainer"></div>
 
 <!-- ─── AI CHATBOT WIDGET ──────────────────────────── -->
@@ -1202,7 +1398,11 @@
   // Firebase console (Authentication > Users > Add user). Any Google account listed below can also sign in.
   const ADMIN_DOMAIN = 'safeflame.github.io';
   const ADMIN_EMAILS = ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com'];
-  const isAdminUser = u => !!u && ADMIN_EMAILS.includes(String(u.email || '').toLowerCase());
+  let extraAdmins = [];
+  const isAdminUser = u => !!u && (ADMIN_EMAILS.includes(String(u.email || '').toLowerCase()) || extraAdmins.includes(String(u.email || '').toLowerCase()));
+  async function loadAdminList() {
+    try { const d = await db.collection('settings').doc('admins').get(); extraAdmins = d.exists ? (d.data().emails || []).map(e => String(e).toLowerCase()) : []; } catch (_) {}
+  }
   let dashboardShown = false;
 
   const loginScreen = document.getElementById('loginScreen');
@@ -1230,6 +1430,7 @@
     startListeners();
     startChatListener();
     loadSettingsIntoForm();
+    axInit();
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
@@ -1250,6 +1451,7 @@
     loginBtn.textContent = 'Signing in...';
     try {
       const result = await auth.signInWithEmailAndPassword(id, pw);
+      await loadAdminList();
       if (!isAdminUser(result.user)) {
         await auth.signOut();
         setLoginError('This account does not have admin access.');
@@ -1284,6 +1486,7 @@
       const provider = new firebase.auth.GoogleAuthProvider();
       const result = await auth.signInWithPopup(provider);
       const email = result.user.email;
+      await loadAdminList();
       if (isAdminUser(result.user)) {
         setLoginError('');
         showDashboard();
@@ -1310,7 +1513,7 @@
   });
 
   // ─── Auto-restore session ─────────────────────────
-  auth.onAuthStateChanged(u => { if (isAdminUser(u)) showDashboard(); });
+  auth.onAuthStateChanged(async u => { if (!u) return; await loadAdminList(); if (isAdminUser(u)) showDashboard(); });
 
   // ─── Tabs ──────────────────────────────────────────
   document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -1495,6 +1698,7 @@
     try {
       await db.collection('settings').doc('site').set(updated, { merge: true });
       siteSettings = { ...siteSettings, ...updated };
+      if (!window.__lastSetLog || Date.now() - window.__lastSetLog > 60000) { window.__lastSetLog = Date.now(); axLog('settings.update', '', 'prices / stock / launch / gemini'); }
       note.style.color = 'var(--green)'; note.textContent = 'Saved'; setTimeout(() => { if (note.textContent === 'Saved') note.textContent = ''; }, 2200);
       renderStats();
     } catch (err) {
@@ -1527,7 +1731,7 @@
     const tierLabel = tierLabelFor(order.tier);
     const qty = Number(order.quantity) || 1;
     const unitPrice = priceForOrder(order);
-    const totalPrice = unitPrice * qty;
+    const totalPrice = unitPrice * qty + (Number(order.addonsTotal) || 0);
 
     const tokens = {
       name: order.name || 'there',
@@ -1537,8 +1741,10 @@
       unit_price: '₹' + unitPrice.toLocaleString('en-IN'),
       total_price: '₹' + totalPrice.toLocaleString('en-IN'),
       status: newStatus.charAt(0).toUpperCase() + newStatus.slice(1),
-      address: order.address || '—',
-      phone: order.phone || ''
+      address: (order.shipping ? axOrderAddr(order) : order.address) || '—',
+      phone: order.phone || '',
+      tracking: order.tracking || '',
+      eta: order.eta || ''
     };
 
     const cfg = (siteSettings.statusEmails && siteSettings.statusEmails[newStatus]) || DEFAULT_SETTINGS.statusEmails[newStatus];
@@ -1567,9 +1773,9 @@
         {
           name: 'SafeFlame AI — ' + tierLabel,
           units: qty,
-          price: totalPrice.toLocaleString('en-IN')   // no ₹ here — the template already prints ₹{{price}}
+          price: (unitPrice * qty).toLocaleString('en-IN')   // no ₹ here — the template already prints ₹{{price}}
         }
-      ],
+      ].concat((order.addons || []).map(a => ({ name: a.name, units: 1, price: Number(a.price).toLocaleString('en-IN') }))),
       cost: {                             // template reads cost.shipping / cost.tax / cost.total
         shipping: '0',
         tax: '0',
@@ -1583,15 +1789,17 @@
       unit_price: '₹' + unitPrice.toLocaleString('en-IN'),
       total_price: '₹' + totalPrice.toLocaleString('en-IN'),
       status: newStatus,
-      address: order.address || '',
+      address: tokens.address,
       phone: order.phone || '',
+      tracking: order.tracking || '',
+      eta: order.eta || '',
       message: message
     };
     try {
       emailjs.init(publicKey);
       emailjs.send(serviceId, templateId, params)
-        .then(() => showToast('Notification email sent to ' + order.email, 'success'))
-        .catch(err => { console.error('EmailJS send failed:', err); showToast('Email failed to send (check EmailJS settings).', 'error'); });
+        .then(() => { axLogEmail('order-' + newStatus, order.email, subject, true, '', order.id); showToast('Notification email sent to ' + order.email, 'success'); })
+        .catch(err => { console.error('EmailJS send failed:', err); axLogEmail('order-' + newStatus, order.email, subject, false, (err && (err.text || err.message)) || 'send failed', order.id); showToast('Email failed to send (see Email > Log).', 'error'); });
     } catch (err) {
       console.error('EmailJS error:', err);
     }
@@ -1623,13 +1831,14 @@
           subject: siteSettings.launchEmailSubject,
           message: siteSettings.launchEmailMessage
         });
-        sent++;
+        sent++; axLogEmail('launch', entry.email, siteSettings.launchEmailSubject, true);
       } catch (err) {
         console.error('Launch email failed for', entry.email, err);
-        failed++;
+        failed++; axLogEmail('launch', entry.email, siteSettings.launchEmailSubject, false, (err && (err.text || err.message)) || 'send failed');
       }
       await new Promise(r => setTimeout(r, 400)); // gentle pacing to avoid rate limits
     }
+    axLog('email.launch', 'waitlist', sent + ' sent, ' + failed + ' failed');
     showToast(`Launch emails done: ${sent} sent, ${failed} failed.`, failed > 0 ? 'error' : 'success');
   });
 
@@ -1650,7 +1859,7 @@
     if (renderTimer) return;
     renderTimer = setTimeout(() => {
       renderTimer = null;
-      try { renderPrebookTable(); renderCustomerTable(); renderWaitlistTable(); renderStats(); renderCharts(); }
+      try { renderPrebookTable(); renderCustomerTable(); renderWaitlistTable(); renderStats(); renderCharts(); axRenderDash(); axRenderCancels(); }
       catch (e) { console.error('Render failed:', e); }
     }, 80);
   }
@@ -1717,7 +1926,7 @@
 
     const revenue = prebookData
       .filter(o => (o.status || 'pending').toLowerCase() !== 'cancelled')
-      .reduce((sum, o) => sum + (priceForOrder(o) * (Number(o.quantity) || 0)), 0);
+      .reduce((sum, o) => sum + axValue(o), 0);
     document.getElementById('revenueEstimate').textContent = '₹' + revenue.toLocaleString('en-IN');
 
     const byStatus = { pending: 0, confirmed: 0, shipped: 0, cancelled: 0 };
@@ -1792,11 +2001,11 @@
           <td><input type="checkbox" class="row-check" data-id="${order.id}" ${selectedIds.has(order.id) ? 'checked' : ''}></td>
           <td style="font-weight:600; color: var(--off-white);">#${escapeHtml(orderNumberFor(order))}</td>
           <td>${formatDate(order.createdAt)}</td>
-          <td>${escapeHtml(order.name)}</td>
+          <td>${escapeHtml(order.name)}${axBadges(order)}</td>
           <td>${escapeHtml(order.email)}</td>
           <td>${escapeHtml(order.phone)}</td>
           <td><span class="tier-pill ${tier}">${tierLabelFor(tier)}</span></td>
-          <td>${escapeHtml(order.quantity)}</td>
+          <td>${escapeHtml(order.quantity)}<div class="ax-sub">${axInr(axValue(order))}</div></td>
           <td><input type="text" class="notes-input" data-id="${order.id}" placeholder="Add note..." value="${escapeHtml(order.notes || '')}"></td>
           <td>
             <select class="status-select ${status}" data-id="${order.id}">
@@ -1807,6 +2016,7 @@
             </select>
           </td>
           <td>
+            <button class="btn-small ax-detail" data-id="${order.id}">Details</button>
             <button class="btn-small slip-btn" data-id="${order.id}">Slip</button>
             <button class="row-delete" data-id="${order.id}" data-collection="preBookings">Delete</button>
           </td>
@@ -1821,10 +2031,8 @@
         const newStatus = e.target.value;
         const order = prebookData.find(o => o.id === id);
         try {
-          await db.collection('preBookings').doc(id).update({ status: newStatus });
-          e.target.className = 'status-select ' + newStatus;
-          showToast('Order status updated to ' + newStatus + '.', 'success');
-          if (order) sendStatusEmail(order, newStatus);
+          const ok = order ? await changeOrderStatus(order, newStatus, { el: e.target }) : false;
+          if (ok) { e.target.className = 'status-select ' + newStatus; showToast('Order status updated to ' + newStatus + '.', 'success'); }
         } catch (err) {
           console.error('Status update failed:', err);
           showToast('Failed to update status.', 'error');
@@ -1906,16 +2114,11 @@
     const newStatus = document.getElementById('bulkStatusSelect').value;
     if (!newStatus || selectedIds.size === 0) return;
     try {
-      const batch = db.batch();
       const affected = [];
-      selectedIds.forEach(id => {
-        batch.update(db.collection('preBookings').doc(id), { status: newStatus });
-        const o = prebookData.find(x => x.id === id);
-        if (o) affected.push(o);
-      });
-      await batch.commit();
-      showToast(selectedIds.size + ' order(s) updated to ' + newStatus + '.', 'success');
-      affected.forEach(o => sendStatusEmail(o, newStatus));
+      selectedIds.forEach(id => { const o = prebookData.find(x => x.id === id); if (o) affected.push(o); });
+      let reason; if (newStatus === 'cancelled') { reason = await axAskReason(); if (reason === null) return; }
+      for (const o of affected) await changeOrderStatus(o, newStatus, { bulk: true, reason });
+      showToast(affected.length + ' order(s) updated to ' + newStatus + '.', 'success');
       selectedIds.clear();
       document.getElementById('bulkStatusSelect').value = '';
     } catch (err) {
@@ -1931,6 +2134,7 @@
       const batch = db.batch();
       selectedIds.forEach(id => batch.delete(db.collection('preBookings').doc(id)));
       await batch.commit();
+      axLog('order.bulkdelete', '', selectedIds.size + ' orders');
       showToast(selectedIds.size + ' order(s) deleted.', 'success');
       selectedIds.clear();
     } catch (err) {
@@ -1990,7 +2194,7 @@
       const totalUnits = g.orders.reduce((sum, o) => sum + (Number(o.quantity) || 0), 0);
       const totalSpent = g.orders
         .filter(o => (o.status || 'pending').toLowerCase() !== 'cancelled')
-        .reduce((sum, o) => sum + (priceForOrder(o) * (Number(o.quantity) || 0)), 0);
+        .reduce((sum, o) => sum + axValue(o), 0);
       return {
         email: g.email,
         name: g.name,
@@ -2035,7 +2239,7 @@
           <td>₹${c.totalSpent.toLocaleString('en-IN')}</td>
           <td><span class="status-pill ${status}" style="background:none; border:1px solid currentColor;">${escapeHtml(status)}</span></td>
           <td>${formatDate(c.lastOrderDate)}</td>
-          <td><button class="btn-small view-orders-btn" data-email="${escapeHtml(c.email)}">View Orders</button></td>
+          <td><button class="btn-small ax-prof" data-email="${escapeHtml(c.email)}">Profile</button> <button class="btn-small view-orders-btn" data-email="${escapeHtml(c.email)}">Orders</button></td>
         `;
         tbody.appendChild(tr);
       });
@@ -2124,6 +2328,7 @@
     if (!confirm('Delete this entry? This cannot be undone.')) return;
     try {
       await db.collection(collection).doc(id).delete();
+      axLog('delete', collection, id);
       showToast('Entry deleted.', 'success');
     } catch (err) {
       console.error('Delete failed:', err);
@@ -2232,7 +2437,7 @@
     });
     const revenue = prebookData
       .filter(o => (o.status || 'pending').toLowerCase() !== 'cancelled')
-      .reduce((sum, o) => sum + (priceForOrder(o) * (Number(o.quantity) || 0)), 0);
+      .reduce((sum, o) => sum + axValue(o), 0);
 
     const stockLine = (label, stock, sold) => stock < 0 ? `${label}: unlimited stock, ${sold} sold` : `${label}: ${stock} total stock, ${sold} sold, ${stock - sold} remaining`;
 
@@ -2243,7 +2448,7 @@
 - Pro tier (7", 2 cameras, gas weight monitoring) at ₹${siteSettings.proPrice}/unit — ${stockLine('Pro', siteSettings.proStock, proUnits)}
 - Elite tier (9", 4 cameras, gas weight monitoring) at ₹${siteSettings.elitePrice}/unit — ${stockLine('Elite', siteSettings.eliteStock, eliteUnits)}
 - Estimated revenue (excluding cancelled): ₹${revenue.toLocaleString('en-IN')}
-- Launch date: ${siteSettings.launchDate}`;
+- Launch date: ${siteSettings.launchDate}` + axExtraContext();
   }
 
   async function sendChatMessage() {
@@ -2310,7 +2515,7 @@ ${buildBusinessContext()}`;
     document.getElementById('waitCount').textContent = n ? '(' + n + ')' : '';
   }
   function renderChatList() {
-    const list = chatsData.filter(c => chatFilter === 'all' || c.status === chatFilter);
+    const list = chatsData.filter(c => chatFilter === 'all' || (chatFilter === 'mine' ? (axLc(c.assignee) === axLc(axWho()) && c.status !== 'closed') : c.status === chatFilter));
     const el = document.getElementById('chatList');
     if (!list.length) { el.innerHTML = '<div class="chat-empty">No chats here.</div>'; return; }
     // people waiting come first
@@ -2318,7 +2523,7 @@ ${buildBusinessContext()}`;
     el.innerHTML = list.map(c => `<div class="chat-item ${c.id === activeChatId ? 'active' : ''}" data-id="${c.id}">
       <div class="top"><span class="nm">${c.unreadAdmin ? '<span class="unread-dot"></span>' : ''}${escapeHtml(c.userName || 'Guest')}</span><span class="tm">${chatTime(c.updatedAt)}</span></div>
       <div class="lm">${escapeHtml(c.lastMessage || '')}</div>
-      <div style="margin-top:.35rem"><span class="chat-status ${c.status}">${STATUS_LABEL[c.status] || c.status}</span></div></div>`).join('');
+      <div style="margin-top:.35rem"><span class="chat-status ${c.status}">${STATUS_LABEL[c.status] || c.status}</span>${c.assignee ? ' <span class="ax-tag" title="Assigned to ' + escapeHtml(c.assignee) + '">' + escapeHtml(c.assignee.split('@')[0]) + '</span>' : ''}</div></div>`).join('');
     el.querySelectorAll('.chat-item').forEach(i => i.addEventListener('click', () => openChat(i.dataset.id)));
   }
   document.getElementById('chatFilter').addEventListener('click', e => {
@@ -2329,7 +2534,8 @@ ${buildBusinessContext()}`;
   function renderChatHeader(c) {
     document.getElementById('cvName').textContent = c.userName || 'Guest';
     const st = document.getElementById('cvStatus'); st.className = 'chat-status ' + c.status; st.textContent = STATUS_LABEL[c.status] || c.status;
-    document.getElementById('cvMeta').textContent = [c.userEmail, c.uid ? 'signed-in user' : 'guest', c.escalationReason].filter(Boolean).join(' · ');
+    document.getElementById('cvMeta').textContent = [c.userEmail, c.uid ? 'signed-in user' : 'guest', c.escalationReason, c.rating ? ('Rated ' + c.rating + '/5') : '', (Date.now() - axMs(c.userTyping) < 4500 && c.status !== 'closed') ? 'typing…' : ''].filter(Boolean).join(' · ');
+    axFillAssign(c); clearTimeout(window.__typT); if (c.userTyping) window.__typT = setTimeout(() => { const cc = chatsData.find(x => x.id === activeChatId); if (cc) renderChatHeader(cc); }, 4700);
     const closed = c.status === 'closed';
     document.getElementById('cvJoin').style.display = (c.status === 'human' || closed) ? 'none' : '';
     document.getElementById('cvClose').style.display = closed ? 'none' : '';
@@ -2361,18 +2567,21 @@ ${buildBusinessContext()}`;
     try {
       await ref.collection('messages').add({ role: 'admin', text, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
       const upd = { lastMessage: text.slice(0, 120), lastRole: 'admin', updatedAt: firebase.firestore.FieldValue.serverTimestamp(), unreadUser: true, unreadAdmin: false };
+      if (!c.assignee) upd.assignee = axWho();
       if (c.status !== 'human') {
         upd.status = 'human'; upd.humanJoinedAt = firebase.firestore.FieldValue.serverTimestamp();
         await ref.collection('messages').add({ role: 'system', text: 'A SafeFlame team member has joined the chat.', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
       }
       await ref.update(upd);
+      if (c.status !== 'human') axNotifyChat(c, text, 'The SafeFlame team replied to your chat');
+      axLog('chat.reply', c.userName || c.id, '');
     } catch (e) { console.error(e); showToast('Could not send message.', 'error'); inp.value = text; }
   }
   document.getElementById('cvSend').addEventListener('click', adminSend);
   document.getElementById('cvInput').addEventListener('keydown', e => { if (e.key === 'Enter') adminSend(); });
   document.getElementById('cvJoin').addEventListener('click', async () => {
     if (!activeChatId) return; const ref = db.collection('chats').doc(activeChatId);
-    await ref.update({ status: 'human', humanJoinedAt: firebase.firestore.FieldValue.serverTimestamp(), unreadAdmin: false, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    await ref.update({ status: 'human', assignee: axWho(), humanJoinedAt: firebase.firestore.FieldValue.serverTimestamp(), unreadAdmin: false, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
     await ref.collection('messages').add({ role: 'system', text: 'A SafeFlame team member has joined the chat.', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
   });
   document.getElementById('cvClose').addEventListener('click', async () => {
@@ -2380,7 +2589,658 @@ ${buildBusinessContext()}`;
     const ref = db.collection('chats').doc(activeChatId);
     await ref.collection('messages').add({ role: 'system', text: 'This chat was closed by the SafeFlame team. Thanks for talking to us!', createdAt: firebase.firestore.FieldValue.serverTimestamp() });
     await ref.update({ status: 'closed', closedAt: firebase.firestore.FieldValue.serverTimestamp(), updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+    axLog('chat.close', (chatsData.find(x => x.id === activeChatId) || {}).userName || activeChatId, '');
   });
+</script>
+<script>
+/* ═════════════════ ADMIN EXTRAS: details drawer, dashboard, customers, inbox, email, site, team, data ═════════════════ */
+const axTS = () => firebase.firestore.FieldValue.serverTimestamp();
+const axInr = n => '₹' + Number(n || 0).toLocaleString('en-IN');
+const axLc = s => String(s || '').trim().toLowerCase();
+const axMs = t => typeof t === 'number' ? t : (t && t.toMillis ? t.toMillis() : (t && t.__ts) || 0);
+const axEsc = s => escapeHtml(s == null ? '' : s);
+const axWho = () => (auth.currentUser && auth.currentUser.email) || 'admin';
+const axDate = ms => ms ? new Date(ms).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+const axValue = o => (priceForOrder(o) * (Number(o.quantity) || 0)) + (Number(o.addonsTotal) || 0);
+const axKey = e => axLc(e).replace(/[.#$\[\]\/]/g, '_');
+const axAddr = a => a ? [a.name, a.line1, a.line2, [a.city, a.state].filter(Boolean).join(', '), a.pin, a.phone && ('Ph: ' + a.phone)].filter(Boolean).join(', ') : '';
+const axOrderAddr = o => o.shipping ? axAddr(o.shipping) : (o.address || '');
+const $ax = id => document.getElementById(id);
+
+function axLog(action, target, detail) { return db.collection('adminLog').add({ by: axWho(), action, target: target || '', detail: detail || '', at: axTS() }).catch(() => {}); }
+function axLogEmail(kind, to, subject, ok, error, orderId) { return db.collection('emailLog').add({ kind, to: axLc(to), subject: String(subject || '').slice(0, 140), ok: !!ok, error: error ? String(error).slice(0, 300) : '', orderId: orderId || '', at: axTS() }).catch(() => {}); }
+function axNotify(n) { return db.collection('notifications').add({ read: false, createdAt: axTS(), ...n, email: axLc(n.email) }).catch(() => {}); }
+
+/* settings (merged with defaults) */
+const AX_DEF = {
+  otpEmail: { subject: 'Your SafeFlame AI verification code', message: 'Hi {{name}}, your SafeFlame AI verification code is {{otp}}. It expires in 10 minutes. Never share this code with anyone.' },
+  verifyEmail: { subject: 'Verify your SafeFlame AI account', message: 'Hi {{name}}, welcome to SafeFlame AI! Please confirm your email address to activate your account: {{link}}' },
+  announcement: { enabled: false, text: '', link: '' }, maintenance: { enabled: false, message: "We're making a few improvements. Please check back shortly." },
+  addons: [{ id: 'warranty', name: 'Extended warranty (+1 year)', price: 1499, enabled: true }, { id: 'install', name: 'Professional installation', price: 999, enabled: true }],
+  eta: { base: 'Within 3–4 weeks of launch', pro: 'Within 3–4 weeks of launch', elite: 'Within 4–5 weeks of launch' }, lowStockThreshold: 3,
+  cannedReplies: ['Thanks for reaching out — let me check that for you.', 'Your order status is in your account under My orders.', 'Is there anything else I can help you with?'],
+  faq: [{ q: 'When will SafeFlame AI ship?', a: 'Pre-bookings ship in launch order. Each order shows an estimated delivery window in your account.' }, { q: 'Do I pay when I pre-book?', a: 'No. Pre-booking only reserves your unit — nothing is charged now.' }, { q: 'Can I change or cancel my order?', a: 'Yes, while it is still Pending. Open your account, go to My orders and choose Edit or Cancel.' }]
+};
+let axCfg = JSON.parse(JSON.stringify(AX_DEF));
+async function axLoadCfg() {
+  try { const d = await db.collection('settings').doc('site').get(); const x = d.exists ? d.data() : {};
+    axCfg = { ...AX_DEF, ...x, otpEmail: { ...AX_DEF.otpEmail, ...(x.otpEmail || {}) }, verifyEmail: { ...AX_DEF.verifyEmail, ...(x.verifyEmail || {}) }, announcement: { ...AX_DEF.announcement, ...(x.announcement || {}) }, maintenance: { ...AX_DEF.maintenance, ...(x.maintenance || {}) }, eta: { ...AX_DEF.eta, ...(x.eta || {}) }, addons: Array.isArray(x.addons) ? x.addons : AX_DEF.addons, faq: Array.isArray(x.faq) ? x.faq : AX_DEF.faq, cannedReplies: Array.isArray(x.cannedReplies) ? x.cannedReplies : AX_DEF.cannedReplies };
+  } catch (e) { console.warn('settings', e); }
+  return axCfg;
+}
+/* one place that sends an email through EmailJS and logs the result */
+async function axSend(cfg, params, kind) {
+  cfg = cfg || {}; const s = axCfg;
+  const svc = cfg.serviceId || s.emailjsServiceId || siteSettings.emailjsServiceId, tpl = cfg.templateId || s.emailjsTemplateId || siteSettings.emailjsTemplateId, key = cfg.publicKey || s.emailjsPublicKey || siteSettings.emailjsPublicKey;
+  if (!svc || !tpl || !key) { axLogEmail(kind, params.to_email, params.subject, false, 'EmailJS not configured'); throw new Error('EmailJS is not configured (Settings > EmailJS).'); }
+  try { const r = await emailjs.send(svc, tpl, params, { publicKey: key }); axLogEmail(kind, params.to_email, params.subject, true); return r; }
+  catch (e) { const msg = (e && (e.text || e.message)) || 'send failed'; axLogEmail(kind, params.to_email, params.subject, false, msg); throw new Error(msg); }
+}
+const axTokens = (str, t) => String(str || '').replace(/\{\{(\w+)\}\}/g, (m, k) => k in t ? t[k] : m);
+
+/* ── modal ── */
+function axOpen(html, wide) { $ax('axModalBody').innerHTML = html; $ax('axModalBody').style.maxWidth = wide ? '860px' : '560px'; $ax('axModal').style.display = 'flex'; }
+function axClose() { $ax('axModal').style.display = 'none'; $ax('axModalBody').innerHTML = ''; }
+$ax('axModal').addEventListener('click', e => { if (e.target === $ax('axModal')) axClose(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') axClose(); });
+
+/* ═════════ order status change (history + notification + activity + email) ═════════ */
+function axNotifyOrder(o, status) {
+  const t = { pending: ['Order received', 'We have your pre-booking.'], confirmed: ['Order confirmed', 'Your order has been confirmed.'], shipped: ['Order shipped', 'Your order is on its way.' + (o.tracking ? ' Tracking: ' + o.tracking : '')], cancelled: ['Order cancelled', 'Your order has been cancelled.'] }[status];
+  if (!t || !o.email) return Promise.resolve();
+  return axNotify({ email: o.email, uid: o.uid || null, type: 'order', orderId: o.id, title: t[0] + ' — #' + orderNumberFor(o), body: t[1] });
+}
+async function changeOrderStatus(order, newStatus, opts) {
+  opts = opts || {}; let tracking = order.tracking || '', cancel = null;
+  if (newStatus === 'cancelled') { cancel = opts.reason !== undefined ? opts.reason : await axAskReason(); if (cancel === null) { if (opts.el) opts.el.value = (order.status || 'pending'); return false; } }
+  if (newStatus === 'shipped' && !opts.bulk && !order.tracking) {
+    const t = prompt('Tracking number for order #' + orderNumberFor(order) + ' (optional):', '');
+    if (t === null) { if (opts.el) opts.el.value = (order.status || 'pending'); return false; }
+    tracking = t.trim();
+  }
+  const upd = { status: newStatus, statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: newStatus, at: Date.now(), by: axWho() }) };
+  if (tracking !== (order.tracking || '')) upd.tracking = tracking;
+  if (cancel) { upd.cancelReason = cancel.reason; upd.cancelledBy = 'admin'; if (cancel.note) upd.cancelNote = cancel.note; upd.statusHistory = firebase.firestore.FieldValue.arrayUnion({ status: 'cancelled', at: Date.now(), by: axWho(), note: 'Cancelled: ' + cancel.reason + (cancel.note ? ' — ' + cancel.note : '') }); }
+  await db.collection('preBookings').doc(order.id).update(upd);
+  const merged = { ...order, status: newStatus, tracking };
+  axNotifyOrder(merged, newStatus); axLog('order.status', '#' + orderNumberFor(order), (order.status || 'pending') + ' → ' + newStatus);
+  sendStatusEmail(merged, newStatus);
+  return true;
+}
+
+/* ═════════ flags (duplicate / fraud checks) ═════════ */
+const AX_DISPOSABLE = ['mailinator.com', 'tempmail.com', 'guerrillamail.com', 'throwam.com', 'yopmail.com', '10minutemail.com', 'trashmail.com', 'fakeinbox.com', 'maildrop.cc', 'sharklasers.com'];
+let axIdx = { src: null, n: -1, phone: {}, addr: {}, cancels: {} };
+const axDigits = p => String(p || '').replace(/\D/g, '').slice(-10);
+function axBuildIdx() {
+  if (axIdx.src === prebookData && axIdx.n === prebookData.length) return axIdx;
+  const phone = {}, addr = {}, cancels = {};
+  prebookData.forEach(o => {
+    const em = axLc(o.email), ph = axDigits(o.phone), ak = o.shipping ? axLc(o.shipping.line1) + '|' + (o.shipping.pin || '') : '';
+    if (ph) (phone[ph] = phone[ph] || new Set()).add(em);
+    if (ak) (addr[ak] = addr[ak] || new Set()).add(em);
+    if ((o.status || '') === 'cancelled') { cancels[em] = (cancels[em] || 0) + 1; if (ph) cancels['p' + ph] = (cancels['p' + ph] || 0) + 1; }
+  });
+  axIdx = { src: prebookData, n: prebookData.length, phone, addr, cancels }; return axIdx;
+}
+function axFlags(o) {
+  const ix = axBuildIdx(), f = [], em = axLc(o.email), ph = axDigits(o.phone);
+  if (AX_DISPOSABLE.includes(em.split('@')[1])) f.push('Disposable email address');
+  if (ph && ix.phone[ph] && ix.phone[ph].size > 1) f.push('Same phone number used with ' + ix.phone[ph].size + ' different emails');
+  const ak = o.shipping ? axLc(o.shipping.line1) + '|' + (o.shipping.pin || '') : '';
+  if (ak && ix.addr[ak] && ix.addr[ak].size > 1) f.push('Same delivery address used with ' + ix.addr[ak].size + ' different emails');
+  if ((ix.cancels[em] || 0) >= 2 || (ph && (ix.cancels['p' + ph] || 0) >= 2)) f.push('Customer has cancelled 2+ orders');
+  if ((Number(o.quantity) || 0) >= 5) f.push('Large quantity (' + o.quantity + ' units)');
+  return f;
+}
+const axBadges = o => { const f = axFlags(o); return (f.length ? ' <span class="ax-flag" title="' + axEsc(f.join('\n')) + '"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 21V4M5.5 5h11l-2 3.5 2 3.5h-11"/></svg> ' + f.length + '</span>' : '') + (o.gift ? ' <span class="ax-tag" title="Gift order"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="9" width="17" height="11" rx="1.5"/><path d="M12 9v11M3.5 13h17M12 9c-1.5-4-5.5-4-5.5-1.3S10 9 12 9Zm0 0c1.5-4 5.5-4 5.5-1.3S14 9 12 9Z"/></svg></span>' : '') + (o.installation && o.installation.status === 'requested' ? ' <span class="ax-tag warn" title="Installation requested"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span>' : '') + (o.tags || []).slice(0, 2).map(t => ' <span class="ax-tag">' + axEsc(t) + '</span>').join(''); };
+
+/* ═════════ ORDER DETAILS DRAWER ═════════ */
+function axOrderDrawer(id) {
+  const o = prebookData.find(x => x.id === id); if (!o) return;
+  const st = (o.status || 'pending').toLowerCase(), flags = axFlags(o), hist = (o.statusHistory || []).slice().reverse(), inst = o.installation;
+  axOpen('<div class="ax-head"><h2>Order #' + axEsc(orderNumberFor(o)) + ' <span class="status-pill ' + st + '">' + st + '</span></h2><button class="btn-small" id="axX">Close</button></div>' +
+    (flags.length ? '<div class="ax-alert">' + flags.map(x => '<div><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 21V4M5.5 5h11l-2 3.5 2 3.5h-11"/></svg> ' + axEsc(x) + '</div>').join('') + '</div>' : '') +
+    '<div class="ax-grid"><div><span>Customer</span>' + axEsc(o.name) + '</div><div><span>Email</span>' + axEsc(o.email) + '</div><div><span>Phone</span>' + axEsc(o.phone) + '</div><div><span>Placed</span>' + axDate(axMs(o.createdAt)) + '</div>' +
+    '<div><span>Product</span>' + tierLabelFor(o.tier) + ' × ' + (o.quantity || 1) + '</div><div><span>Unit price</span>' + axInr(priceForOrder(o)) + '</div><div><span>Add-ons</span>' + ((o.addons || []).map(a => axEsc(a.name) + ' (' + axInr(a.price) + ')').join(', ') || '—') + '</div><div><span>Order total</span><b>' + axInr(axValue(o)) + '</b></div>' +
+    '<div class="wide"><span>Deliver to</span>' + axEsc(axOrderAddr(o) || '—') + '</div>' + (o.gift ? '<div class="wide"><span>Gift for</span>' + axEsc(o.gift.name) + ' · ' + axEsc(o.gift.phone) + '</div>' : '') + (o.deliveryNotes ? '<div class="wide"><span>Delivery instructions</span>' + axEsc(o.deliveryNotes) + '</div>' : '') +
+    (o.referredBy ? '<div><span>Referred by code</span>' + axEsc(o.referredBy) + '</div>' : '') + (o.cancelReason ? '<div class="wide"><span>Cancel reason</span>' + axEsc(o.cancelReason) + '</div>' : '') + '</div>' +
+    '<div class="ax-sec">Fulfilment</div><div class="ax-grid"><div><span>Tracking number</span><input id="axTrack" class="search-input" value="' + axEsc(o.tracking || '') + '"></div><div><span>Estimated delivery</span><input id="axEta" class="search-input" value="' + axEsc(o.eta || '') + '" placeholder="e.g. 12–15 Jan"></div><div class="wide"><span>Tags (comma separated)</span><input id="axTags" class="search-input" value="' + axEsc((o.tags || []).join(', ')) + '"></div><div class="wide"><span>Internal notes</span><textarea id="axNotes" class="search-input" rows="3">' + axEsc(o.notes || '') + '</textarea></div></div>' +
+    (st === 'cancelled' ? '<div class="ax-sec">Refund</div><div class="ax-grid"><div><span>Refund status</span><select id="axRefSt" class="filter-select" style="width:100%">' + ['none', 'pending', 'issued', 'not needed'].map(x => '<option' + ((o.refundStatus || 'none') === x ? ' selected' : '') + '>' + x + '</option>').join('') + '</select></div><div><span>Amount</span><input id="axRefAmt" type="number" class="search-input" value="' + axEsc(o.refundAmount || '') + '"></div><div class="wide"><span>Refund note</span><input id="axRefNote" class="search-input" value="' + axEsc(o.refundNote || '') + '"></div></div>' : '') +
+    (inst ? '<div class="ax-sec">Installation request</div><div class="ax-row"><span>' + axEsc(inst.date) + ' · ' + axEsc(inst.slot) + ' · <b>' + axEsc(inst.status) + '</b></span><span><button class="btn-small" data-inst="confirmed">Confirm</button> <button class="btn-small danger" data-inst="declined">Decline</button></span></div>' : '') +
+    '<div class="ax-sec">History</div><div class="ax-hist">' + (hist.length ? hist.map(h => '<div><b>' + axEsc(h.status) + '</b> <small>' + axDate(h.at) + (h.by ? ' · ' + axEsc(h.by) : '') + '</small>' + (h.note ? '<p>' + axEsc(h.note) + '</p>' : '') + '</div>').join('') : '<div class="hint">No history recorded for this order.</div>') + '</div>' +
+    '<div class="ax-actions"><button class="btn-small primary" id="axSave">Save changes</button><button class="btn-small" id="axLabel"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M7 9V3.5h10V9M7 17.5H4.5V10a1 1 0 0 1 1-1h13a1 1 0 0 1 1 1v7.5H17"/><rect x="7" y="14" width="10" height="6.5" rx=".8"/></svg> Print label</button><button class="btn-small" id="axSlip">Packing slip</button><button class="btn-small" id="axCust">Customer profile</button></div>', true);
+  $ax('axX').onclick = axClose; $ax('axLabel').onclick = () => axPrintLabel(o); $ax('axSlip').onclick = () => printPackingSlip(o); $ax('axCust').onclick = () => axCustomerDrawer(o.email);
+  $ax('axSave').onclick = async () => {
+    const upd = { ...($ax('axRefSt') ? { refundStatus: $ax('axRefSt').value, refundAmount: Number($ax('axRefAmt').value) || 0, refundNote: $ax('axRefNote').value.trim() } : {}), tracking: $ax('axTrack').value.trim(), eta: $ax('axEta').value.trim(), notes: $ax('axNotes').value.trim(), tags: $ax('axTags').value.split(',').map(t => t.trim()).filter(Boolean).slice(0, 8) };
+    try { await db.collection('preBookings').doc(o.id).update(upd); axLog('order.edit', '#' + orderNumberFor(o), 'tracking/eta/notes/tags'); if (upd.tracking && upd.tracking !== (o.tracking || '') && st === 'shipped') axNotify({ email: o.email, uid: o.uid || null, type: 'order', orderId: o.id, title: 'Tracking added — #' + orderNumberFor(o), body: 'Tracking number: ' + upd.tracking }); showToast('Order saved.', 'success'); axClose(); } catch (e) { showToast('Could not save order.', 'error'); }
+  };
+  axModalBody.querySelectorAll('[data-inst]').forEach(b => b.onclick = async () => {
+    const s = b.dataset.inst;
+    try { await db.collection('preBookings').doc(o.id).update({ 'installation.status': s, statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: st, at: Date.now(), by: axWho(), note: 'Installation ' + s }) }); axNotify({ email: o.email, uid: o.uid || null, type: 'order', orderId: o.id, title: 'Installation ' + s + ' — #' + orderNumberFor(o), body: s === 'confirmed' ? 'Your installation is booked for ' + inst.date + ', ' + inst.slot + '.' : 'We could not do that slot. Please pick another date in your account.' }); axLog('order.install', '#' + orderNumberFor(o), s); showToast('Installation ' + s + '.', 'success'); axClose(); } catch (e) { showToast('Could not update installation.', 'error'); }
+  });
+}
+const axModalBody = $ax('axModalBody');
+
+function axPrintLabel(o) {
+  const w = window.open('', '_blank', 'width=480,height=640'); if (!w) { showToast('Allow pop-ups to print the label.', 'error'); return; }
+  const s = o.shipping || { name: o.name, phone: o.phone, line1: o.address || '' };
+  w.document.write('<!doctype html><html><head><title>Label #' + axEsc(orderNumberFor(o)) + '</title><style>@page{size:105mm 148mm;margin:6mm}body{font-family:Arial,sans-serif;margin:0;color:#000}.b{border:2px solid #000;padding:10px;margin-bottom:8px}.k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#444}.n{font-size:22px;font-weight:700}.a{font-size:16px;line-height:1.4;margin-top:4px}.big{font-size:30px;font-weight:700}</style></head><body>' +
+    '<div class="b"><div class="k">Ship to</div><div class="n">' + axEsc(s.name) + '</div><div class="a">' + axEsc([s.line1, s.line2].filter(Boolean).join(', ')) + '<br>' + axEsc([s.city, s.state].filter(Boolean).join(', ')) + '<br><b>PIN ' + axEsc(s.pin || '') + '</b></div><div class="a">Phone: ' + axEsc(s.phone || o.phone || '') + '</div></div>' +
+    '<div class="b"><div class="k">Order</div><div class="big">#' + axEsc(orderNumberFor(o)) + '</div><div class="a">' + axEsc(tierLabelFor(o.tier)) + ' × ' + (o.quantity || 1) + (o.tracking ? '<br>Tracking: ' + axEsc(o.tracking) : '') + (o.deliveryNotes ? '<br>Note: ' + axEsc(o.deliveryNotes) : '') + '</div></div>' +
+    '<div class="b"><div class="k">From</div><div class="a"><b>SafeFlame AI</b><br>safeflame.github.io</div></div></body></html>');
+  w.document.close(); w.focus(); setTimeout(() => w.print(), 300);
+}
+
+/* ═════════ DASHBOARD (revenue, range, tier split, low stock) ═════════ */
+let axRevChart = null, axTierChart = null, axLowShown = false;
+function axRenderDash() {
+  if (!$ax('axKpis')) return;
+  const days = Number($ax('axRange').value), since = days ? Date.now() - days * 864e5 : 0;
+  const live = prebookData.filter(o => (o.status || 'pending') !== 'cancelled'), inR = o => axMs(o.createdAt) >= since;
+  const rows = live.filter(inR), all = prebookData.filter(inR);
+  const rev = rows.reduce((s, o) => s + axValue(o), 0), addon = rows.reduce((s, o) => s + (Number(o.addonsTotal) || 0), 0), units = rows.reduce((s, o) => s + (Number(o.quantity) || 0), 0);
+  const canc = all.filter(o => (o.status || '') === 'cancelled').length, wl = waitlistData.filter(w => axMs(w.createdAt) >= since).length;
+  const emails = new Set(prebookData.map(o => axLc(o.email))), conv = waitlistData.length ? Math.round(100 * waitlistData.filter(w => emails.has(axLc(w.email))).length / waitlistData.length) : 0;
+  $ax('axKpis').innerHTML = [['Revenue', axInr(rev)], ['Orders', rows.length], ['Avg. order', axInr(rows.length ? Math.round(rev / rows.length) : 0)], ['Units', units], ['Add-on revenue', axInr(addon)], ['Cancel rate', (all.length ? Math.round(100 * canc / all.length) : 0) + '%'], ['New waitlist', wl], ['Waitlist → order', conv + '%']].map(k => '<div class="stat-card"><div class="num">' + k[1] + '</div><div class="label">' + k[0] + '</div></div>').join('');
+  // chart data
+  const span = days || 30, labels = [], rv = [];
+  for (let i = span - 1; i >= 0; i--) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); const a = d.getTime(), b = a + 864e5; labels.push(d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })); rv.push(live.filter(o => axMs(o.createdAt) >= a && axMs(o.createdAt) < b).reduce((s, o) => s + axValue(o), 0)); }
+  const tierU = { base: 0, pro: 0, elite: 0 }; rows.forEach(o => { tierU[o.tier === 'pro' ? 'pro' : o.tier === 'elite' ? 'elite' : 'base'] += Number(o.quantity) || 0; });
+  if (!axRevChart) axRevChart = new Chart($ax('axRevChart'), { type: 'line', data: { labels, datasets: [{ label: 'Revenue', data: rv, borderColor: '#FF6B35', backgroundColor: 'rgba(255,107,53,.15)', fill: true, tension: .3 }] }, options: { animation: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
+  else { axRevChart.data.labels = labels; axRevChart.data.datasets[0].data = rv; axRevChart.update('none'); }
+  const tv = [tierU.base, tierU.pro, tierU.elite];
+  if (!axTierChart) axTierChart = new Chart($ax('axTierChart'), { type: 'doughnut', data: { labels: ['Base', 'Pro', 'Elite'], datasets: [{ data: tv, backgroundColor: ['#4ECDC4', '#FF6B35', '#E8C547'] }] }, options: { animation: false } });
+  else { axTierChart.data.datasets[0].data = tv; axTierChart.update('none'); }
+  // low stock
+  const thr = Number(siteSettings.lowStockThreshold != null ? siteSettings.lowStockThreshold : axCfg.lowStockThreshold) || 3, sold = { base: 0, pro: 0, elite: 0 };
+  live.forEach(o => { sold[o.tier === 'pro' ? 'pro' : o.tier === 'elite' ? 'elite' : 'base'] += Number(o.quantity) || 0; });
+  const warn = [];['base', 'pro', 'elite'].forEach(t => { const stock = Number(siteSettings[t + 'Stock']); if (stock >= 0) { const left = stock - sold[t]; if (left <= thr) warn.push({ t, left }); } });
+  $ax('axLow').innerHTML = warn.map(w => '<div class="ax-alert ' + (w.left <= 0 ? 'bad' : '') + '"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg> <b>' + tierLabelFor(w.t) + '</b>: ' + (w.left <= 0 ? 'sold out' : w.left + ' left') + '</div>').join('');
+  if (warn.length && !axLowShown && prebookData.length) { axLowShown = true; showToast('Low stock: ' + warn.map(w => tierLabelFor(w.t) + (w.left <= 0 ? ' sold out' : ' (' + w.left + ' left)')).join(', '), 'error'); }
+}
+$ax('axRange').addEventListener('change', axRenderDash);
+
+/* ═════════ CUSTOMER PROFILE ═════════ */
+async function axCustomerDrawer(email) {
+  email = axLc(email); axOpen('<div class="empty-state">Loading…</div>', true);
+  const orders = prebookData.filter(o => axLc(o.email) === email).sort((a, b) => axMs(b.createdAt) - axMs(a.createdAt));
+  let meta = {}, user = null, chats = [], reviews = [];
+  try { const m = await db.collection('customerMeta').doc(axKey(email)).get(); meta = m.exists ? m.data() : {}; } catch (_) {}
+  try { const u = await db.collection('users').where('email', '==', email).get(); user = u.empty ? null : u.docs[0].data(); } catch (_) {}
+  try { const c = await db.collection('chats').where('userEmail', '==', email).get(); chats = c.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => axMs(b.updatedAt) - axMs(a.updatedAt)); } catch (_) {}
+  try { const r = await db.collection('reviews').where('email', '==', email).get(); reviews = r.docs.map(d => d.data()); } catch (_) {}
+  const spent = orders.filter(o => (o.status || '') !== 'cancelled').reduce((s, o) => s + axValue(o), 0), flags = orders.flatMap(axFlags).filter((x, i, a) => a.indexOf(x) === i);
+  axOpen('<div class="ax-head"><h2>' + axEsc((orders[0] && orders[0].name) || (user && user.displayName) || email) + '</h2><button class="btn-small" id="axX">Close</button></div>' +
+    (flags.length ? '<div class="ax-alert">' + flags.map(x => '<div><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 21V4M5.5 5h11l-2 3.5 2 3.5h-11"/></svg> ' + axEsc(x) + '</div>').join('') + '</div>' : '') +
+    '<div class="ax-grid"><div><span>Email</span>' + axEsc(email) + '</div><div><span>Phone</span>' + axEsc((orders[0] && orders[0].phone) || (user && user.phone) || '—') + '</div><div><span>Account</span>' + (user ? 'Signed up ' + axDate(axMs(user.createdAt)) : 'Guest (no account)') + '</div><div><span>Lifetime spend</span><b>' + axInr(spent) + '</b></div></div>' +
+    '<div class="ax-sec">Orders (' + orders.length + ')</div>' + (orders.map(o => '<div class="ax-row ax-link" data-oid="' + axEsc(o.id) + '"><span>#' + axEsc(orderNumberFor(o)) + ' · ' + tierLabelFor(o.tier) + ' × ' + (o.quantity || 1) + ' · ' + axInr(axValue(o)) + '</span><span class="status-pill ' + (o.status || 'pending') + '">' + (o.status || 'pending') + '</span></div>').join('') || '<div class="hint">No orders.</div>') +
+    '<div class="ax-sec">Chats (' + chats.length + ')</div>' + (chats.map(c => '<div class="ax-row ax-link" data-cid="' + axEsc(c.id) + '"><span>' + axEsc(c.lastMessage || '(empty)') + '</span><span class="chat-status ' + c.status + '">' + axEsc(c.status) + '</span></div>').join('') || '<div class="hint">No chats.</div>') +
+    ((user && user.addresses || []).length ? '<div class="ax-sec">Saved addresses</div>' + user.addresses.map(a => '<div class="ax-row"><span>' + axEsc(a.label) + ': ' + axEsc(axAddr(a)) + '</span></div>').join('') : '') +
+    (reviews.length ? '<div class="ax-sec">Reviews</div>' + reviews.map(r => '<div class="ax-row"><span>' + '★'.repeat(r.rating) + ' ' + axEsc(r.comment || '') + '</span></div>').join('') : '') +
+    '<div class="ax-sec">Notes &amp; tags</div><div class="ax-grid"><div class="wide"><span>Tags (comma separated)</span><input id="axCTags" class="search-input" value="' + axEsc((meta.tags || []).join(', ')) + '"></div><div class="wide"><span>Internal notes</span><textarea id="axCNotes" class="search-input" rows="3">' + axEsc(meta.notes || '') + '</textarea></div></div>' +
+    '<div class="ax-actions"><button class="btn-small primary" id="axCSave">Save notes</button><button class="btn-small" id="axCMail">Email this customer</button></div>', true);
+  $ax('axX').onclick = axClose;
+  $ax('axCSave').onclick = async () => { try { await db.collection('customerMeta').doc(axKey(email)).set({ email, notes: $ax('axCNotes').value.trim(), tags: $ax('axCTags').value.split(',').map(t => t.trim()).filter(Boolean).slice(0, 8), updatedAt: axTS() }, { merge: true }); axLog('customer.notes', email, ''); showToast('Saved.', 'success'); } catch (_) { showToast('Could not save.', 'error'); } };
+  $ax('axCMail').onclick = () => { axClose(); document.querySelector('.tab-btn[data-tab="email"]').click(); $ax('axAud').value = 'custom'; $ax('axCustom').value = email; axAudChange(); };
+  axModalBody.querySelectorAll('[data-oid]').forEach(r => r.onclick = () => axOrderDrawer(r.dataset.oid));
+  axModalBody.querySelectorAll('[data-cid]').forEach(r => r.onclick = () => { axClose(); document.querySelector('.tab-btn[data-tab="chats"]').click(); setTimeout(() => { try { openChat(r.dataset.cid); } catch (_) {} }, 200); });
+}
+
+/* ═════════ CHATS: canned replies, AI suggestion, rating, email transcript, customer notifications ═════════ */
+function axFillCanned() { const s = $ax('axCanned'); s.innerHTML = '<option value="">Quick replies…</option>' + (axCfg.cannedReplies || []).map(r => '<option>' + axEsc(r) + '</option>').join(''); }
+$ax('axCanned').addEventListener('change', e => { if (e.target.value) { $ax('cvInput').value = e.target.value; $ax('cvInput').focus(); e.target.value = ''; } });
+$ax('axSuggest').addEventListener('click', async () => {
+  if (!activeChatId) return; if (!getGeminiKeys().length) return showToast('Add a Gemini API key in Settings first.', 'error');
+  const b = $ax('axSuggest'); b.disabled = true; b.textContent = 'Thinking…';
+  try {
+    const s = await db.collection('chats').doc(activeChatId).collection('messages').orderBy('createdAt').get();
+    const transcript = s.docs.map(d => d.data()).filter(m => m.role !== 'system').slice(-20).map(m => (m.role === 'user' ? 'Customer' : m.role === 'admin' ? 'Team' : 'Assistant') + ': ' + m.text).join('\n');
+    const reply = await callGemini('You write short, warm, accurate replies for the SafeFlame AI support team. Reply only with the message text to send to the customer. Do not invent facts, delivery dates or discounts.\n\n' + buildBusinessContext(), [{ role: 'user', parts: [{ text: 'Conversation so far:\n' + transcript + '\n\nWrite the team\'s next reply.' }] }]);
+    $ax('cvInput').value = reply.trim(); $ax('cvInput').focus();
+  } catch (e) { showToast('Could not get a suggestion.', 'error'); }
+  b.disabled = false; b.innerHTML = '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="8" width="16" height="11" rx="3"/><path d="M12 8V4.5M9.5 4.5h5M2.5 13v2M21.5 13v2"/><circle cx="9" cy="13.5" r="1" fill="currentColor" stroke="none"/><circle cx="15" cy="13.5" r="1" fill="currentColor" stroke="none"/></svg> Suggest';
+});
+$ax('axTranscript').addEventListener('click', async () => {
+  const c = chatsData.find(x => x.id === activeChatId); if (!c) return;
+  if (!c.userEmail) return showToast('This visitor did not leave an email.', 'error');
+  if (!confirm('Email this transcript to ' + c.userEmail + '?')) return;
+  try {
+    const s = await db.collection('chats').doc(c.id).collection('messages').orderBy('createdAt').get();
+    const body = s.docs.map(d => d.data()).filter(m => m.role !== 'system').map(m => (m.role === 'user' ? 'You' : m.role === 'admin' ? 'SafeFlame team' : 'Assistant') + ': ' + m.text).join('\n\n');
+    await axSend({}, { to_email: c.userEmail, to_name: c.userName || 'there', name: c.userName || 'there', email: c.userEmail, subject: 'Your chat with SafeFlame AI', message: 'Hi ' + (c.userName || 'there') + ',\n\nHere is a copy of your conversation:\n\n' + body, order_id: '' }, 'chat-transcript');
+    axLog('chat.transcript', c.userEmail, c.id); showToast('Transcript emailed.', 'success');
+  } catch (e) { showToast('Email failed: ' + e.message, 'error'); }
+});
+async function axNotifyChat(c, text, title) {
+  if (!c || !c.userEmail) return; return axNotify({ email: c.userEmail, uid: c.uid || null, type: 'chat', title: title || 'New reply from the SafeFlame team', body: String(text || '').slice(0, 140) });
+}
+
+/* ═════════ INBOX: feedback + reviews ═════════ */
+let axFb = [], axRv = [];
+function axRenderInbox() {
+  const f = $ax('axFbFilter').value;
+  const list = axFb.filter(x => f === 'all' || (x.status || 'new') === f);
+  $ax('axFbList').innerHTML = list.length ? list.map(x => '<div class="ax-card"><div class="ax-row"><span><b>' + axEsc(x.category) + '</b> · ' + axEsc(x.name || 'Anonymous') + (x.email ? ' · ' + axEsc(x.email) : '') + '</span><small>' + axDate(axMs(x.createdAt)) + '</small></div><p>' + axEsc(x.message) + '</p><div class="ax-actions">' + (x.email ? '<a class="btn-small" href="mailto:' + axEsc(x.email) + '?subject=' + encodeURIComponent('Re: your SafeFlame AI feedback') + '">Reply by email</a>' : '') + '<button class="btn-small" data-fb="' + x.id + '" data-s="' + ((x.status || 'new') === 'new' ? 'done' : 'new') + '">' + ((x.status || 'new') === 'new' ? 'Mark done' : 'Reopen') + '</button><button class="btn-small danger" data-fbdel="' + x.id + '">Delete</button></div></div>').join('') : '<div class="empty-state">Nothing here.</div>';
+  $ax('axRvList').innerHTML = axRv.length ? axRv.map(r => '<div class="ax-card"><div class="ax-row"><span><b class="ax-stars">' + '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) + '</b> · ' + axEsc(r.name) + ' · #' + axEsc(r.orderNumber) + ' · ' + tierLabelFor(r.tier) + '</span><small>' + axDate(axMs(r.createdAt)) + '</small></div>' + (r.comment ? '<p>' + axEsc(r.comment) + '</p>' : '') + '</div>').join('') : '<div class="empty-state">No reviews yet.</div>';
+  const avg = axRv.length ? (axRv.reduce((s, r) => s + r.rating, 0) / axRv.length).toFixed(1) : '—', n = axFb.filter(x => (x.status || 'new') === 'new').length;
+  $ax('axRvAvg').textContent = avg + (axRv.length ? ' average from ' + axRv.length + ' review' + (axRv.length > 1 ? 's' : '') : '');
+  const bd = $ax('axInboxBadge'); bd.textContent = n; bd.style.display = n ? 'inline-block' : 'none';
+}
+$ax('axFbFilter').addEventListener('change', axRenderInbox);
+$ax('axFbList').addEventListener('click', async e => {
+  const a = e.target.closest('[data-fb]'), d = e.target.closest('[data-fbdel]');
+  if (a) { await db.collection('feedback').doc(a.dataset.fb).update({ status: a.dataset.s }).catch(() => {}); axLog('feedback.' + a.dataset.s, a.dataset.fb, ''); }
+  if (d && confirm('Delete this message?')) { await db.collection('feedback').doc(d.dataset.fbdel).delete().catch(() => {}); axLog('feedback.delete', d.dataset.fbdel, ''); }
+});
+
+/* ═════════ EMAIL: composer, log, test sends ═════════ */
+let axUsers = null;
+async function axOptOuts() { if (axUsers) return axUsers; axUsers = {}; try { const s = await db.collection('users').get(); s.forEach(d => { const u = d.data(); if (u.email) axUsers[axLc(u.email)] = u.prefs || {}; }); } catch (_) {} return axUsers; }
+function axAudChange() { $ax('axCustomWrap').style.display = $ax('axAud').value === 'custom' ? '' : 'none'; axPreview(); }
+function axRecipients() {
+  const a = $ax('axAud').value, map = new Map(), add = (email, name) => { email = axLc(email); if (email && isValidEmailAx(email) && !map.has(email)) map.set(email, name || 'there'); };
+  if (a === 'waitlist') waitlistData.forEach(w => add(w.email, w.name));
+  else if (a === 'custom') $ax('axCustom').value.split(/[\s,;]+/).forEach(e => add(e));
+  else prebookData.filter(o => a === 'customers' || (a.startsWith('tier:') && o.tier === a.slice(5)) || (a.startsWith('status:') && (o.status || 'pending') === a.slice(7))).forEach(o => add(o.email, String(o.name || '').split(' ')[0]));
+  return map;
+}
+const isValidEmailAx = e => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
+function axPreview() {
+  const r = axRecipients(), first = r.entries().next().value;
+  $ax('axCount').textContent = r.size + ' recipient' + (r.size === 1 ? '' : 's');
+  $ax('axPrevBox').innerHTML = first ? '<b>' + axEsc(axTokens($ax('axSubj').value, { name: first[1], email: first[0] })) + '</b><br>' + axEsc(axTokens($ax('axMsg').value, { name: first[1], email: first[0] })).replace(/\n/g, '<br>') : '<span class="hint">Pick an audience to preview.</span>';
+}
+['axAud', 'axSubj', 'axMsg', 'axCustom'].forEach(id => $ax(id).addEventListener('input', axPreview));
+$ax('axAud').addEventListener('change', axAudChange);
+let axSending = false, axCancel = false;
+$ax('axSendAll').addEventListener('click', async () => {
+  if (axSending) { axCancel = true; return; }
+  const subj = $ax('axSubj').value.trim(), msg = $ax('axMsg').value.trim(); let rec = [...axRecipients()];
+  if (!subj || !msg) return showToast('Write a subject and a message.', 'error');
+  if (!rec.length) return showToast('No recipients for that audience.', 'error');
+  const optOut = await axOptOuts(); const skipped = rec.filter(([e]) => optOut[e] && optOut[e].launchEmails === false).length; rec = rec.filter(([e]) => !(optOut[e] && optOut[e].launchEmails === false));
+  if (!confirm('Send this email to ' + rec.length + ' recipient(s)?' + (skipped ? ' (' + skipped + ' opted out and are skipped.)' : ''))) return;
+  axSending = true; axCancel = false; const btn = $ax('axSendAll'); let ok = 0, fail = 0;
+  for (let i = 0; i < rec.length; i++) {
+    if (axCancel) break; btn.textContent = 'Sending ' + (i + 1) + '/' + rec.length + ' — click to stop';
+    const t = { name: rec[i][1], email: rec[i][0] };
+    try { await axSend({}, { to_email: rec[i][0], to_name: rec[i][1], name: rec[i][1], email: rec[i][0], subject: axTokens(subj, t), message: axTokens(msg, t), order_id: '' }, 'composer'); ok++; } catch (e) { fail++; if (/not configured/i.test(e.message)) break; }
+    await new Promise(r => setTimeout(r, 700));
+  }
+  axSending = false; btn.textContent = 'Send email'; axLog('email.composer', $ax('axAud').value, ok + ' sent, ' + fail + ' failed'); showToast(ok + ' sent' + (fail ? ', ' + fail + ' failed (see the log)' : '') + '.', fail ? 'error' : 'success');
+});
+let axLogs = [];
+function axRenderLog() {
+  const f = $ax('axLogFilter').value, list = axLogs.filter(l => f === 'all' || (f === 'failed' ? !l.ok : l.ok));
+  $ax('axLogBody').innerHTML = list.length ? list.map(l => '<tr><td>' + axDate(axMs(l.at)) + '</td><td>' + axEsc(l.kind) + '</td><td>' + axEsc(l.to) + '</td><td>' + axEsc(l.subject) + '</td><td><span class="status-pill ' + (l.ok ? 'shipped' : 'cancelled') + '">' + (l.ok ? 'sent' : 'failed') + '</span></td><td>' + axEsc(l.error || '') + '</td></tr>').join('') : '<tr><td colspan="6" class="empty-state">No emails logged yet.</td></tr>';
+}
+$ax('axLogFilter').addEventListener('change', axRenderLog);
+$ax('axLogClear').addEventListener('click', async () => { if (!confirm('Clear the email log?')) return; const b = db.batch(); axLogs.forEach(l => b.delete(db.collection('emailLog').doc(l.id))); await b.commit().catch(() => {}); axLog('emaillog.clear', '', axLogs.length + ' entries'); });
+$ax('axTestSend').addEventListener('click', async () => {
+  const kind = $ax('axTestKind').value, to = $ax('axTestTo').value.trim(); if (!isValidEmailAx(to)) return showToast('Enter a valid address to send the test to.', 'error');
+  await axLoadCfg(); const t = { name: 'Test', email: to, otp: '123456', link: location.origin + '/verify?token=TEST', order_id: '100000', tier: '7" Pro', quantity: 1, total_price: '₹7,999', unit_price: '₹7,999', tracking: 'TRK123', eta: '2–3 weeks' }; let cfg, subject, message;
+  if (kind === 'otp' || kind === 'verify') { cfg = axCfg[kind === 'otp' ? 'otpEmail' : 'verifyEmail']; subject = cfg.subject; message = cfg.message; }
+  else if (kind === 'launch') { subject = axCfg.launchEmailSubject || 'SafeFlame AI has launched!'; message = axCfg.launchEmailMessage || 'SafeFlame AI is live!'; cfg = { serviceId: axCfg.launchEmailServiceId, templateId: axCfg.launchEmailTemplateId, publicKey: axCfg.launchEmailPublicKey }; }
+  else { cfg = (axCfg.statusEmails || {})[kind] || DEFAULT_SETTINGS.statusEmails[kind] || {}; subject = cfg.subject || 'Order update'; message = cfg.message || 'Your order was updated.'; }
+  const b = $ax('axTestSend'); b.disabled = true;
+  try { await axSend(cfg, { to_email: to, to_name: 'Test', name: 'Test', email: to, order_id: t.order_id, subject: '[TEST] ' + axTokens(subject, t), message: axTokens(message, t), otp: t.otp, link: t.link, orders: [{ name: 'SafeFlame AI — 7" Pro', units: 1, price: '7,999' }], cost: { shipping: '0', tax: '0', total: '7,999' }, tier: t.tier, quantity: 1, total_price: t.total_price, status: kind, tracking: t.tracking, eta: t.eta }, 'test-' + kind); showToast('Test email sent to ' + to + '.', 'success'); }
+  catch (e) { showToast('Test failed: ' + e.message, 'error'); }
+  b.disabled = false;
+});
+
+/* ═════════ SITE CONTROLS (announcement, maintenance, add-ons, ETA, stock alert, replies, FAQ) ═════════ */
+let axSiteTimer = null, axSiteReady = false;
+function axRenderSite() {
+  const c = axCfg; $ax('siAnnOn').checked = !!c.announcement.enabled; $ax('siAnnText').value = c.announcement.text || ''; $ax('siAnnLink').value = c.announcement.link || '';
+  $ax('siMaintOn').checked = !!c.maintenance.enabled; $ax('siMaintMsg').value = c.maintenance.message || '';
+  $ax('siEtaBase').value = c.eta.base || ''; $ax('siEtaPro').value = c.eta.pro || ''; $ax('siEtaElite').value = c.eta.elite || ''; $ax('siLow').value = c.lowStockThreshold != null ? c.lowStockThreshold : 3;
+  $ax('siCanned').value = (c.cannedReplies || []).join('\n');
+  $ax('siAddons').innerHTML = (c.addons || []).map(axAddonRow).join(''); $ax('siFaq').innerHTML = (c.faq || []).map(axFaqRow).join('');
+  if (window.axRenderSite2) axRenderSite2();
+  axSiteReady = true;
+}
+const axAddonRow = a => '<div class="ax-line"><input class="search-input ao-name" placeholder="Name" value="' + axEsc(a.name) + '"><input class="search-input ao-price" type="number" min="0" placeholder="Price" value="' + axEsc(a.price) + '" style="max-width:120px"><label class="ax-chk"><input type="checkbox" class="ao-on" ' + (a.enabled !== false ? 'checked' : '') + '> On</label><button class="row-delete ax-rm" type="button">Remove</button><input type="hidden" class="ao-id" value="' + axEsc(a.id || '') + '"></div>';
+const axFaqRow = f => '<div class="ax-line col"><input class="search-input fq-q" placeholder="Question" value="' + axEsc(f.q) + '"><textarea class="search-input fq-a" rows="2" placeholder="Answer">' + axEsc(f.a) + '</textarea><button class="row-delete ax-rm" type="button">Remove</button></div>';
+function axCollectSite() {
+  return {
+    announcement: { enabled: $ax('siAnnOn').checked, text: $ax('siAnnText').value.trim(), link: $ax('siAnnLink').value.trim() },
+    maintenance: { enabled: $ax('siMaintOn').checked, message: $ax('siMaintMsg').value.trim() },
+    eta: { base: $ax('siEtaBase').value.trim(), pro: $ax('siEtaPro').value.trim(), elite: $ax('siEtaElite').value.trim() }, lowStockThreshold: Math.max(0, Number($ax('siLow').value) || 0),
+    cannedReplies: $ax('siCanned').value.split('\n').map(s => s.trim()).filter(Boolean),
+    addons: [...document.querySelectorAll('#siAddons .ax-line')].map((r, i) => ({ id: r.querySelector('.ao-id').value || ('a' + Date.now().toString(36) + i), name: r.querySelector('.ao-name').value.trim(), price: Number(r.querySelector('.ao-price').value) || 0, enabled: r.querySelector('.ao-on').checked })).filter(a => a.name),
+    faq: [...document.querySelectorAll('#siFaq .ax-line')].map(r => ({ q: r.querySelector('.fq-q').value.trim(), a: r.querySelector('.fq-a').value.trim() })).filter(f => f.q && f.a),
+    ...axCollectSite2()
+  };
+}
+async function axSaveSite() {
+  const chip = $ax('siChip'); chip.textContent = 'Saving…';
+  const data = axCollectSite();
+  if (data.maintenance.enabled && !confirm('Turn ON maintenance mode? Visitors will see a "Back soon" screen instead of the site.')) { $ax('siMaintOn').checked = false; data.maintenance.enabled = false; }
+  try { await db.collection('settings').doc('site').set(data, { merge: true }); Object.assign(axCfg, data); Object.assign(siteSettings, data); chip.textContent = 'Saved'; setTimeout(() => { if (chip.textContent === 'Saved') chip.textContent = ''; }, 2200); axLog('site.update', '', 'site controls'); axFillCanned(); }
+  catch (e) { chip.textContent = 'Could not save'; }
+}
+function axQueueSite() { if (!axSiteReady) return; $ax('siChip').textContent = 'Saving…'; clearTimeout(axSiteTimer); axSiteTimer = setTimeout(axSaveSite, 900); }
+$ax('tab-site').addEventListener('input', axQueueSite); $ax('tab-site').addEventListener('change', axQueueSite);
+$ax('tab-site').addEventListener('click', e => { if (e.target.classList.contains('ax-rm')) { e.target.closest('.ax-line').remove(); axQueueSite(); } });
+$ax('siAddAddon').addEventListener('click', () => { $ax('siAddons').insertAdjacentHTML('beforeend', axAddonRow({ name: '', price: 0, enabled: true })); });
+$ax('siAddFaq').addEventListener('click', () => { $ax('siFaq').insertAdjacentHTML('beforeend', axFaqRow({ q: '', a: '' })); });
+
+/* ═════════ TEAM: admins + activity log ═════════ */
+let axAdmins = [], axActs = [];
+function axRenderAdmins() {
+  $ax('tmList').innerHTML = ADMIN_EMAILS.map(e => '<div class="ax-row"><span>' + axEsc(e) + '</span><span class="hint">Owner · cannot be removed</span></div>').join('') + axAdmins.map(e => '<div class="ax-row"><span>' + axEsc(e) + (axLc(e) === axLc(axWho()) ? ' <small>(you)</small>' : '') + '</span><button class="btn-small danger" data-rm="' + axEsc(e) + '">Remove</button></div>').join('');
+}
+$ax('tmList').addEventListener('click', async e => {
+  const b = e.target.closest('[data-rm]'); if (!b) return; const em = b.dataset.rm;
+  if (axLc(em) === axLc(axWho())) return showToast("You can't remove yourself.", 'error');
+  if (!confirm('Remove admin access for ' + em + '? Their login stays in Firebase but they can no longer open this panel.')) return;
+  try { await db.collection('settings').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayRemove(em) }, { merge: true }); extraAdmins = extraAdmins.filter(x => x !== axLc(em)); axLog('admin.remove', em, ''); showToast('Admin removed.', 'success'); } catch (_) { showToast('Could not remove admin.', 'error'); }
+});
+$ax('tmAdd').addEventListener('click', async () => {
+  let id = axLc($ax('tmId').value), pw = $ax('tmPw').value; const err = $ax('tmErr'); err.textContent = '';
+  if (!id) return err.textContent = 'Enter an ID or email for the new admin.'; if (!id.includes('@')) id += '@' + ADMIN_DOMAIN;
+  if (!isValidEmailAx(id)) return err.textContent = 'That ID is not valid.'; if (pw.length < 6) return err.textContent = 'Password must be at least 6 characters.';
+  $ax('tmAdd').disabled = true; let created = true;
+  try {
+    const app2 = firebase.apps.find(a => a.name === 'adminCreate') || firebase.initializeApp(firebaseConfig, 'adminCreate');
+    try { await app2.auth().createUserWithEmailAndPassword(id, pw); await app2.auth().signOut(); }
+    catch (e) { if (e.code === 'auth/email-already-in-use') created = false; else throw e; }
+    await db.collection('settings').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayUnion(id) }, { merge: true });
+    if (!extraAdmins.includes(id)) extraAdmins.push(id); axLog('admin.add', id, created ? 'account created' : 'existing account'); $ax('tmId').value = ''; $ax('tmPw').value = '';
+    showToast(created ? 'Admin created. They can sign in with that ID and password.' : 'That account already existed — it now has admin access with its current password.', 'success');
+  } catch (e) { err.textContent = ({ 'auth/weak-password': 'Password is too weak.', 'auth/operation-not-allowed': 'Email/password sign-in is turned off in Firebase.' })[e.code] || e.message || 'Could not add the admin.'; }
+  $ax('tmAdd').disabled = false;
+});
+function axRenderActs() {
+  const q = axLc($ax('actSearch').value), list = axActs.filter(a => !q || axLc(a.by + ' ' + a.action + ' ' + a.target + ' ' + a.detail).includes(q));
+  $ax('actBody').innerHTML = list.length ? list.map(a => '<tr><td>' + axDate(axMs(a.at)) + '</td><td>' + axEsc(a.by) + '</td><td>' + axEsc(a.action) + '</td><td>' + axEsc(a.target) + '</td><td>' + axEsc(a.detail) + '</td></tr>').join('') : '<tr><td colspan="5" class="empty-state">No activity yet.</td></tr>';
+}
+$ax('actSearch').addEventListener('input', axRenderActs);
+
+/* ═════════ DATA: CSV export + backup / restore ═════════ */
+const axCsvSets = {
+  orders: async () => [['Order #', 'Date', 'Name', 'Email', 'Phone', 'Tier', 'Qty', 'Unit price', 'Add-ons', 'Total', 'Status', 'Tracking', 'ETA', 'Address', 'Gift for', 'Delivery notes', 'Tags', 'Notes', 'Referred by']].concat(prebookData.map(o => [orderNumberFor(o), axDate(axMs(o.createdAt)), o.name, o.email, o.phone, tierLabelFor(o.tier), o.quantity, priceForOrder(o), (o.addons || []).map(a => a.name).join('; '), axValue(o), o.status || 'pending', o.tracking || '', o.eta || '', axOrderAddr(o), o.gift ? o.gift.name : '', o.deliveryNotes || '', (o.tags || []).join('; '), o.notes || '', o.referredBy || '']), prebookData.map(o => axMs(o.createdAt))),
+  waitlist: async () => [['Email', 'Name', 'Date']].concat(waitlistData.map(w => [w.email, w.name || '', axDate(axMs(w.createdAt))]), waitlistData.map(w => axMs(w.createdAt))),
+  customers: async () => [['Name', 'Email', 'Phone', 'Orders', 'Units', 'Spent', 'Latest status']].concat(buildCustomerData().map(c => [c.name, c.email, c.phone, c.orderCount, c.totalUnits, c.totalSpent, c.latestStatus]), buildCustomerData().map(c => axMs(c.lastOrderDate))),
+  chats: async () => { const s = await db.collection('chats').get(), d = s.docs.map(x => ({ id: x.id, ...x.data() })); return [['Chat ID', 'Name', 'Email', 'Status', 'Rating', 'Started', 'Last message']].concat(d.map(c => [c.id, c.userName, c.userEmail, c.status, c.rating || '', axDate(axMs(c.createdAt)), c.lastMessage || '']), d.map(c => axMs(c.createdAt))); },
+  messages: async () => { const s = await db.collection('chats').get(); const rows = [], ts = []; for (const c of s.docs) { const m = await c.ref.collection('messages').orderBy('createdAt').get(); m.forEach(x => { const v = x.data(); rows.push([c.id, c.data().userName, v.role, v.text, axDate(axMs(v.createdAt))]); ts.push(axMs(v.createdAt)); }); } return [['Chat ID', 'Visitor', 'Who', 'Message', 'Time']].concat(rows, ts); },
+  feedback: async () => [['Topic', 'Name', 'Email', 'Message', 'Status', 'Date']].concat(axFb.map(f => [f.category, f.name, f.email, f.message, f.status || 'new', axDate(axMs(f.createdAt))]), axFb.map(f => axMs(f.createdAt))),
+  reviews: async () => [['Order', 'Name', 'Tier', 'Rating', 'Comment', 'Date']].concat(axRv.map(r => [r.orderNumber, r.name, r.tier, r.rating, r.comment, axDate(axMs(r.createdAt))]), axRv.map(r => axMs(r.createdAt))),
+  emaillog: async () => [['Time', 'Kind', 'To', 'Subject', 'Result', 'Error']].concat(axLogs.map(l => [axDate(axMs(l.at)), l.kind, l.to, l.subject, l.ok ? 'sent' : 'failed', l.error || '']), axLogs.map(l => axMs(l.at))),
+  activity: async () => [['Time', 'Admin', 'Action', 'Target', 'Detail']].concat(axActs.map(a => [axDate(axMs(a.at)), a.by, a.action, a.target, a.detail]), axActs.map(a => axMs(a.at)))
+};
+/* each dataset returns [header, ...rows, ...timestamps]; split + filter by date range */
+$ax('dtExport').addEventListener('click', async () => {
+  const kind = $ax('dtSet').value, from = $ax('dtFrom').value ? new Date($ax('dtFrom').value).getTime() : 0, to = $ax('dtTo').value ? new Date($ax('dtTo').value).getTime() + 864e5 : Infinity;
+  const b = $ax('dtExport'); b.disabled = true;
+  try {
+    const raw = await axCsvSets[kind](); const n = (raw.length - 1) / 2, header = raw[0], rows = raw.slice(1, 1 + n), ts = raw.slice(1 + n);
+    const out = [header]; rows.forEach((r, i) => { if (!ts[i] || (ts[i] >= from && ts[i] < to)) out.push(r); });
+    downloadCsv('safeflame-' + kind + '-' + new Date().toISOString().slice(0, 10) + '.csv', out); axLog('export.csv', kind, (out.length - 1) + ' rows'); showToast((out.length - 1) + ' row(s) exported.', 'success');
+  } catch (e) { showToast('Export failed: ' + e.message, 'error'); }
+  b.disabled = false;
+});
+const AX_BACKUP = ['preBookings', 'waitlist', 'users', 'chats', 'notifications', 'feedback', 'reviews', 'settings', 'customerMeta'];
+function axPack(v) { if (v && typeof v === 'object') { if (typeof v.toMillis === 'function') return { __ts: v.toMillis() }; if (Array.isArray(v)) return v.map(axPack); const o = {}; for (const k in v) o[k] = axPack(v[k]); return o; } return v; }
+function axUnpack(v) { if (v && typeof v === 'object') { if ('__ts' in v && Object.keys(v).length === 1) return firebase.firestore.Timestamp.fromMillis(v.__ts); if (Array.isArray(v)) return v.map(axUnpack); const o = {}; for (const k in v) o[k] = axUnpack(v[k]); return o; } return v; }
+$ax('bkDownload').addEventListener('click', async () => {
+  const b = $ax('bkDownload'), st = $ax('bkStatus'); b.disabled = true; st.textContent = 'Collecting data…';
+  try {
+    const out = { app: 'safeflame', version: 1, exportedAt: new Date().toISOString(), collections: {} };
+    for (const c of AX_BACKUP) {
+      const s = await db.collection(c).get(); out.collections[c] = {};
+      for (const d of s.docs) { const rec = { data: axPack(d.data()) }; if (c === 'chats') { const m = await d.ref.collection('messages').get(); rec.messages = m.docs.map(x => ({ id: x.id, data: axPack(x.data()) })); } out.collections[c][d.id] = rec; }
+      st.textContent = 'Collected ' + c + '…';
+    }
+    const blob = new Blob([JSON.stringify(out)], { type: 'application/json' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'safeflame-backup-' + new Date().toISOString().slice(0, 10) + '.json'; document.body.appendChild(a); a.click(); a.remove();
+    axLog('backup.download', '', Object.keys(out.collections).map(k => k + ':' + Object.keys(out.collections[k]).length).join(', ')); st.textContent = 'Backup downloaded.';
+  } catch (e) { st.textContent = 'Backup failed: ' + e.message; }
+  b.disabled = false;
+});
+$ax('bkRestore').addEventListener('change', async e => {
+  const f = e.target.files[0]; e.target.value = ''; if (!f) return; const st = $ax('bkStatus');
+  try {
+    const j = JSON.parse(await f.text()); if (j.app !== 'safeflame' || !j.collections) throw new Error('This is not a SafeFlame backup file.');
+    const counts = Object.keys(j.collections).map(k => k + ': ' + Object.keys(j.collections[k]).length).join('\n');
+    if (!confirm('Restore this backup?\n\n' + counts + '\n\nDocuments with the same ID will be overwritten. Nothing is deleted.')) return;
+    let n = 0, batch = db.batch(), k = 0;
+    const flush = async () => { if (k) { await batch.commit(); batch = db.batch(); k = 0; } };
+    for (const c of Object.keys(j.collections)) for (const id of Object.keys(j.collections[c])) {
+      const rec = j.collections[c][id]; batch.set(db.collection(c).doc(id), axUnpack(rec.data)); n++; if (++k >= 400) await flush();
+      for (const m of (rec.messages || [])) { batch.set(db.collection(c).doc(id).collection('messages').doc(m.id), axUnpack(m.data)); n++; if (++k >= 400) await flush(); }
+      st.textContent = 'Restoring… ' + n;
+    }
+    await flush(); axLog('backup.restore', f.name, n + ' documents'); st.textContent = 'Restored ' + n + ' documents.'; showToast('Backup restored.', 'success');
+  } catch (err) { st.textContent = 'Restore failed: ' + err.message; }
+});
+
+/* ═════════ smarter assistant context (feeds the admin chatbot) ═════════ */
+function axExtraContext() {
+  const live = prebookData.filter(o => (o.status || 'pending') !== 'cancelled'), now = Date.now();
+  const rev = (d) => live.filter(o => !d || axMs(o.createdAt) >= now - d * 864e5).reduce((s, o) => s + axValue(o), 0);
+  const addon = live.reduce((s, o) => s + (Number(o.addonsTotal) || 0), 0), byC = {};
+  live.forEach(o => { const k = axLc(o.email); byC[k] = (byC[k] || { name: o.name, v: 0 }); byC[k].v += axValue(o); });
+  const top = Object.values(byC).sort((a, b) => b.v - a.v).slice(0, 5).map(c => c.name + ' ' + axInr(c.v)).join('; ');
+  const cs = {}; (chatsData || []).forEach(c => cs[c.status] = (cs[c.status] || 0) + 1); const rated = (chatsData || []).filter(c => c.rating);
+  const flagged = prebookData.filter(o => axFlags(o).length).length, refs = prebookData.filter(o => o.referredBy).length, gifts = prebookData.filter(o => o.gift).length, inst = prebookData.filter(o => o.installation && o.installation.status === 'requested').length;
+  const recent = prebookData.slice().sort((a, b) => axMs(b.createdAt) - axMs(a.createdAt)).slice(0, 10).map(o => '#' + orderNumberFor(o) + ' ' + (o.name || '') + ' ' + tierLabelFor(o.tier) + '×' + (o.quantity || 1) + ' ' + (o.status || 'pending') + ' ' + axInr(axValue(o))).join('; ');
+  return '\n- Revenue last 7 days: ' + axInr(rev(7)) + '; last 30 days: ' + axInr(rev(30)) + '; add-on revenue: ' + axInr(addon) +
+    '\n- Top customers: ' + (top || 'none') + '\n- Chats by status: ' + JSON.stringify(cs) + '; average chat rating: ' + (rated.length ? (rated.reduce((s, c) => s + c.rating, 0) / rated.length).toFixed(1) : 'n/a') +
+    '\n- Feedback waiting: ' + axFb.filter(x => (x.status || 'new') === 'new').length + '; reviews: ' + axRv.length + ' (avg ' + (axRv.length ? (axRv.reduce((s, r) => s + r.rating, 0) / axRv.length).toFixed(1) : 'n/a') + ')' +
+    '\n- Orders flagged for review: ' + flagged + '; referred orders: ' + refs + '; gift orders: ' + gifts + '; installation requests waiting: ' + inst + '\n- 10 most recent orders: ' + (recent || 'none');
+}
+
+/* ═════════ wiring ═════════ */
+function axInit() {
+  if (axInit.done) return; axInit.done = true;
+  axLoadCfg().then(() => { axRenderSite(); axFillCanned(); axRenderDash(); });
+  db.collection('feedback').orderBy('createdAt', 'desc').limit(150).onSnapshot(s => { axFb = s.docs.map(d => ({ id: d.id, ...d.data() })); axRenderInbox(); }, e => console.warn('feedback', e));
+  db.collection('reviews').orderBy('createdAt', 'desc').limit(150).onSnapshot(s => { axRv = s.docs.map(d => ({ id: d.id, ...d.data() })); axRenderInbox(); }, e => console.warn('reviews', e));
+  db.collection('emailLog').orderBy('at', 'desc').limit(150).onSnapshot(s => { axLogs = s.docs.map(d => ({ id: d.id, ...d.data() })); axRenderLog(); }, e => console.warn('emailLog', e));
+  db.collection('adminLog').orderBy('at', 'desc').limit(200).onSnapshot(s => { axActs = s.docs.map(d => ({ id: d.id, ...d.data() })); axRenderActs(); }, e => console.warn('adminLog', e));
+  db.collection('settings').doc('admins').onSnapshot(d => { axAdmins = d.exists ? (d.data().emails || []) : []; extraAdmins = axAdmins.map(axLc); axRenderAdmins(); }, e => console.warn('admins', e));
+  $ax('axTestTo').value = axWho(); axAudChange();
+}
+document.addEventListener('click', e => {
+  const d = e.target.closest('.ax-detail'); if (d) axOrderDrawer(d.dataset.id);
+  const p = e.target.closest('.ax-prof'); if (p) axCustomerDrawer(p.dataset.email);
+});
+
+</script>
+<script>
+/* ═════════ ADMIN EXTRAS 2: tickets, health, ideas/stories/featured reviews, devices, site pages, firmware, cancellations ═════════ */
+const AX_REASONS = ['Customer request', 'Duplicate order', 'Suspected fraud', 'Out of stock', 'Unable to deliver', 'Payment problem', 'Other'];
+function axAsk(html, okLabel) {
+  return new Promise(res => {
+    axOpen(html + '<div class="ax-actions"><button class="btn-small primary" id="axAskOk">' + (okLabel || 'OK') + '</button><button class="btn-small" id="axAskNo">Cancel</button></div>');
+    $ax('axAskOk').onclick = () => { const v = { reason: $ax('axAskReason') ? $ax('axAskReason').value : '', note: $ax('axAskNote') ? $ax('axAskNote').value.trim() : '' }; axClose(); res(v); };
+    $ax('axAskNo').onclick = () => { axClose(); res(null); };
+  });
+}
+const axAskReason = () => axAsk('<div class="ax-head"><h2>Why is this order being cancelled?</h2></div><div class="ax-grid"><div class="wide"><span>Reason</span><select id="axAskReason" class="filter-select" style="width:100%">' + AX_REASONS.map(r => '<option>' + r + '</option>').join('') + '</select></div><div class="wide"><span>Note (optional)</span><input id="axAskNote" class="search-input" maxlength="200"></div></div>', 'Cancel order');
+
+/* ═════════ TICKETS (X30) ═════════ */
+let axTickets = [], axActiveTicket = null, axTkUnsub = null, axTkFirst = true;
+const AX_TK_STATUS = ['open', 'pending', 'resolved', 'closed'], AX_TK_PRIO = ['low', 'normal', 'high', 'urgent'];
+const axAdminList = () => [...new Set(ADMIN_EMAILS.concat(extraAdmins))];
+function axRenderTickets() {
+  const fs = $ax('tkStatus').value, fa = $ax('tkAssignee').value, fp = $ax('tkPrio').value, me = axLc(axWho());
+  const list = axTickets.filter(t => (fs === 'all' || (fs === 'active' ? t.status !== 'closed' : t.status === fs)) && (fp === 'all' || t.priority === fp) && (fa === 'all' || (fa === 'mine' ? axLc(t.assignee) === me : !t.assignee)));
+  const rank = { urgent: 0, high: 1, normal: 2, low: 3 }; list.sort((a, b) => (b.unreadAdmin ? 1 : 0) - (a.unreadAdmin ? 1 : 0) || rank[a.priority] - rank[b.priority] || axMs(b.updatedAt) - axMs(a.updatedAt));
+  $ax('tkList').innerHTML = list.length ? list.map(t => '<div class="chat-item ' + (t.id === axActiveTicket ? 'active' : '') + '" data-id="' + t.id + '"><div class="top"><span class="nm">' + (t.unreadAdmin ? '<span class="unread-dot"></span>' : '') + axEsc(t.subject) + '</span><span class="tm">' + axDate(axMs(t.updatedAt)).split(',')[0] + '</span></div><div class="lm">' + axEsc(t.name || t.email) + ' · ' + axEsc(t.category) + '</div><div style="margin-top:.35rem;display:flex;gap:.3rem;flex-wrap:wrap"><span class="chat-status ' + ({ open: 'waiting_human', pending: 'ai', resolved: 'human', closed: 'closed' })[t.status] + '">' + t.status + '</span><span class="ax-tag' + (t.priority === 'high' || t.priority === 'urgent' ? ' warn' : '') + '">' + t.priority + '</span>' + (t.assignee ? '<span class="ax-tag">' + axEsc(t.assignee.split('@')[0]) + '</span>' : '') + '</div></div>').join('') : '<div class="chat-empty">No tickets here.</div>';
+  const n = axTickets.filter(t => t.unreadAdmin && t.status !== 'closed').length, b = $ax('axTkBadge'); b.textContent = n; b.style.display = n ? 'inline-block' : 'none';
+}
+async function axOpenTicket(id) {
+  axActiveTicket = id; const t = axTickets.find(x => x.id === id); if (!t) return; axRenderTickets();
+  $ax('tkPlaceholder').style.display = 'none'; $ax('tkView').style.display = 'flex';
+  $ax('tkTitle').textContent = t.subject; $ax('tkMeta').textContent = [t.name, t.email, t.category, t.orderNumber ? 'order #' + t.orderNumber : ''].filter(Boolean).join(' · ');
+  $ax('tkSetStatus').value = t.status; $ax('tkSetPrio').value = t.priority; $ax('tkSetAssign').innerHTML = '<option value="">Unassigned</option>' + axAdminList().map(e => '<option>' + axEsc(e) + '</option>').join(''); $ax('tkSetAssign').value = t.assignee || '';
+  $ax('tkCanned').innerHTML = '<option value="">Quick replies…</option>' + (axCfg.cannedReplies || []).map(r => '<option>' + axEsc(r) + '</option>').join('');
+  if (t.unreadAdmin) db.collection('tickets').doc(id).update({ unreadAdmin: false }).catch(() => {});
+  if (axTkUnsub) axTkUnsub();
+  axTkUnsub = db.collection('tickets').doc(id).collection('messages').orderBy('createdAt').onSnapshot(s => {
+    const box = $ax('tkMsgs'); box.innerHTML = s.docs.map(d => { const m = d.data(); return '<div class="cm ' + (m.role === 'user' ? 'user' : 'admin') + '"><span class="who">' + (m.role === 'user' ? axEsc(t.name || 'Customer') : 'You (team)') + (m.by && m.role === 'admin' ? ' · ' + axEsc(m.by.split('@')[0]) : '') + '</span>' + axEsc(m.text) + (m.image ? '<img src="' + axEsc(m.image) + '" alt="attachment" style="display:block;max-width:100%;border-radius:8px;margin-top:.5rem">' : '') + '<small>' + axDate(axMs(m.createdAt)) + '</small></div>'; }).join(''); box.scrollTop = box.scrollHeight;
+  });
+}
+$ax('tkList').addEventListener('click', e => { const i = e.target.closest('.chat-item'); if (i) axOpenTicket(i.dataset.id); });
+['tkStatus', 'tkAssignee', 'tkPrio'].forEach(id => $ax(id).addEventListener('change', axRenderTickets));
+$ax('tkCanned').addEventListener('change', e => { if (e.target.value) { $ax('tkInput').value = e.target.value; e.target.value = ''; } });
+async function axTkUpdate(fields, what) { if (!axActiveTicket) return; try { await db.collection('tickets').doc(axActiveTicket).update({ ...fields, updatedAt: axTS() }); axLog('ticket.' + what, axActiveTicket, JSON.stringify(fields)); } catch (_) { showToast('Could not update the ticket.', 'error'); } }
+$ax('tkSetStatus').addEventListener('change', e => { const t = axTickets.find(x => x.id === axActiveTicket); axTkUpdate({ status: e.target.value }, 'status'); if (t && t.email && (e.target.value === 'resolved' || e.target.value === 'closed')) axNotify({ email: t.email, uid: t.uid, type: 'ticket', title: 'Ticket ' + e.target.value + ': ' + t.subject, body: 'Open Support tickets in your account to see it.' }); });
+$ax('tkSetPrio').addEventListener('change', e => axTkUpdate({ priority: e.target.value }, 'priority'));
+$ax('tkSetAssign').addEventListener('change', e => axTkUpdate({ assignee: e.target.value }, 'assign'));
+$ax('tkAssignMe').addEventListener('click', () => { $ax('tkSetAssign').value = axWho(); axTkUpdate({ assignee: axWho() }, 'assign'); });
+$ax('tkSend').addEventListener('click', async () => {
+  const text = $ax('tkInput').value.trim(); const t = axTickets.find(x => x.id === axActiveTicket); if (!text || !t) return; $ax('tkInput').value = '';
+  try {
+    await db.collection('tickets').doc(t.id).collection('messages').add({ role: 'admin', text, image: '', by: axWho(), createdAt: axTS() });
+    await db.collection('tickets').doc(t.id).update({ lastMessage: text.slice(0, 120), status: t.status === 'open' || t.status === 'resolved' ? 'pending' : t.status, unreadUser: true, unreadAdmin: false, assignee: t.assignee || axWho(), updatedAt: axTS() });
+    axNotify({ email: t.email, uid: t.uid, type: 'ticket', title: 'New reply on your ticket: ' + t.subject, body: text.slice(0, 140) }); axLog('ticket.reply', t.subject, '');
+  } catch (e) { showToast('Could not send the reply.', 'error'); $ax('tkInput').value = text; }
+});
+$ax('tkInput').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); $ax('tkSend').click(); } });
+function axStartTickets() {
+  db.collection('tickets').orderBy('updatedAt', 'desc').limit(150).onSnapshot(s => {
+    axTickets = s.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (!axTkFirst) s.docChanges().forEach(c => { const t = c.doc.data(); if (c.type === 'added' && t.unreadAdmin) { showToast('New support ticket: ' + t.subject, 'success'); playBeep(); } });
+    axTkFirst = false; axRenderTickets();
+  }, e => console.warn('tickets', e));
+}
+
+/* ═════════ chat assignment + typing (X31) ═════════ */
+function axFillAssign(c) { const s = $ax('axAssign'); s.innerHTML = '<option value="">Unassigned</option>' + axAdminList().map(e => '<option>' + axEsc(e) + '</option>').join(''); s.value = c.assignee || ''; }
+$ax('axAssign').addEventListener('change', async e => { if (!activeChatId) return; await db.collection('chats').doc(activeChatId).update({ assignee: e.target.value }).catch(() => {}); axLog('chat.assign', activeChatId, e.target.value); });
+let axLastTyping = 0;
+$ax('cvInput').addEventListener('input', () => { if (!activeChatId || Date.now() - axLastTyping < 3000) return; axLastTyping = Date.now(); db.collection('chats').doc(activeChatId).update({ adminTyping: Date.now() }).catch(() => {}); });
+
+/* ═════════ INBOX: ideas, stories, featured reviews, devices (X15 X17 X39 X18) ═════════ */
+let axIdeas = [], axStories = [], axDevices = [];
+function axRenderIdeas() {
+  $ax('axIdeaList').innerHTML = axIdeas.length ? axIdeas.map(i => '<div class="ax-card"><div class="ax-row"><span><b>' + axEsc(i.title) + '</b> · ' + (Number(i.votes) || 0) + ' vote(s) · ' + axEsc(i.name || '') + '</span><select class="filter-select" data-idea="' + i.id + '">' + ['open', 'planned', 'done', 'declined', 'hidden'].map(s => '<option' + (i.status === s ? ' selected' : '') + '>' + s + '</option>').join('') + '</select></div>' + (i.description ? '<p>' + axEsc(i.description) + '</p>' : '') + '<div class="ax-actions"><button class="btn-small danger" data-ideadel="' + i.id + '">Delete</button></div></div>').join('') : '<div class="empty-state">No ideas yet.</div>';
+}
+function axRenderStories() {
+  $ax('axStoryList').innerHTML = axStories.length ? axStories.map(s => '<div class="ax-card"><div class="ax-row"><span><b>' + axEsc(s.title || 'My setup') + '</b> · ' + axEsc(s.name) + '</span><span class="chat-status ' + ({ pending: 'waiting_human', approved: 'human', rejected: 'closed' })[s.status] + '">' + s.status + '</span></div><p>' + axEsc(s.story) + '</p>' + (s.photo ? '<img src="' + axEsc(s.photo) + '" alt="" style="max-width:240px;border-radius:8px">' : '') + '<div class="ax-actions"><button class="btn-small primary" data-st="approved" data-id="' + s.id + '">Approve</button><button class="btn-small" data-st="rejected" data-id="' + s.id + '">Reject</button><label class="ax-chk">Order on site <input type="number" class="search-input" style="width:70px" data-sorder="' + s.id + '" value="' + (Number(s.featuredOrder) || 0) + '"></label><button class="btn-small danger" data-stdel="' + s.id + '">Delete</button></div></div>').join('') : '<div class="empty-state">No stories yet.</div>';
+}
+$ax('axIdeaList').addEventListener('change', async e => { const s = e.target.closest('[data-idea]'); if (s) { await db.collection('ideas').doc(s.dataset.idea).update({ status: s.value }).catch(() => {}); axLog('idea.status', s.dataset.idea, s.value); } });
+$ax('axIdeaList').addEventListener('click', async e => { const d = e.target.closest('[data-ideadel]'); if (d && confirm('Delete this idea?')) { await db.collection('ideas').doc(d.dataset.ideadel).delete().catch(() => {}); axLog('idea.delete', d.dataset.ideadel, ''); } });
+$ax('axStoryList').addEventListener('click', async e => {
+  const a = e.target.closest('[data-st]'), d = e.target.closest('[data-stdel]');
+  if (a) { await db.collection('stories').doc(a.dataset.id).update({ status: a.dataset.st }).catch(() => {}); axLog('story.' + a.dataset.st, a.dataset.id, ''); }
+  if (d && confirm('Delete this story?')) { await db.collection('stories').doc(d.dataset.stdel).delete().catch(() => {}); axLog('story.delete', d.dataset.stdel, ''); }
+});
+$ax('axStoryList').addEventListener('change', async e => { const o = e.target.closest('[data-sorder]'); if (o) await db.collection('stories').doc(o.dataset.sorder).update({ featuredOrder: Number(o.value) || 0 }).catch(() => {}); });
+/* featured reviews on the home page (extends the reviews list rendered earlier) */
+const axRenderInboxBase = axRenderInbox;
+axRenderInbox = function () {
+  axRenderInboxBase();
+  $ax('axRvList').innerHTML = axRv.length ? axRv.map(r => '<div class="ax-card"><div class="ax-row"><span><b class="ax-stars">' + '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating) + '</b> · ' + axEsc(r.name) + ' · #' + axEsc(r.orderNumber) + ' · ' + tierLabelFor(r.tier) + '</span><small>' + axDate(axMs(r.createdAt)) + '</small></div>' + (r.comment ? '<p>' + axEsc(r.comment) + '</p>' : '') + '<div class="ax-actions"><label class="ax-chk"><input type="checkbox" data-feat="' + r.id + '" ' + (r.featured ? 'checked' : '') + '> Show on home page</label><label class="ax-chk">Order <input type="number" class="search-input" style="width:70px" data-rorder="' + r.id + '" value="' + (Number(r.featuredOrder) || 0) + '"></label></div></div>').join('') : '<div class="empty-state">No reviews yet.</div>';
+};
+$ax('axRvList').addEventListener('change', async e => {
+  const f = e.target.closest('[data-feat]'), o = e.target.closest('[data-rorder]');
+  if (f) { await db.collection('reviews').doc(f.dataset.feat).update({ featured: f.checked }).catch(() => {}); axLog('review.' + (f.checked ? 'feature' : 'unfeature'), f.dataset.feat, ''); }
+  if (o) await db.collection('reviews').doc(o.dataset.rorder).update({ featuredOrder: Number(o.value) || 0 }).catch(() => {});
+});
+function axRenderDevices() {
+  $ax('axDevBody').innerHTML = axDevices.length ? axDevices.map(d => { const months = Number(axCfg.warrantyMonths) || 12, end = new Date(d.warrantyStart); end.setMonth(end.getMonth() + months); return '<tr><td>' + axEsc(d.serial) + '</td><td>' + axEsc(d.email) + '</td><td>' + tierLabelFor(d.tier) + '</td><td>' + axDate(d.registeredAt).split(',')[0] + '</td><td>' + end.toLocaleDateString('en-IN') + '</td><td>' + axEsc(d.firmware || '—') + '</td></tr>'; }).join('') : '<tr><td colspan="6" class="empty-state">No devices registered yet.</td></tr>';
+}
+function axStartInbox2() {
+  db.collection('ideas').onSnapshot(s => { axIdeas = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => (Number(b.votes) || 0) - (Number(a.votes) || 0)); axRenderIdeas(); }, e => console.warn('ideas', e));
+  db.collection('stories').onSnapshot(s => { axStories = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => axMs(b.createdAt) - axMs(a.createdAt)); axRenderStories(); const n = axStories.filter(x => x.status === 'pending').length; $ax('axStoryCount').textContent = n ? '(' + n + ' waiting)' : ''; }, e => console.warn('stories', e));
+  db.collection('devices').onSnapshot(s => { axDevices = s.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => b.registeredAt - a.registeredAt); axRenderDevices(); }, e => console.warn('devices', e));
+}
+
+/* ═════════ SITE additions: knowledge, away mode, SEO, pages, guides, firmware, warranty ═════════ */
+const AX_PAGES = { privacy: 'Privacy policy', refund: 'Refund & cancellation policy', warranty: 'Warranty' };
+const axGuideRow = g => '<div class="ax-line col"><div class="ax-line"><input class="search-input gd-cat" placeholder="Category" value="' + axEsc(g.category || '') + '" style="max-width:180px"><input class="search-input gd-title" placeholder="Title" value="' + axEsc(g.title || '') + '"><button class="row-delete ax-rm" type="button">Remove</button></div><textarea class="search-input gd-body" rows="4" placeholder="Steps… (## heading, - bullets, 1. numbered, **bold**)">' + axEsc(g.body || '') + '</textarea><input type="hidden" class="gd-id" value="' + axEsc(g.id || '') + '"></div>';
+function axRenderSite2() {
+  const c = axCfg, aw = { enabled: false, startHour: 9, endHour: 21, message: '', notifyEmail: '', ...(c.awayMode || {}) }, seo = c.seo || {};
+  $ax('siKnow').value = c.knowledge || ''; $ax('siAwayOn').checked = !!aw.enabled; $ax('siAwayStart').value = aw.startHour; $ax('siAwayEnd').value = aw.endHour; $ax('siAwayMsg').value = aw.message || ''; $ax('siAwayMail').value = aw.notifyEmail || '';
+  $ax('siSeoTitle').value = seo.title || ''; $ax('siSeoDesc').value = seo.description || ''; $ax('siSeoImg').value = seo.image || ''; $ax('siWarr').value = c.warrantyMonths != null ? c.warrantyMonths : 12;
+  const pages = c.pages || {}; $ax('siPages').innerHTML = Object.keys(AX_PAGES).map(k => { const p = { title: AX_PAGES[k], body: '', ...(pages[k] || {}) }; return '<div class="ax-line col" data-slug="' + k + '"><input class="search-input pg-title" value="' + axEsc(p.title) + '"><textarea class="search-input pg-body" rows="8" placeholder="Page text (## heading, - bullets, **bold**)">' + axEsc(p.body) + '</textarea></div>'; }).join('');
+  $ax('siGuides').innerHTML = (c.guides || []).map(axGuideRow).join(''); axRenderFw(); axSeoSnippet();
+}
+function axCollectSite2() {
+  const pages = {}; document.querySelectorAll('#siPages [data-slug]').forEach(r => { const k = r.dataset.slug, t = r.querySelector('.pg-title').value.trim(), b = r.querySelector('.pg-body').value, old = (axCfg.pages || {})[k] || {}; pages[k] = { title: t || AX_PAGES[k], body: b, updated: (old.title === t && old.body === b && old.updated) ? old.updated : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) }; });
+  return {
+    knowledge: $ax('siKnow').value.trim(), warrantyMonths: Math.max(1, Number($ax('siWarr').value) || 12), pages,
+    awayMode: { enabled: $ax('siAwayOn').checked, startHour: Math.min(23, Math.max(0, Number($ax('siAwayStart').value) || 0)), endHour: Math.min(24, Math.max(0, Number($ax('siAwayEnd').value) || 0)), message: $ax('siAwayMsg').value.trim(), notifyEmail: $ax('siAwayMail').value.trim() },
+    seo: { title: $ax('siSeoTitle').value.trim(), description: $ax('siSeoDesc').value.trim(), image: $ax('siSeoImg').value.trim() },
+    guides: [...document.querySelectorAll('#siGuides .ax-line.col')].map((r, i) => ({ id: r.querySelector('.gd-id').value || ('g' + Date.now().toString(36) + i), category: r.querySelector('.gd-cat').value.trim() || 'General', title: r.querySelector('.gd-title').value.trim(), body: r.querySelector('.gd-body').value })).filter(g => g.title && g.body.trim())
+  };
+}
+function axSeoSnippet() {
+  const t = $ax('siSeoTitle').value.trim(), d = $ax('siSeoDesc').value.trim(), i = $ax('siSeoImg').value.trim(), q = x => x.replace(/"/g, '&quot;');
+  $ax('siSeoSnippet').value = [t && '<title>' + t + '</title>', d && '<meta name="description" content="' + q(d) + '">', t && '<meta property="og:title" content="' + q(t) + '">', d && '<meta property="og:description" content="' + q(d) + '">', i && '<meta property="og:image" content="' + q(i) + '">', i && '<meta name="twitter:card" content="summary_large_image">'].filter(Boolean).join('\n');
+}
+['siSeoTitle', 'siSeoDesc', 'siSeoImg'].forEach(id => $ax(id).addEventListener('input', axSeoSnippet));
+$ax('siAddGuide').addEventListener('click', () => $ax('siGuides').insertAdjacentHTML('beforeend', axGuideRow({})));
+function axRenderFw() {
+  const f = (axCfg.firmware || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  $ax('siFwList').innerHTML = f.length ? f.map(r => '<div class="ax-row"><span><b>v' + axEsc(r.version) + '</b> · ' + axEsc(r.date) + ' — ' + axEsc((r.notes || '').slice(0, 80)) + '</span><button class="btn-small danger" data-fwdel="' + axEsc(r.version) + '">Remove</button></div>').join('') : '<div class="hint">No releases published yet.</div>';
+}
+$ax('siFwList').addEventListener('click', async e => { const b = e.target.closest('[data-fwdel]'); if (!b || !confirm('Remove this release?')) return; const list = (axCfg.firmware || []).filter(r => r.version !== b.dataset.fwdel); try { await db.collection('settings').doc('site').set({ firmware: list }, { merge: true }); axCfg.firmware = list; siteSettings.firmware = list; axRenderFw(); axLog('firmware.remove', b.dataset.fwdel, ''); } catch (_) { showToast('Could not remove.', 'error'); } });
+$ax('siFwPublish').addEventListener('click', async () => {
+  const v = $ax('siFwVer').value.trim(), n = $ax('siFwNotes').value.trim(); if (!v) return showToast('Enter a version number.', 'error');
+  if ((axCfg.firmware || []).some(r => r.version === v)) return showToast('That version is already published.', 'error');
+  const rel = { version: v, date: new Date().toISOString().slice(0, 10), notes: n }, list = (axCfg.firmware || []).concat([rel]); $ax('siFwPublish').disabled = true;
+  try {
+    await db.collection('settings').doc('site').set({ firmware: list }, { merge: true }); axCfg.firmware = list; siteSettings.firmware = list;
+    const owners = [...new Set(axDevices.map(d => axLc(d.email)))], uidOf = {}; axDevices.forEach(d => uidOf[axLc(d.email)] = d.uid);
+    for (let i = 0; i < owners.length; i += 400) { const b = db.batch(); owners.slice(i, i + 400).forEach(em => b.set(db.collection('notifications').doc(), { email: em, uid: uidOf[em] || null, type: 'order', title: 'New firmware available: v' + v, body: (n || 'See Devices & warranty in your account.').slice(0, 140), read: false, createdAt: axTS() })); await b.commit(); }
+    axLog('firmware.publish', 'v' + v, owners.length + ' owners notified'); $ax('siFwVer').value = ''; $ax('siFwNotes').value = ''; axRenderFw(); showToast('Release published. ' + owners.length + ' owner(s) notified.', 'success');
+  } catch (e) { showToast('Could not publish the release.', 'error'); }
+  $ax('siFwPublish').disabled = false;
+});
+
+/* ═════════ CANCELLATIONS & REFUNDS (X29) ═════════ */
+function axRenderCancels() {
+  const rows = prebookData.filter(o => (o.status || '') === 'cancelled').sort((a, b) => axMs(b.createdAt) - axMs(a.createdAt)), by = {};
+  rows.forEach(o => { const r = o.cancelReason || 'No reason recorded'; by[r] = (by[r] || 0) + 1; });
+  $ax('cnSummary').innerHTML = Object.keys(by).length ? Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, v]) => '<span class="ax-tag" style="font-size:.78rem;padding:.2rem .7rem">' + axEsc(k) + ' · <b>' + v + '</b></span>').join(' ') : '<span class="hint">No cancelled orders.</span>';
+  $ax('cnBody').innerHTML = rows.length ? rows.map(o => '<tr><td>#' + axEsc(orderNumberFor(o)) + '</td><td>' + axEsc(o.name) + '</td><td>' + axInr(axValue(o)) + '</td><td>' + axEsc(o.cancelReason || '—') + '</td><td>' + axEsc(o.cancelledBy || '—') + '</td><td>' + axEsc(o.refundStatus || 'none') + (o.refundAmount ? ' · ' + axInr(o.refundAmount) : '') + '</td><td><button class="btn-small ax-detail" data-id="' + o.id + '">Open</button></td></tr>').join('') : '<tr><td colspan="7" class="empty-state">Nothing cancelled.</td></tr>';
+}
+
+/* ═════════ HEALTH (X43) ═════════ */
+async function axHealth() {
+  const out = [], add = (status, title, detail, fix) => out.push({ status, title, detail, fix }), box = $ax('hlList'); box.innerHTML = '<div class="skel-line"></div>'.repeat(5);
+  await axLoadCfg(); const cfg = axCfg, t0 = Date.now();
+  try { await db.collection('settings').doc('site').get(); const ms = Date.now() - t0; add(ms > 2500 ? 'warn' : 'ok', 'Database connection', 'Firestore answered in ' + ms + ' ms.', ms > 2500 ? 'Slow response — check your internet connection.' : ''); } catch (e) { add('bad', 'Database connection', 'Could not read the database.', 'Check your connection and the Firestore rules.'); }
+  const colls = ['preBookings', 'waitlist', 'users', 'chats', 'tickets', 'notifications', 'emailLog', 'adminLog', 'feedback', 'ideas', 'stories', 'reviews', 'devices', 'customerMeta'], blocked = [];
+  for (const c of colls) { try { await db.collection(c).limit(1).get(); } catch (e) { blocked.push(c); } }
+  add(blocked.length ? 'bad' : 'ok', 'Admin permissions (Firestore rules)', blocked.length ? 'The rules stop the admin panel from reading: ' + blocked.join(', ') + '.' : 'The admin panel can read all collections.', blocked.length ? 'Publish the updated rules from the README so isAdmin() covers these collections.' : '');
+  const def = !!(cfg.emailjsServiceId && cfg.emailjsTemplateId && cfg.emailjsPublicKey);
+  add(def ? 'ok' : 'bad', 'EmailJS default account', def ? 'Service, template and public key are filled in.' : 'The default EmailJS account is incomplete — OTP, verification and order emails will fail.', def ? '' : 'Open Settings > EmailJS and fill in the Account tab.');
+  const recent = axLogs.slice(0, 20), failed = recent.filter(l => !l.ok);
+  if (!recent.length) add('warn', 'Recent emails', 'No emails have been logged yet.', 'Use Email > Send a test to check delivery.');
+  else add(failed.length === 0 ? 'ok' : (failed.length === recent.length ? 'bad' : 'warn'), 'Recent emails', (recent.length - failed.length) + ' of the last ' + recent.length + ' were sent.' + (failed[0] ? ' Last error: ' + failed[0].error : ''), /invalid grant|gmail/i.test((failed[0] || {}).error || '') ? 'The Gmail connection in EmailJS expired — open EmailJS > Email Services and reconnect (or switch to SMTP).' : (failed.length ? 'Open Email > Email log for details.' : ''));
+  const keys = getGeminiKeys(); add(keys.length ? 'ok' : 'warn', 'AI assistant (Gemini)', keys.length ? keys.length + ' API key(s) saved, model ' + (siteSettings.geminiModel || 'default') + '.' : 'No Gemini API key — the chat assistant cannot answer.', keys.length ? '' : 'Add a key in Settings.');
+  add(cfg.maintenance && cfg.maintenance.enabled ? 'warn' : 'ok', 'Maintenance mode', cfg.maintenance && cfg.maintenance.enabled ? 'ON — visitors see a "Back soon" screen.' : 'Off — the site is live.', cfg.maintenance && cfg.maintenance.enabled ? 'Turn it off in Site when you are done.' : '');
+  const ld = new Date(siteSettings.launchDate || cfg.launchDate); add(isNaN(ld) ? 'warn' : 'ok', 'Launch countdown', isNaN(ld) ? 'No valid launch date.' : 'Launch date: ' + ld.toLocaleString('en-IN') + (ld < new Date() ? ' (already passed)' : '') + '.', ld < new Date() ? 'Update the date in Settings if the countdown is still shown.' : '');
+  const thr = Number(cfg.lowStockThreshold) || 3, low = ['base', 'pro', 'elite'].filter(t => { const st = Number(siteSettings[t + 'Stock']); if (!(st >= 0)) return false; const sold = prebookData.filter(o => (o.status || '') !== 'cancelled' && (o.tier || 'base') === t).reduce((s, o) => s + (Number(o.quantity) || 0), 0); return st - sold <= thr; });
+  add(low.length ? 'warn' : 'ok', 'Stock', low.length ? 'Low or sold out: ' + low.map(tierLabelFor).join(', ') + '.' : 'No tier is running low.', low.length ? 'Raise the stock in Settings if more units are available.' : '');
+  const open = axTickets.filter(t => t.status === 'open').length, wait = chatsData.filter(c => c.status === 'waiting_human').length;
+  add(open + wait ? 'warn' : 'ok', 'Waiting for a reply', open + ' open ticket(s) and ' + wait + ' chat(s) need a person.', open + wait ? 'Check Tickets and Chats.' : '');
+  add(axAdminList().length > 1 ? 'ok' : 'warn', 'Admin accounts', axAdminList().length + ' admin account(s).', axAdminList().length > 1 ? '' : 'Add a second admin in Team so you are never locked out.');
+  try { const r = await fetch('/manifest.webmanifest', { cache: 'no-store' }); add(r.ok ? 'ok' : 'warn', 'Installable app (PWA)', r.ok ? 'manifest.webmanifest and the service worker are published.' : 'manifest.webmanifest was not found.', r.ok ? '' : 'Upload manifest.webmanifest and sw.js to the site root.'); } catch (_) { add('warn', 'Installable app (PWA)', 'Could not check the manifest.', ''); }
+  add('Notification' in window && Notification.permission === 'granted' ? 'ok' : 'warn', 'Browser notifications', 'Permission: ' + ('Notification' in window ? Notification.permission : 'not supported') + '.', 'Allow notifications to get alerts when a customer asks for a person.');
+  const icon = { ok: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-dasharray="57" stroke-dashoffset="57"><animate attributeName="stroke-dashoffset" values="57;0;0;57" keyTimes="0;0.34;0.84;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></circle><path d="m8 12.2 2.7 2.8L16 9.4" stroke-dasharray="13" stroke-dashoffset="13"><animate attributeName="stroke-dashoffset" values="13;13;0;0;13" keyTimes="0;0.3;0.52;0.82;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></path></svg>', warn: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', bad: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 21V4M5.5 5h11l-2 3.5 2 3.5h-11"/></svg>' };
+  box.innerHTML = out.map(o => '<div class="hl-row ' + o.status + '"><span class="hl-ic">' + icon[o.status] + '</span><div><b>' + axEsc(o.title) + '</b><p>' + axEsc(o.detail) + '</p>' + (o.fix ? '<small>' + axEsc(o.fix) + '</small>' : '') + '</div></div>').join('');
+  const bad = out.filter(o => o.status === 'bad').length, warn = out.filter(o => o.status === 'warn').length; $ax('hlSummary').textContent = bad ? bad + ' problem(s) to fix' : warn ? 'All working — ' + warn + ' thing(s) to look at' : 'Everything looks healthy';
+  const b = $ax('axHealthBadge'); b.textContent = bad; b.style.display = bad ? 'inline-block' : 'none';
+}
+$ax('hlRun').addEventListener('click', axHealth);
+$ax('hlGemini').addEventListener('click', async () => { const b = $ax('hlGemini'); b.disabled = true; b.textContent = 'Testing…'; try { await callGemini('Reply with the single word OK.', [{ role: 'user', parts: [{ text: 'ping' }] }]); showToast('Gemini answered.', 'success'); } catch (e) { showToast('Gemini test failed: ' + (e.message || 'error'), 'error'); } b.disabled = false; b.textContent = 'Test Gemini'; });
+
+/* ═════════ wiring ═════════ */
+const axInitBase = axInit;
+axInit = function () {
+  if (axInit.done2) return; axInit.done2 = true; axInitBase();
+  axStartTickets(); axStartInbox2();
+  axLoadCfg().then(() => { axRenderSite2(); });
+};
+$ax('tab-site').addEventListener('input', e => { if (e.target.closest('#siFwNew')) return; });
+
 </script>
 </body>
 </html>
