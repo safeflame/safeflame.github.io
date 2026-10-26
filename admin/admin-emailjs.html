@@ -918,11 +918,42 @@ const DEFAULT_SETTINGS = {
   baseStock: -1, proStock: -1, eliteStock: -1, orderNumberStart: 100000,
   geminiApiKey: '', geminiApiKeys: [], geminiModel: 'gemini-3.5-flash',
   emailjsServiceId: '', emailjsTemplateId: '', emailjsPublicKey: '',
+  announcement: { enabled: false, text: '', link: '' },
+  maintenance: { enabled: false, message: "We're making a few improvements. Please check back shortly." },
+  addons: [
+    { id: 'warranty', name: 'Extended warranty (+1 year)', price: 1499, enabled: true },
+    { id: 'install', name: 'Professional installation', price: 999, enabled: true }
+  ],
+  eta: { base: 'Within 3–4 weeks of launch', pro: 'Within 3–4 weeks of launch', elite: 'Within 4–5 weeks of launch' },
+  lowStockThreshold: 3, warrantyMonths: 12, firmware: [], knowledge: '',
+  awayMode: { enabled: false, startHour: 9, endHour: 21, message: 'Our team is away right now. Leave your message and we will reply as soon as we are back.', notifyEmail: '' },
+  seo: { title: '', description: '', image: '' },
+  guides: [
+    { id: 'safety', category: 'Getting started', title: 'Before you start: safety first', body: '## Before installation\n- Turn off the gas supply at the cylinder before anything is connected or moved.\n- Keep the unit away from water, steam and direct flame.\n- Never block kitchen ventilation.\n- Do not modify gas fittings yourself — ask us to help with installation.' },
+    { id: 'box', category: 'Getting started', title: 'Unboxing checklist', body: 'Check everything in the box against the list you received. Keep the packaging until your device is registered, and tell us straight away (with a photo) if anything is damaged or missing.' },
+    { id: 'setup', category: 'Setup', title: 'Powering on and connecting', body: 'Your unit shows its setup instructions on the touchscreen. If a step does not work, open a support ticket from this account and attach a photo of the screen — we will walk you through it.' },
+    { id: 'alerts', category: 'Troubleshooting', title: 'Alerts keep triggering', body: '- Check the room is ventilated and the sensor area is clean and dust-free.\n- Make sure nothing is leaking: if you smell gas, turn off the cylinder and leave the room, then contact us.\n- If it keeps happening, open a ticket so we can look at the readings.' },
+    { id: 'offline', category: 'Troubleshooting', title: 'Unit shows offline', body: '- Check your Wi-Fi router is on and the password has not changed.\n- Restart the unit once, then wait a minute.\n- Still offline? Open a ticket with a photo of the status screen.' }
+  ],
+  cannedReplies: ['Thanks for reaching out — let me check that for you.', 'Your order status is in your account under My orders.', 'Is there anything else I can help you with?'],
+  faq: [
+    { q: 'When will SafeFlame AI ship?', a: 'Pre-bookings ship in launch order. Each order shows an estimated delivery window in your account.' },
+    { q: 'Do I pay when I pre-book?', a: 'No. Pre-booking only reserves your unit — nothing is charged now.' },
+    { q: 'Can I change or cancel my order?', a: 'Yes, while it is still Pending. Open your account, go to My orders and choose Edit or Cancel.' },
+    { q: 'Which tier should I choose?', a: 'Base suits one kitchen with one camera. Pro adds a second camera and gas-weight display. Elite adds four cameras and multi-room support.' },
+    { q: 'How does the safety shut-off work?', a: 'Gas, flame and pressure sensors watch the kitchen. If something is wrong the valve closes automatically and you get an alert.' },
+    { q: 'How do I reach a person?', a: 'Open Chat and ask for a human — our team replies in the same window.' }
+  ],
   statusEmails: {
     pending: { subject: "We've received your SafeFlame AI order", message: "Hi {{name}}, thanks for pre-booking! Your order {{order_id}} for {{tier}} (x{{quantity}}) is currently Pending — total {{total_price}}. We'll email you again once it's confirmed.", serviceId: '', templateId: '', publicKey: '' }
   },
   otpEmail: { subject: 'Your SafeFlame AI verification code', message: 'Hi {{name}}, your SafeFlame AI verification code is {{otp}}. It expires in 10 minutes. Never share this code with anyone.', serviceId: '', templateId: '', publicKey: '' },
   verifyEmail: { subject: 'Verify your SafeFlame AI account', message: 'Hi {{name}}, welcome to SafeFlame AI! Please confirm your email address to activate your account: {{link}}', serviceId: '', templateId: '', publicKey: '' }
+};
+const DEFAULT_PAGES = {
+  privacy: { title: 'Privacy policy', body: '## What we collect\n- Account details: your name and email, plus phone, date of birth and gender if you choose to add them.\n- Orders: delivery addresses, order history and delivery notes.\n- Support: chat messages, support tickets and any photos you attach.\n- Technical: basic usage and error information that keeps the site working.\n\n## How we use it\nTo take and deliver your pre-booking, support you, send order emails and improve SafeFlame AI. We do not sell your data.\n\n## Who helps us run the service\nGoogle Firebase (accounts and database), EmailJS (sending emails) and Google Gemini (the AI chat assistant). If you pick a language other than English, the page text is translated by Google Translate.\n\n## Your choices\nYou can download your data or delete your account at any time from your account page. For anything else, contact us through the chat.' },
+  refund: { title: 'Refund & cancellation policy', body: '## Pre-booking\nPre-booking does not charge anything. You can edit or cancel an order for free while it is Pending, from My orders in your account.\n\n## After an order is confirmed or shipped\nOpen a support ticket from your account and we will review the request with you.\n\n## Refunds\nIf a payment has been taken and the order is cancelled or cannot be fulfilled, the amount is returned to the original payment method. Bank timelines vary.\n\n## Damaged or wrong items\nTell us as soon as possible through a support ticket and attach photos.' },
+  warranty: { title: 'Warranty', body: '## Coverage\nEach unit comes with a warranty from the start date you register in your account. The Extended warranty add-on lengthens it by 12 months. Your exact end date is shown under Devices & warranty.\n\n## What is covered\nFaults in materials and workmanship under normal home use.\n\n## What is not covered\n- Damage from water, misuse or accidents.\n- Changes to gas fittings or the unit\'s electronics by anyone other than our team.\n\n## How to claim\nRegister your device, then choose Claim warranty on its card. We will reply in your support ticket.' }
 };
 let siteSettings = JSON.parse(JSON.stringify(DEFAULT_SETTINGS));
 function mergeSettings(data) {
@@ -931,14 +962,66 @@ function mergeSettings(data) {
     ...DEFAULT_SETTINGS, ...data,
     statusEmails: { ...DEFAULT_SETTINGS.statusEmails, ...(data.statusEmails || {}) },
     otpEmail: { ...DEFAULT_SETTINGS.otpEmail, ...(data.otpEmail || {}) },
-    verifyEmail: { ...DEFAULT_SETTINGS.verifyEmail, ...(data.verifyEmail || {}) }
+    verifyEmail: { ...DEFAULT_SETTINGS.verifyEmail, ...(data.verifyEmail || {}) },
+    announcement: { ...DEFAULT_SETTINGS.announcement, ...(data.announcement || {}) },
+    maintenance: { ...DEFAULT_SETTINGS.maintenance, ...(data.maintenance || {}) },
+    eta: { ...DEFAULT_SETTINGS.eta, ...(data.eta || {}) },
+    addons: Array.isArray(data.addons) ? data.addons : DEFAULT_SETTINGS.addons,
+    faq: Array.isArray(data.faq) && data.faq.length ? data.faq : DEFAULT_SETTINGS.faq,
+    cannedReplies: Array.isArray(data.cannedReplies) ? data.cannedReplies : DEFAULT_SETTINGS.cannedReplies,
+    guides: Array.isArray(data.guides) ? data.guides : DEFAULT_SETTINGS.guides,
+    firmware: Array.isArray(data.firmware) ? data.firmware : [],
+    awayMode: { ...DEFAULT_SETTINGS.awayMode, ...(data.awayMode || {}) },
+    seo: { ...DEFAULT_SETTINGS.seo, ...(data.seo || {}) },
+    pages: { privacy: { ...DEFAULT_PAGES.privacy, ...((data.pages || {}).privacy || {}) }, refund: { ...DEFAULT_PAGES.refund, ...((data.pages || {}).refund || {}) }, warranty: { ...DEFAULT_PAGES.warranty, ...((data.pages || {}).warranty || {}) } }
   };
 }
-async function loadSiteSettings() {
-  try { const d = await db.collection('settings').doc('site').get(); if (d.exists) siteSettings = mergeSettings(d.data()); }
-  catch (e) { console.warn('Settings load failed, using defaults:', e); }
-  return siteSettings;
+let _settingsP = null;
+function loadSiteSettings(force) {
+  if (_settingsP && !force) return _settingsP;
+  _settingsP = (async () => {
+    try { const d = await db.collection('settings').doc('site').get(); if (d.exists) siteSettings = mergeSettings(d.data()); }
+    catch (e) { console.warn('Settings load failed, using defaults:', e); }
+    if (!window.SF_APP_NAME) applySiteControls(siteSettings);
+    return siteSettings;
+  })();
+  return _settingsP;
 }
+
+/* ── site controls: announcement bar + maintenance mode (set in Admin > Site) ── */
+function applySiteControls(s) {
+  try {
+    const a = s.announcement || {};
+    if (a.enabled && a.text && !sessionStorage.getItem('sf_banner_closed') && !document.getElementById('sfBanner')) {
+      const b = document.createElement('div'); b.id = 'sfBanner';
+      b.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:9000;background:linear-gradient(90deg,#FF5722,#FF8A65);color:#fff;font:600 .85rem Inter,system-ui,sans-serif;padding:.65rem 4.5rem .65rem 1rem;text-align:center';
+      const txt = document.createElement(a.link ? 'a' : 'span'); txt.textContent = a.text; if (a.link) { txt.href = a.link; txt.style.cssText = 'color:#fff;text-decoration:underline'; }
+      const x = document.createElement('button'); x.textContent = '✕'; x.setAttribute('aria-label', 'Dismiss');
+      x.style.cssText = 'position:absolute;right:4.6rem;top:50%;transform:translateY(-50%);background:none;border:none;color:#fff;cursor:pointer;font-size:1rem';
+      x.onclick = () => { sessionStorage.setItem('sf_banner_closed', '1'); b.remove(); };
+      b.append(txt, x); document.body.appendChild(b);
+    }
+    const m = s.maintenance || {};
+    if (m.enabled && !document.getElementById('sfMaint')) {
+      const o = document.createElement('div'); o.id = 'sfMaint';
+      o.style.cssText = 'position:fixed;inset:0;z-index:99998;background:#08080f;color:#f0f0f8;display:flex;align-items:center;justify-content:center;text-align:center;padding:2rem;font-family:Inter,system-ui,sans-serif';
+      const d = document.createElement('div'); const h = document.createElement('h1'); h.textContent = 'Back soon'; h.style.cssText = 'margin:0 0 .7rem;font-size:1.8rem';
+      const p = document.createElement('p'); p.textContent = m.message || ''; p.style.cssText = 'color:#a0a0b8;max-width:420px;margin:0 auto';
+      d.append(h, p); o.appendChild(d); document.body.appendChild(o);
+      // admins can still use the site while it is in maintenance mode
+      try { auth.onAuthStateChanged(u => { if (u && isAdminEmail(u.email)) o.remove(); }); } catch (_) {}
+    }
+  } catch (e) { console.warn('site controls', e); }
+}
+
+/* ── shared order/notification/log helpers ── */
+const orderTotal = o => (Number(o.unitPrice) || 0) * (Number(o.quantity) || 1) + (Number(o.addonsTotal) || 0);
+function fmtAddress(a) { return a ? [a.name, a.line1, a.line2, [a.city, a.state].filter(Boolean).join(', '), a.pin, a.phone && ('Ph: ' + a.phone)].filter(Boolean).join(', ') : ''; }
+function pushNotification(n) { return db.collection('notifications').add({ read: false, createdAt: TS(), ...n, email: String(n.email || '').toLowerCase() }).catch(e => console.warn('notification failed', e)); }
+function logEmail(kind, to, subject, ok, error, orderId) { try { db.collection('emailLog').add({ kind: kind || 'email', to: String(to || '').toLowerCase(), subject: String(subject || '').slice(0, 140), ok: !!ok, error: error ? String(error).slice(0, 300) : '', orderId: orderId || '', at: TS() }).catch(() => {}); } catch (_) {} }
+/* referrals: ?ref=CODE is remembered and attached to a later pre-booking */
+function refCodeFor(uid) { let h = 5381; for (let i = 0; i < uid.length; i++) h = ((h << 5) + h + uid.charCodeAt(i)) >>> 0; return 'SF' + h.toString(36).toUpperCase().padStart(6, '0').slice(0, 6); }
+(function captureRef() { try { const r = new URLSearchParams(location.search).get('ref'); if (r && /^[A-Z0-9]{4,12}$/i.test(r)) localStorage.setItem('sf_ref', r.toUpperCase()); } catch (_) {} })();
 
 /* ── helpers ── */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -986,37 +1069,40 @@ function qs(name) { return new URLSearchParams(location.search).get(name); }
 function safeNext(n) { return n && /^\/?[a-z0-9_-]*(\.html)?(\?[\w=&%.-]*)?$/i.test(n) ? n : null; }
 
 /* ── EmailJS ── */
-async function sendWithCfg(cfg, params) {
+async function sendWithCfg(cfg, params, kind, orderId) {
   cfg = cfg || {};
   const svc = cfg.serviceId || siteSettings.emailjsServiceId;
   const tpl = cfg.templateId || siteSettings.emailjsTemplateId;
   const key = cfg.publicKey || siteSettings.emailjsPublicKey;
-  if (!svc || !tpl || !key) throw new Error('EMAILJS_NOT_CONFIGURED');
-  return emailjs.send(svc, tpl, params, { publicKey: key });
+  if (!svc || !tpl || !key) { logEmail(kind, params.to_email, params.subject, false, 'EmailJS not configured', orderId); throw new Error('EMAILJS_NOT_CONFIGURED'); }
+  try { const r = await emailjs.send(svc, tpl, params, { publicKey: key }); logEmail(kind, params.to_email, params.subject, true, '', orderId); return r; }
+  catch (e) { logEmail(kind, params.to_email, params.subject, false, (e && (e.text || e.message)) || 'send failed', orderId); throw e; }
 }
 async function sendOtpEmail(email, name, otp) {
   const cfg = siteSettings.otpEmail;
   const tokens = { name: name || 'there', otp, email };
-  return sendWithCfg(cfg, { to_email: email, to_name: name || 'there', name: name || 'there', email, otp, subject: renderTokens(cfg.subject, tokens), message: renderTokens(cfg.message, tokens), order_id: '' });
+  return sendWithCfg(cfg, { to_email: email, to_name: name || 'there', name: name || 'there', email, otp, subject: renderTokens(cfg.subject, tokens), message: renderTokens(cfg.message, tokens), order_id: '' }, 'otp');
 }
 async function sendVerifyEmail(email, name, link) {
   const cfg = siteSettings.verifyEmail;
   const tokens = { name: name || 'there', email, link };
-  return sendWithCfg(cfg, { to_email: email, to_name: name || 'there', name: name || 'there', email, link, subject: renderTokens(cfg.subject, tokens), message: renderTokens(cfg.message, tokens), order_id: '' });
+  return sendWithCfg(cfg, { to_email: email, to_name: name || 'there', name: name || 'there', email, link, subject: renderTokens(cfg.subject, tokens), message: renderTokens(cfg.message, tokens), order_id: '' }, 'verify');
 }
-function sendOrderConfirmationEmail(order) {
-  if (!order.email) return;
-  const cfg = (siteSettings.statusEmails && siteSettings.statusEmails.pending) || DEFAULT_SETTINGS.statusEmails.pending;
-  const tierLabel = tierLabelFor(order.tier), qty = Number(order.quantity) || 1, unit = order.unitPrice, total = unit * qty;
-  const t = { name: order.name || 'there', order_id: orderNumberFor(order), tier: tierLabel, quantity: qty, unit_price: fmtINR(unit), total_price: fmtINR(total), status: 'Pending', phone: order.phone || '' };
-  sendWithCfg(cfg, {
+function sendOrderEmail(order, status) {
+  status = status || 'pending';
+  if (!order.email) return Promise.resolve();
+  const cfg = (siteSettings.statusEmails && siteSettings.statusEmails[status]) || DEFAULT_SETTINGS.statusEmails[status] || DEFAULT_SETTINGS.statusEmails.pending;
+  const tierLabel = tierLabelFor(order.tier), qty = Number(order.quantity) || 1, unit = Number(order.unitPrice) || 0, total = orderTotal(order);
+  const t = { name: order.name || 'there', order_id: orderNumberFor(order), tier: tierLabel, quantity: qty, unit_price: fmtINR(unit), total_price: fmtINR(total), status: status.charAt(0).toUpperCase() + status.slice(1), phone: order.phone || '', address: fmtAddress(order.shipping) || order.address || '', tracking: order.tracking || '', eta: order.eta || '' };
+  const lines = [{ name: 'SafeFlame AI — ' + tierLabel, units: qty, price: (unit * qty).toLocaleString('en-IN') }].concat((order.addons || []).map(a => ({ name: a.name, units: 1, price: Number(a.price).toLocaleString('en-IN') })));
+  return sendWithCfg(cfg, {
     to_email: order.email, to_name: t.name, subject: renderTokens(cfg.subject, t), email: order.email, order_id: t.order_id,
-    orders: [{ name: 'SafeFlame AI — ' + tierLabel, units: qty, price: total.toLocaleString('en-IN') }],
-    cost: { shipping: '0', tax: '0', total: total.toLocaleString('en-IN') },
+    orders: lines, cost: { shipping: '0', tax: '0', total: total.toLocaleString('en-IN') },
     product_name: 'SafeFlame AI — ' + tierLabel, tier: tierLabel, quantity: qty, unit_price: t.unit_price, total_price: t.total_price,
-    status: 'pending', phone: t.phone, message: renderTokens(cfg.message, t)
-  }).catch(e => console.warn('Confirmation email failed:', e));
+    status, phone: t.phone, address: t.address, tracking: t.tracking, eta: t.eta, message: renderTokens(cfg.message, t)
+  }, 'order-' + status, order.id).catch(e => console.warn('Order email failed:', e));
 }
+const sendOrderConfirmationEmail = o => sendOrderEmail(o, 'pending');
 
 /* ── Gemini (used by chat page) ── */
 function getGeminiKeys() {
@@ -1089,18 +1175,64 @@ async function createAndSendVerification(user, name) {
 }
 
 /* ── top bar account button ── */
+let _unreadUnsub = null;
 function initNavAccount(sel) {
   const el = document.querySelector(sel || '#navAccount'); if (!el) return;
   auth.onAuthStateChanged(async user => {
+    if (_unreadUnsub) { _unreadUnsub(); _unreadUnsub = null; }
     if (!user) { el.className = 'nav-account'; el.href = '/login'; el.textContent = 'Sign In'; return; }
     let name = user.displayName || user.email.split('@')[0], photo = user.photoURL;
     try { const d = await db.collection('users').doc(user.uid).get(); if (d.exists) { name = d.data().displayName || name; photo = d.data().photoURL || photo; } } catch (_) {}
     el.className = 'nav-account signed-in'; el.href = '/account'; el.title = 'Your account';
-    el.innerHTML = (photo ? `<img src="${esc(photo)}" alt="">` : `<span class="nav-initial">${esc(name.charAt(0).toUpperCase())}</span>`) + esc(name.split(' ')[0]);
+    const base = (photo ? `<img src="${esc(photo)}" alt="">` : `<span class="nav-initial">${esc(name.charAt(0).toUpperCase())}</span>`) + esc(name.split(' ')[0]);
+    el.innerHTML = base;
+    try {
+      _unreadUnsub = db.collection('notifications').where('email', '==', String(user.email).toLowerCase()).where('read', '==', false).onSnapshot(s => {
+        el.innerHTML = base + (s.size ? '<span class="nav-badge">' + s.size + '</span>' : '');
+        el.href = s.size ? '/account#notifications' : '/account';
+      }, () => {});
+    } catch (_) {}
   });
 }
 const GOOGLE_SVG = '<svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M17.64 9.205c0-.639-.057-1.252-.164-1.841H9v3.481h4.844a4.14 4.14 0 0 1-1.796 2.716v2.259h2.908c1.702-1.567 2.684-3.875 2.684-6.615Z" fill="#4285F4"/><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18Z" fill="#34A853"/><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332Z" fill="#FBBC05"/><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58Z" fill="#EA4335"/></svg>';
 const HEAD_LIBS = '';
+if (!window.SF_APP_NAME) loadSiteSettings();
+/* ── language picker (Google Website Translator: ~130 languages, machine translation) ── */
+const SF_LANGS = [['en','English'],['af','Afrikaans'],['sq','Albanian'],['am','Amharic'],['ar','Arabic'],['hy','Armenian'],['as','Assamese'],['ay','Aymara'],['az','Azerbaijani'],['bm','Bambara'],['eu','Basque'],['be','Belarusian'],['bn','Bengali'],['bho','Bhojpuri'],['bs','Bosnian'],['bg','Bulgarian'],['ca','Catalan'],['ceb','Cebuano'],['ny','Chichewa'],['zh-CN','Chinese (Simplified)'],['zh-TW','Chinese (Traditional)'],['co','Corsican'],['hr','Croatian'],['cs','Czech'],['da','Danish'],['dv','Dhivehi'],['doi','Dogri'],['nl','Dutch'],['eo','Esperanto'],['et','Estonian'],['ee','Ewe'],['tl','Filipino'],['fi','Finnish'],['fr','French'],['fy','Frisian'],['gl','Galician'],['ka','Georgian'],['de','German'],['el','Greek'],['gn','Guarani'],['gu','Gujarati'],['ht','Haitian Creole'],['ha','Hausa'],['haw','Hawaiian'],['iw','Hebrew'],['hi','Hindi'],['hmn','Hmong'],['hu','Hungarian'],['is','Icelandic'],['ig','Igbo'],['ilo','Ilocano'],['id','Indonesian'],['ga','Irish'],['it','Italian'],['ja','Japanese'],['jw','Javanese'],['kn','Kannada'],['kk','Kazakh'],['km','Khmer'],['rw','Kinyarwanda'],['gom','Konkani'],['ko','Korean'],['kri','Krio'],['ku','Kurdish (Kurmanji)'],['ckb','Kurdish (Sorani)'],['ky','Kyrgyz'],['lo','Lao'],['la','Latin'],['lv','Latvian'],['ln','Lingala'],['lt','Lithuanian'],['lg','Luganda'],['lb','Luxembourgish'],['mk','Macedonian'],['mai','Maithili'],['mg','Malagasy'],['ms','Malay'],['ml','Malayalam'],['mt','Maltese'],['mi','Maori'],['mr','Marathi'],['mni-Mtei','Meiteilon (Manipuri)'],['lus','Mizo'],['mn','Mongolian'],['my','Myanmar (Burmese)'],['ne','Nepali'],['no','Norwegian'],['or','Odia (Oriya)'],['om','Oromo'],['ps','Pashto'],['fa','Persian'],['pl','Polish'],['pt','Portuguese'],['pa','Punjabi'],['qu','Quechua'],['ro','Romanian'],['ru','Russian'],['sm','Samoan'],['sa','Sanskrit'],['gd','Scots Gaelic'],['nso','Sepedi'],['sr','Serbian'],['st','Sesotho'],['sn','Shona'],['sd','Sindhi'],['si','Sinhala'],['sk','Slovak'],['sl','Slovenian'],['so','Somali'],['es','Spanish'],['su','Sundanese'],['sw','Swahili'],['sv','Swedish'],['tg','Tajik'],['ta','Tamil'],['tt','Tatar'],['te','Telugu'],['th','Thai'],['ti','Tigrinya'],['ts','Tsonga'],['tr','Turkish'],['tk','Turkmen'],['ak','Twi'],['uk','Ukrainian'],['ur','Urdu'],['ug','Uyghur'],['uz','Uzbek'],['vi','Vietnamese'],['cy','Welsh'],['xh','Xhosa'],['yi','Yiddish'],['yo','Yoruba'],['zu','Zulu']];
+function sfSetLangCookie(code) {
+  const v = code === 'en' ? '' : '/en/' + code, exp = code === 'en' ? ';expires=Thu, 01 Jan 1970 00:00:00 GMT' : '';
+  document.cookie = 'googtrans=' + v + ';path=/' + exp; document.cookie = 'googtrans=' + v + ';path=/;domain=' + location.hostname + exp;
+}
+function sfLoadTranslator() {
+  if (window.__sfGt) return; window.__sfGt = 1;
+  const d = document.createElement('div'); d.id = 'sf_gt'; d.style.display = 'none'; document.body.appendChild(d);
+  const st = document.createElement('style'); st.textContent = '.goog-te-banner-frame,.skiptranslate>iframe{display:none!important}body{top:0!important}.goog-tooltip{display:none!important}.goog-text-highlight{background:none!important;box-shadow:none!important}'; document.head.appendChild(st);
+  window.googleTranslateElementInit = () => { try { new google.translate.TranslateElement({ pageLanguage: 'en', autoDisplay: false }, 'sf_gt'); } catch (_) {} };
+  const s = document.createElement('script'); s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'; s.async = true; document.head.appendChild(s);
+}
+function initLanguage() {
+  const sel = document.getElementById('langSel'), saved = localStorage.getItem('sf_lang') || 'en';
+  if (sel) {
+    sel.innerHTML = SF_LANGS.map(l => '<option value="' + l[0] + '">' + l[1] + '</option>').join(''); sel.value = saved; sel.setAttribute('translate', 'no');
+    sel.onchange = () => { localStorage.setItem('sf_lang', sel.value); sfSetLangCookie(sel.value); location.reload(); };
+  }
+  if (saved !== 'en') { sfSetLangCookie(saved); sfLoadTranslator(); }
+}
+
+if (!window.SF_APP_NAME) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initLanguage); else initLanguage(); }
+/* tiny safe text formatter for guides and policy pages: ## heading, - bullets, 1. numbers, **bold**, blank line = new paragraph */
+function richText(src) {
+  let out = '', list = null; const close = () => { if (list) { out += '</' + list + '>'; list = null; } }, inl = t => esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  String(src || '').replace(/\r/g, '').split('\n').forEach(l => {
+    const t = l.trim(); if (!t) { close(); return; } let m;
+    if ((m = t.match(/^##\s+(.*)/))) { close(); out += '<h3>' + inl(m[1]) + '</h3>'; }
+    else if ((m = t.match(/^[-*]\s+(.*)/))) { if (list !== 'ul') { close(); out += '<ul>'; list = 'ul'; } out += '<li>' + inl(m[1]) + '</li>'; }
+    else if ((m = t.match(/^\d+[.)]\s+(.*)/))) { if (list !== 'ol') { close(); out += '<ol>'; list = 'ol'; } out += '<li>' + inl(m[1]) + '</li>'; }
+    else { close(); out += '<p>' + inl(t) + '</p>'; }
+  });
+  close(); return out;
+}
+if ('serviceWorker' in navigator && !window.SF_APP_NAME) navigator.serviceWorker.register('/sw.js').catch(() => {});
 </script>
 <script>
 
