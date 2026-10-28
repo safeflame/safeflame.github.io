@@ -304,6 +304,28 @@ html[data-theme="light"] .banner{color:#8a5a00}
 .theme-btn{display:inline-flex;align-items:center;justify-content:center;width:34px;height:34px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;transition:background .2s,color .2s}
 .theme-btn:hover{background:var(--surface2);color:var(--text)}
 .theme-btn .ic{width:1.1rem;height:1.1rem}
+
+.apple-btn{background:#fff!important;color:#000!important;border-color:#fff!important}
+.apple-btn .ic{width:1.15rem;height:1.15rem}
+html[data-theme="light"] .apple-btn{background:#000!important;color:#fff!important;border-color:#000!important}
+
+#sfRelease{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:center;gap:.7rem;flex-wrap:wrap;padding:.55rem 3rem .55rem 1rem;background:linear-gradient(90deg,#26C6DA,#66BB6A);color:#06222a;font:600 .85rem Inter,system-ui,sans-serif;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#sfRelease button{border:1px solid rgba(6,34,42,.45);background:rgba(255,255,255,.35);color:#06222a;border-radius:50px;padding:.2rem .8rem;font:600 .78rem Inter,system-ui,sans-serif;cursor:pointer}
+#sfRelease button:hover{background:rgba(255,255,255,.6)}
+#sfRelease #sfRelX{position:absolute;right:.8rem;top:50%;transform:translateY(-50%);border:none;background:none;font-size:1rem;padding:.2rem .4rem}
+.topbar,nav{top:var(--sf-banner-h,0px)}
+.pn-card{background:#0d0d1a;color:#f0f0f8;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:1.6rem;max-width:520px;width:100%;max-height:88vh;overflow:auto}
+.pn-card h2{font-size:1.25rem;margin:0 0 .2rem}.pn-sub{color:#a0a0b8;font-size:.88rem;margin:0 0 1rem}
+.pn-body h4{margin:.9rem 0 .3rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:#a0a0b8}
+.pn{list-style:none;margin:0;padding:0}.pn li{padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.9rem;line-height:1.5}
+.pn-tag{display:inline-block;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .5rem;border-radius:50px;margin-right:.4rem}
+.pn-fix{background:rgba(102,187,106,.18);color:#66BB6A}.pn-new{background:rgba(38,198,218,.18);color:#26C6DA}.pn-imp{background:rgba(255,167,38,.18);color:#FFA726}.pn-sec{background:rgba(239,83,80,.18);color:#EF5350}
+.pn-actions{display:flex;justify-content:space-between;align-items:center;margin-top:1.2rem}.pn-actions a{color:#FF8A65;font-size:.85rem}
+.pn-actions button{background:#FF5722;color:#fff;border:none;border-radius:10px;padding:.65rem 1.4rem;font:600 .9rem Inter,system-ui,sans-serif;cursor:pointer}
+html[data-theme="light"] .pn-card{background:#fff;color:#15151f;border-color:rgba(20,20,40,.12)}html[data-theme="light"] .pn li{border-color:rgba(20,20,40,.08)}
+
+body{padding-top:calc(70px + var(--sf-banner-h,0px))}
+.sf-foot a+a{margin-left:.2rem}
 </style>
 </head>
 <body>
@@ -566,6 +588,11 @@ const _fbApp = window.SF_APP_NAME
   : (firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig));
 const ADMIN_EMAILS = ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com'];
 const isAdminEmail = e => ADMIN_EMAILS.includes(String(e || '').toLowerCase());
+/* admins added in Admin > Team are stored in settings/admins */
+async function checkAdmin(u) {
+  if (!u) return false; if (isAdminEmail(u.email)) return true;
+  try { const d = await db.collection('settings').doc('admins').get(); return d.exists && (d.data().emails || []).map(x => String(x).toLowerCase()).includes(String(u.email).toLowerCase()); } catch (_) { return false; }
+}
 const db = _fbApp.firestore();
 try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {} // avoids long hangs on networks that block Firestore streaming
 const auth = _fbApp.auth();
@@ -585,6 +612,7 @@ const DEFAULT_SETTINGS = {
     { id: 'install', name: 'Professional installation', price: 999, enabled: true }
   ],
   eta: { base: 'Within 3–4 weeks of launch', pro: 'Within 3–4 weeks of launch', elite: 'Within 4–5 weeks of launch' },
+  charges: { shipping: 49, handling: 0, freeShippingAbove: 0, cgst: 2.5, sgst: 2.5, igst: 5, taxShipping: true, sellerState: '', gstin: '', businessName: '' },
   lowStockThreshold: 3, warrantyMonths: 12, firmware: [], knowledge: '',
   awayMode: { enabled: false, startHour: 9, endHour: 21, message: 'Our team is away right now. Leave your message and we will reply as soon as we are back.', notifyEmail: '' },
   seo: { title: '', description: '', image: '' },
@@ -633,6 +661,7 @@ function mergeSettings(data) {
     firmware: Array.isArray(data.firmware) ? data.firmware : [],
     awayMode: { ...DEFAULT_SETTINGS.awayMode, ...(data.awayMode || {}) },
     seo: { ...DEFAULT_SETTINGS.seo, ...(data.seo || {}) },
+    charges: { ...DEFAULT_SETTINGS.charges, ...(data.charges || {}) },
     pages: { privacy: { ...DEFAULT_PAGES.privacy, ...((data.pages || {}).privacy || {}) }, refund: { ...DEFAULT_PAGES.refund, ...((data.pages || {}).refund || {}) }, warranty: { ...DEFAULT_PAGES.warranty, ...((data.pages || {}).warranty || {}) } }
   };
 }
@@ -675,7 +704,26 @@ function applySiteControls(s) {
 }
 
 /* ── shared order/notification/log helpers ── */
-const orderTotal = o => (Number(o.unitPrice) || 0) * (Number(o.quantity) || 1) + (Number(o.addonsTotal) || 0);
+const chargesSum = c => c ? (Number(c.shipping) || 0) + (Number(c.handling) || 0) + (Number(c.cgst) || 0) + (Number(c.sgst) || 0) + (Number(c.igst) || 0) : 0;
+const orderTotal = o => (Number(o.unitPrice) || 0) * (Number(o.quantity) || 1) + (Number(o.addonsTotal) || 0) + chargesSum(o.charges);
+/* shipping + handling + GST (CGST/SGST within the seller's state, IGST for other states). Rates and fees are set in Admin > Site. */
+function computeCharges(goods, shipState) {
+  const c = { ...DEFAULT_SETTINGS.charges, ...(siteSettings.charges || {}) }, n = x => Number(x) || 0, norm = s => String(s || '').trim().toLowerCase();
+  const shipping = (n(c.freeShippingAbove) > 0 && goods >= n(c.freeShippingAbove)) ? 0 : n(c.shipping), handling = n(c.handling);
+  const taxable = goods + (c.taxShipping ? shipping + handling : 0), inter = !!(norm(c.sellerState) && norm(shipState) && norm(shipState) !== norm(c.sellerState));
+  const cgst = inter ? 0 : Math.round(taxable * n(c.cgst) / 100), sgst = inter ? 0 : Math.round(taxable * n(c.sgst) / 100), igst = inter ? Math.round(taxable * n(c.igst) / 100) : 0;
+  return { shipping, handling, taxable, cgst, sgst, igst, inter, rates: { cgst: n(c.cgst), sgst: n(c.sgst), igst: n(c.igst) }, total: goods + shipping + handling + cgst + sgst + igst };
+}
+/* the lines shown under an order's subtotal: [label, amount] */
+function chargeLines(ch) {
+  if (!ch) return []; const L = [];
+  if (Number(ch.shipping)) L.push(['Shipping', ch.shipping]); else if (ch.shipping === 0) L.push(['Shipping', 'FREE']);
+  if (Number(ch.handling)) L.push(['Handling', ch.handling]);
+  if (Number(ch.cgst)) L.push(['CGST @ ' + ((ch.rates || {}).cgst || '') + '%', ch.cgst]);
+  if (Number(ch.sgst)) L.push(['SGST @ ' + ((ch.rates || {}).sgst || '') + '%', ch.sgst]);
+  if (Number(ch.igst)) L.push(['IGST @ ' + ((ch.rates || {}).igst || '') + '%', ch.igst]);
+  return L;
+}
 function fmtAddress(a) { return a ? [a.name, a.line1, a.line2, [a.city, a.state].filter(Boolean).join(', '), a.pin, a.phone && ('Ph: ' + a.phone)].filter(Boolean).join(', ') : ''; }
 function pushNotification(n) { return db.collection('notifications').add({ read: false, createdAt: TS(), ...n, email: String(n.email || '').toLowerCase() }).catch(e => console.warn('notification failed', e)); }
 function logEmail(kind, to, subject, ok, error, orderId) { try { db.collection('emailLog').add({ kind: kind || 'email', to: String(to || '').toLowerCase(), subject: String(subject || '').slice(0, 140), ok: !!ok, error: error ? String(error).slice(0, 300) : '', orderId: orderId || '', at: TS() }).catch(() => {}); } catch (_) {} }
@@ -757,7 +805,7 @@ function sendOrderEmail(order, status) {
   const lines = [{ name: 'SafeFlame AI — ' + tierLabel, units: qty, price: (unit * qty).toLocaleString('en-IN') }].concat((order.addons || []).map(a => ({ name: a.name, units: 1, price: Number(a.price).toLocaleString('en-IN') })));
   return sendWithCfg(cfg, {
     to_email: order.email, to_name: t.name, subject: renderTokens(cfg.subject, t), email: order.email, order_id: t.order_id,
-    orders: lines, cost: { shipping: '0', tax: '0', total: total.toLocaleString('en-IN') },
+    orders: lines, cost: { shipping: ((Number((order.charges || {}).shipping) || 0) + (Number((order.charges || {}).handling) || 0)).toLocaleString('en-IN'), tax: ((Number((order.charges || {}).cgst) || 0) + (Number((order.charges || {}).sgst) || 0) + (Number((order.charges || {}).igst) || 0)).toLocaleString('en-IN'), total: total.toLocaleString('en-IN') },
     product_name: 'SafeFlame AI — ' + tierLabel, tier: tierLabel, quantity: qty, unit_price: t.unit_price, total_price: t.total_price,
     status, phone: t.phone, address: t.address, tracking: t.tracking, eta: t.eta, message: renderTokens(cfg.message, t)
   }, 'order-' + status, order.id).catch(e => console.warn('Order email failed:', e));
@@ -909,6 +957,44 @@ function initTheme() {
   applyTheme();
 }
 if (!window.SF_APP_NAME) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initTheme); else initTheme(); }
+/* ── "new version" banner + patch notes (published from Admin > Site > Website releases) ── */
+const sfEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function patchNotesHtml(text) {
+  const tags = { fix: ['Fixed', 'fix'], fixed: ['Fixed', 'fix'], new: ['New', 'new'], improved: ['Improved', 'imp'], improve: ['Improved', 'imp'], security: ['Security', 'sec'] };
+  const items = String(text || '').replace(/\r/g, '').split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    if (/^##\s+/.test(l)) return '<h4>' + sfEsc(l.replace(/^##\s+/, '')) + '</h4>';
+    const m = l.replace(/^[-*]\s+/, '').match(/^(fix|fixed|new|improved|improve|security)\s*:\s*(.*)$/i);
+    return m ? '<li><span class="pn-tag pn-' + tags[m[1].toLowerCase()][1] + '">' + tags[m[1].toLowerCase()][0] + '</span> ' + sfEsc(m[2]) + '</li>' : '<li>' + sfEsc(l.replace(/^[-*]\s+/, '')) + '</li>';
+  });
+  return '<ul class="pn">' + items.join('') + '</ul>';
+}
+function sfReleaseModal(rel, notes) {
+  const o = document.createElement('div'); o.id = 'sfRelModal';
+  o.style.cssText = 'position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:1rem;font-family:Inter,system-ui,sans-serif';
+  o.innerHTML = '<div class="pn-card"><h2>What\'s new in v' + sfEsc(rel.version) + '</h2><p class="pn-sub">' + sfEsc(rel.title || 'Bug fixes and improvements') + '</p><div class="pn-body">' + patchNotesHtml(notes) + '</div><div class="pn-actions"><a href="/whats-new">All releases</a><button type="button" id="sfRelOk">Got it</button></div></div>';
+  o.addEventListener('click', e => { if (e.target === o || e.target.id === 'sfRelOk') o.remove(); });
+  document.body.appendChild(o);
+}
+function showReleaseBanner(rel) {
+  try {
+    if (!rel || !rel.version || rel.banner === false) return; const key = rel.version + ':' + (rel.nonce || 0);
+    if (localStorage.getItem('sf_release_seen') === key || document.getElementById('sfRelease')) return;
+    const bar = document.createElement('div'); bar.id = 'sfRelease'; bar.setAttribute('role', 'status');
+    bar.innerHTML = '<span><b>New version live (v' + sfEsc(rel.version) + ')</b> — bug fixes and improvements.</span><button type="button" id="sfRelNotes">What\'s new</button><button type="button" id="sfRelReload">Reload</button><button type="button" id="sfRelX" aria-label="Dismiss">✕</button>';
+    document.body.insertBefore(bar, document.body.firstChild); document.documentElement.style.setProperty('--sf-banner-h', bar.offsetHeight + 'px');
+    const close = () => { localStorage.setItem('sf_release_seen', key); bar.remove(); document.documentElement.style.setProperty('--sf-banner-h', '0px'); };
+    bar.querySelector('#sfRelX').onclick = close; bar.querySelector('#sfRelReload').onclick = () => { localStorage.setItem('sf_release_seen', key); location.reload(); };
+    bar.querySelector('#sfRelNotes').onclick = async () => {
+      let notes = rel.notes || '';
+      if (!notes && rel.id) { try { notes = ((await db.collection('releases').doc(rel.id).get()).data() || {}).notes || ''; } catch (_) {} }
+      sfReleaseModal(rel, notes); close();
+    };
+  } catch (_) {}
+}
+function watchRelease() {
+  try { db.collection('settings').doc('site').onSnapshot(d => { const r = d.exists && d.data().latestRelease; if (r) showReleaseBanner(r); }, () => {}); } catch (_) {}
+}
+if (!window.SF_APP_NAME && location.pathname.indexOf('/admin') !== 0) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watchRelease); else watchRelease(); }
 </script>
 <script>
 initNavAccount();
@@ -1064,7 +1150,8 @@ function editOrder(o) {
     const unit = tier === o.tier ? Number(o.unitPrice) : tierPriceFor(tier);
     const addons = ao.filter(x => document.querySelector('.e-ao[value="' + x.id + '"]').checked).map(x => ({ id: x.id, name: x.name, price: Number(x.price) || 0 }));
     const addonsTotal = addons.reduce((s, x) => s + x.price, 0), shipping = { name: gift ? gN : o.name, phone: gift ? gP : o.phone, ...a };
-    const upd = { quantity: qty, tier, unitPrice: unit, shipping, address: fmtAddress(shipping), gift: gift ? { name: gN, phone: gP } : null, addons, addonsTotal, total: unit * qty + addonsTotal, deliveryNotes: sanitize($('eNotes').value), eta: (siteSettings.eta || {})[tier] || o.eta || '', statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: 'pending', at: Date.now(), note: 'Edited by customer' }), editedAt: TS() };
+    const goods = unit * qty + addonsTotal, charges = o.charges ? computeCharges(goods, a.state) : null;
+    const upd = { quantity: qty, tier, unitPrice: unit, shipping, address: fmtAddress(shipping), gift: gift ? { name: gN, phone: gP } : null, addons, addonsTotal, ...(charges ? { charges } : {}), total: charges ? charges.total : goods, deliveryNotes: sanitize($('eNotes').value), eta: (siteSettings.eta || {})[tier] || o.eta || '', statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: 'pending', at: Date.now(), note: 'Edited by customer' }), editedAt: TS() };
     $('eSave').disabled = true;
     try { await db.collection('preBookings').doc(o.id).update(upd); closeModal(); await loadOrders(); }
     catch (e) { $('eErr').textContent = 'Could not save: ' + (e.message || 'try again.'); $('eSave').disabled = false; }
@@ -1120,7 +1207,10 @@ function makeReceipt(o) {
   const T = (t, x, yy, size, bold) => ops.push('BT /' + (bold ? 'F2' : 'F1') + ' ' + size + ' Tf ' + x + ' ' + yy + ' Td (' + pdfText(t) + ') Tj ET');
   const L = yy => ops.push('0.8 G 50 ' + yy + ' m 545 ' + yy + ' l S');
   const wrap = (t, n) => { const out = []; let cur = ''; String(t || '').split(/\s+/).forEach(w => { if ((cur + ' ' + w).trim().length > n) { out.push(cur); cur = w; } else cur = (cur + ' ' + w).trim(); }); if (cur) out.push(cur); return out; };
-  T('SafeFlame AI', 50, y, 24, true); T('Pre-booking receipt', 50, y - 20, 11, false); T('Order #' + orderNumberFor(o), 545 - 150, y, 14, true); y -= 36; L(y); y -= 24;
+  const bz = siteSettings.charges || {}, hasBz = !!(bz.businessName || bz.gstin);
+  T('SafeFlame AI', 50, y, 24, true); T('Pre-booking receipt', 50, y - 20, 11, false); T('Order #' + orderNumberFor(o), 545 - 150, y, 14, true);
+  if (hasBz) T([bz.businessName, bz.gstin && ('GSTIN ' + bz.gstin)].filter(Boolean).join('   '), 50, y - 36, 9, false);
+  y -= hasBz ? 48 : 36; L(y); y -= 24;
   const row = (k, v) => { T(k, 50, y, 10, false); T(v, 170, y, 11, true); y -= 18; };
   row('Date', fmtD(tsMs(o.createdAt)) || '-'); row('Status', String(o.status || 'pending').toUpperCase()); row('Customer', o.name || ''); row('Email', o.email || ''); row('Phone', o.phone || '');
   const ship = o.shipping ? fmtAddress(o.shipping) : (o.address || ''); if (ship) wrap(ship, 62).forEach((ln, i) => { T(i ? '' : 'Deliver to', 50, y, 10, false); T(ln, 170, y, 11, true); y -= 16; });
@@ -1129,6 +1219,7 @@ function makeReceipt(o) {
   const qty = Number(o.quantity) || 1, unit = Number(o.unitPrice) || 0;
   T('SafeFlame AI - ' + tierLabelFor(o.tier), 50, y, 11, false); T(String(qty), 385, y, 11, false); T(rs(unit * qty), 470, y, 11, false); y -= 20;
   (o.addons || []).forEach(a => { T(a.name, 50, y, 11, false); T('1', 385, y, 11, false); T(rs(a.price), 470, y, 11, false); y -= 20; });
+  chargeLines(o.charges).forEach(l => { T(l[0], 50, y, 11, false); T(typeof l[1] === 'number' ? rs(l[1]) : String(l[1]), 470, y, 11, false); y -= 20; });
   L(y + 8); y -= 14; T('Total', 380, y, 13, true); T(rs(orderTotal(o)), 470, y, 13, true); y -= 40;
   T('No payment has been collected yet - this receipt confirms your pre-booking.', 50, y, 9, false); y -= 14; T('Questions? Open the chat on safeflame.github.io and we will help.', 50, y, 9, false);
   const stream = ops.join('\n');
@@ -1294,7 +1385,7 @@ async function orderDetails(o) {
   const hist = (o.statusHistory || []).slice().sort((a, b) => a.at - b.at), ship = o.shipping ? fmtAddress(o.shipping) : (o.address || '');
   const row = (k, v) => v ? '<div class="stat-row"><span>' + k + '</span><span style="text-align:right;max-width:65%">' + v + '</span></div>' : '';
   $('mdlCard').innerHTML = mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4.6H7.2A2.2 2.2 0 0 0 5 6.8v12A2.2 2.2 0 0 0 7.2 21h9.6a2.2 2.2 0 0 0 2.2-2.2v-12a2.2 2.2 0 0 0-2.2-2.2H15"></path><rect x="9" y="2.8" width="6" height="3.6" rx="1.2"></rect><path d="M8.8 11.4h6.4M8.8 15.4h4.4" stroke-width="1.6"></path></svg>', 'Order #' + esc(orderNumberFor(o)), esc((o.status || 'pending').toUpperCase())) +
-    row('Product', 'SafeFlame AI — ' + esc(tierLabelFor(o.tier)) + ' × ' + (Number(o.quantity) || 1)) + row('Add-ons', (o.addons || []).map(a => esc(a.name)).join(', ')) + row('Total', inr(orderTotal(o))) + row('Placed', esc(fmtD(tsMs(o.createdAt)))) +
+    row('Product', 'SafeFlame AI — ' + esc(tierLabelFor(o.tier)) + ' × ' + (Number(o.quantity) || 1)) + row('Add-ons', (o.addons || []).map(a => esc(a.name)).join(', ')) + row('Subtotal', inr((Number(o.unitPrice) || 0) * (Number(o.quantity) || 1) + (Number(o.addonsTotal) || 0))) + chargeLines(o.charges).map(l => row(l[0], typeof l[1] === 'number' ? inr(l[1]) : esc(l[1]))).join('') + row('Total', inr(orderTotal(o))) + row('Placed', esc(fmtD(tsMs(o.createdAt)))) +
     row('Estimated delivery', esc(o.eta || '')) + row('Tracking', esc(o.tracking || '')) + row('Deliver to', esc(ship)) + row('Gift for', o.gift ? esc(o.gift.name + ' · ' + o.gift.phone) : '') + row('Instructions', esc(o.deliveryNotes || '')) +
     row('Installation', o.installation ? esc(o.installation.status + ' — ' + o.installation.date + ', ' + o.installation.slot) : '') + row('Device', esc(o.device || '')) + row('Cancel reason', esc(o.cancelReason || '')) +
     '<div class="section-title" style="margin-top:1.2rem"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1L3.5 8.5M3.5 4v4.5H8M12 7.5V12l3 2"/></svg> Everything that happened</div><div class="tl-list">' +
@@ -1431,20 +1522,21 @@ $('newStoryBtn').onclick = () => {
 /* ── linked sign-in methods ── */
 function renderLinked() {
   const has = p => user.providerData.some(x => x.providerId === p), n = user.providerData.length;
-  $('linkedBox').innerHTML = [['google.com', 'Google', has('google.com')], ['password', 'Email & password', has('password')]].map(m => '<div class="settings-row"><div><span class="settings-row-label">' + m[1] + '</span><span class="settings-row-sub">' + (m[2] ? 'Connected' : 'Not connected') + '</span></div>' + (m[2] ? (n > 1 ? '<button class="btn-secondary" data-lk="unlink:' + m[0] + '" style="padding:.4rem .9rem;font-size:.8rem">Disconnect</button>' : '<span class="hint">Only sign-in method</span>') : '<button class="btn-secondary" data-lk="link:' + m[0] + '" style="padding:.4rem .9rem;font-size:.8rem">Connect</button>') + '</div>').join('');
+  $('linkedBox').innerHTML = [['google.com', 'Google', has('google.com')], ['apple.com', 'Apple', has('apple.com')], ['password', 'Email & password', has('password')]].map(m => '<div class="settings-row"><div><span class="settings-row-label">' + m[1] + '</span><span class="settings-row-sub">' + (m[2] ? 'Connected' : 'Not connected') + '</span></div>' + (m[2] ? (n > 1 ? '<button class="btn-secondary" data-lk="unlink:' + m[0] + '" style="padding:.4rem .9rem;font-size:.8rem">Disconnect</button>' : '<span class="hint">Only sign-in method</span>') : '<button class="btn-secondary" data-lk="link:' + m[0] + '" style="padding:.4rem .9rem;font-size:.8rem">Connect</button>') + '</div>').join('');
 }
 $('linkedBox').addEventListener('click', async e => {
   const b = e.target.closest('[data-lk]'); if (!b) return; const [act, prov] = b.dataset.lk.split(':'); $('lkErr').textContent = ''; $('lkOk').textContent = '';
   try {
     if (act === 'unlink') { if (!confirm('Disconnect this sign-in method?')) return; await user.unlink(prov); $('lkOk').textContent = 'Disconnected.'; }
     else if (prov === 'google.com') { await user.linkWithPopup(new firebase.auth.GoogleAuthProvider()); $('lkOk').textContent = 'Google connected.'; }
+    else if (prov === 'apple.com') { const ap = new firebase.auth.OAuthProvider('apple.com'); ap.addScope('email'); await user.linkWithPopup(ap); $('lkOk').textContent = 'Apple connected.'; }
     else {
       openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="3.8"/><path d="m10.8 12.2 8.2-8.2M16 7l2.5 2.5M14 9l2 2"/></svg>', 'Add a password', 'So you can also sign in with ' + esc(user.email)) + '<div class="field"><label>New password</label><input type="password" id="lkPw" autocomplete="new-password" placeholder="Min 6 characters"></div><div class="msg-error" id="lkPErr"></div><div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button><button class="btn-primary" style="flex:1" id="lkGo">Add password</button></div>');
       $('lkGo').onclick = async () => { const pw = $('lkPw').value; if (pw.length < 6) return $('lkPErr').textContent = 'Use at least 6 characters.'; try { await user.linkWithCredential(firebase.auth.EmailAuthProvider.credential(user.email, pw)); closeModal(); $('lkOk').textContent = 'Password added.'; user = auth.currentUser; renderLinked(); $('pwForm').classList.remove('hidden'); $('pwGoogle').classList.add('hidden'); } catch (x) { $('lkPErr').textContent = x.message || 'Could not add the password.'; } };
       return;
     }
     user = auth.currentUser; renderLinked(); $('pwForm').classList.toggle('hidden', !isPasswordUser()); $('pwGoogle').classList.toggle('hidden', isPasswordUser());
-  } catch (x) { $('lkErr').textContent = ({ 'auth/popup-closed-by-user': 'Cancelled.', 'auth/credential-already-in-use': 'That Google account is already used by another SafeFlame account.', 'auth/requires-recent-login': 'Please sign out and sign in again, then retry.' })[x.code] || x.message || 'That did not work.'; }
+  } catch (x) { $('lkErr').textContent = ({ 'auth/popup-closed-by-user': 'Cancelled.', 'auth/credential-already-in-use': 'That account is already used by another SafeFlame account.', 'auth/operation-not-allowed': 'That sign-in method is not turned on yet.', 'auth/requires-recent-login': 'Please sign out and sign in again, then retry.' })[x.code] || x.message || 'That did not work.'; }
 });
 
 /* ── install as an app (PWA) ── */
