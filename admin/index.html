@@ -900,6 +900,34 @@
   .skel-line { height: 56px; border-radius: 10px; margin-bottom: .6rem; background: linear-gradient(90deg, rgba(255,255,255,.04), rgba(255,255,255,.09), rgba(255,255,255,.04)); background-size: 200% 100%; animation: skel 1.2s linear infinite; }
   @keyframes skel { from { background-position: 200% 0; } to { background-position: -200% 0; } }
   .empty-state { color: var(--muted); text-align: center; padding: 1.4rem; font-size: .85rem; }
+
+  /* ── polish ── */
+  header { box-shadow: 0 2px 14px rgba(0,0,0,.18); }
+  .hdr-actions { display: flex; gap: .4rem; align-items: center; }
+  .hdr-btn { display: inline-flex; align-items: center; gap: .45rem; background: var(--surface2); border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: .45rem .7rem; font-size: .8rem; cursor: pointer; font-family: 'Inter', sans-serif; transition: color .2s, border-color .2s; }
+  .hdr-btn:hover { color: var(--off-white); border-color: var(--flame); }
+  .hdr-btn .ic { width: 1.05rem; height: 1.05rem; } .hdr-btn.muted { opacity: .55; position: relative; }
+  .hdr-btn.muted s { position: absolute; left: 20%; right: 20%; top: 50%; border-top: 2px solid var(--red); transform: rotate(-35deg); }
+  .hdr-btn kbd { font-size: .62rem; background: var(--darker); border: 1px solid var(--border); border-radius: 4px; padding: .05rem .3rem; }
+  @media (max-width: 820px) { .hdr-search span, .hdr-search kbd { display: none; } }
+  .tab-nav { scrollbar-width: thin; } .tab-btn .ic { width: 1rem; height: 1rem; margin-right: .15rem; vertical-align: -.2em; }
+  .tab-btn.active { background: linear-gradient(180deg, transparent, rgba(255,107,53,.08)); }
+  .panel { box-shadow: 0 1px 0 rgba(255,255,255,.03) inset, 0 6px 18px rgba(0,0,0,.12); }
+  table { border-collapse: separate; border-spacing: 0; }
+  thead th { position: sticky; top: 0; z-index: 2; background: var(--surface2); }
+  tbody tr { transition: background .15s; } tbody tr:hover { background: rgba(255,107,53,.06); }
+  .stat-card { transition: transform .15s, border-color .15s; } .stat-card:hover { transform: translateY(-2px); border-color: var(--flame); }
+  .ax-attn { display: flex; flex-wrap: wrap; gap: .6rem; }
+  .ax-attn-item { display: inline-flex; align-items: center; gap: .55rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: .6rem .9rem; color: var(--off-white); cursor: pointer; font-family: 'Inter', sans-serif; font-size: .84rem; transition: border-color .15s, transform .15s; }
+  .ax-attn-item:hover { border-color: var(--flame); transform: translateY(-1px); }
+  .ax-attn-item .ic { color: var(--flame); width: 1.1rem; height: 1.1rem; } .ax-attn-item b { color: var(--flame); font-size: 1rem; } .ax-attn-item span { color: var(--muted); }
+  .ax-clear { color: var(--green); font-size: .9rem; display: flex; align-items: center; gap: .5rem; } .ax-clear .ic { width: 1.3rem; height: 1.3rem; }
+  /* light theme for the admin panel */
+  html[data-admin-theme="light"] { color-scheme: light; --dark: #ffffff; --darker: #f2f3f9; --off-white: #1b1b2f; --muted: #626279; --surface: #ffffff; --surface2: #f0f1f8; --surface3: #e4e6f1; --border: rgba(255,107,53,.3); --shadow: 0 8px 24px rgba(30,30,70,.1); }
+  html[data-admin-theme="light"] header { box-shadow: 0 2px 14px rgba(30,30,70,.08); }
+  html[data-admin-theme="light"] .panel { box-shadow: 0 6px 18px rgba(30,30,70,.07); }
+  html[data-admin-theme="light"] .ax-back { background: rgba(30,30,70,.4); }
+  html[data-admin-theme="light"] .cm.user { background: #e8eaf4; } html[data-admin-theme="light"] .cm.ai { background: rgba(78,205,196,.18); }
 </style>
 </head>
 <body>
@@ -910,7 +938,14 @@
     SafeFlame AI Admin
     <span class="live-badge" id="liveBadge" style="display:none;"><span class="live-dot"></span>Live</span>
   </div>
-  <button id="logoutBtn" style="display:none;">Log Out</button>
+  <div style="display:flex;align-items:center;gap:.5rem">
+    <div class="hdr-actions" id="axHdr" style="display:none">
+      <button class="hdr-btn hdr-search" id="axSearchBtn" type="button" title="Search (Ctrl+K or /)"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg> <span>Search</span> <kbd>Ctrl K</kbd></button>
+      <button class="hdr-btn" id="axSoundBtn" type="button"></button>
+      <button class="hdr-btn" id="axThemeBtn" type="button"></button>
+    </div>
+    <button id="logoutBtn" style="display:none;">Log Out</button>
+  </div>
 </header>
 
 <div class="tab-nav" id="tabNav" style="display:none;">
@@ -963,6 +998,7 @@
 
     <!-- OVERVIEW TAB -->
     <div class="tab-panel active" id="tab-overview">
+      <div class="panel" id="axAttn"><div class="panel-header"><h2>Needs attention</h2></div><div class="ax-attn" id="axAttnList"><div class="skel-line"></div></div></div>
       <div class="panel" id="axDash">
         <div class="panel-header"><h2>Performance</h2>
           <select class="filter-select" id="axRange"><option value="7">Last 7 days</option><option value="30" selected>Last 30 days</option><option value="90">Last 90 days</option><option value="0">All time</option></select></div>
@@ -973,6 +1009,7 @@
           <div class="chart-box"><h3>Units by tier</h3><canvas id="axTierChart" height="180"></canvas></div>
         </div>
       </div>
+      <div class="panel"><div class="panel-header" id="axRecentHead"><h2>Recent activity</h2><a class="btn-small" data-go="team" style="cursor:pointer">View all</a></div><div id="axRecent"></div></div>
       <div class="stats-row">
         <div class="stat-card"><div class="num" id="prebookCount">0</div><div class="label">Pre-Bookings</div></div>
         <div class="stat-card"><div class="num" id="unitsCount">0</div><div class="label">Units Ordered</div></div>
@@ -1239,6 +1276,14 @@
             <div class="field"><label>Low-stock alert at (units left)</label><input type="number" id="siLow" min="0"></div></div>
           <div class="settings-group"><h3>Add-ons offered at pre-book</h3><div id="siAddons"></div><button class="btn-small" id="siAddAddon" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add add-on</button></div>
           <div class="settings-group"><h3>Chat quick replies</h3><div class="field"><label>One per line</label><textarea id="siCanned" rows="6"></textarea></div></div>
+          <div class="settings-group"><h3>Shipping &amp; taxes (GST)</h3>
+            <div class="ax-line"><div class="field" style="flex:1"><label>Shipping fee (₹, per order)</label><input type="number" id="chShip" min="0"></div><div class="field" style="flex:1"><label>Handling fee (₹)</label><input type="number" id="chHand" min="0"></div></div>
+            <div class="field"><label>Free shipping above (₹, 0 = never)</label><input type="number" id="chFree" min="0"></div>
+            <div class="ax-line"><div class="field" style="flex:1"><label>CGST %</label><input type="number" id="chCgst" min="0" step="0.1"></div><div class="field" style="flex:1"><label>SGST %</label><input type="number" id="chSgst" min="0" step="0.1"></div><div class="field" style="flex:1"><label>IGST %</label><input type="number" id="chIgst" min="0" step="0.1"></div></div>
+            <label class="ax-chk"><input type="checkbox" id="chTaxShip"> GST also applies to shipping &amp; handling</label>
+            <div class="field" style="margin-top:.6rem"><label>Your state (customers in other states pay IGST instead)</label><input type="text" id="chState" placeholder="Leave blank to always charge CGST + SGST"></div>
+            <div class="field"><label>Business name (on receipts)</label><input type="text" id="chBiz"></div><div class="field"><label>GSTIN (on receipts)</label><input type="text" id="chGstin" maxlength="15"></div>
+            <div class="ax-prev" id="chPreview"></div></div>
           <div class="settings-group"><h3>AI knowledge base</h3><div class="field"><label>Facts the chat assistant should know (specs, policies, delivery, etc.)</label><textarea id="siKnow" rows="9"></textarea></div></div>
           <div class="settings-group"><h3>Away mode (chat)</h3><label class="ax-chk"><input type="checkbox" id="siAwayOn"> Tell visitors when the team is away</label>
             <div class="ax-line"><div class="field" style="flex:1"><label>Team online from (hour, IST)</label><input type="number" id="siAwayStart" min="0" max="23"></div><div class="field" style="flex:1"><label>until (hour)</label><input type="number" id="siAwayEnd" min="0" max="24"></div></div>
@@ -1246,6 +1291,11 @@
           <div class="settings-group"><h3>SEO</h3><div class="field"><label>Page title</label><input type="text" id="siSeoTitle" maxlength="70"></div><div class="field"><label>Description</label><textarea id="siSeoDesc" rows="3" maxlength="170"></textarea></div><div class="field"><label>Share image URL</label><input type="text" id="siSeoImg" placeholder="https://…"></div><div class="field"><label>Paste into index.html (for link previews)</label><textarea id="siSeoSnippet" rows="5" readonly></textarea></div></div>
           <div class="settings-group"><h3>Warranty &amp; firmware</h3><div class="field"><label>Warranty length (months)</label><input type="number" id="siWarr" min="1"></div>
             <div id="siFwList"></div><div id="siFwNew"><div class="field"><label>New firmware version</label><input type="text" id="siFwVer" placeholder="e.g. 1.2.0"></div><div class="field"><label>Release notes</label><textarea id="siFwNotes" rows="3"></textarea></div><button class="btn-small primary" id="siFwPublish" type="button">Publish and notify owners</button></div></div>
+          <div class="settings-group" style="grid-column:1/-1" id="relGroup"><h3>Website releases — publish an update notice with patch notes</h3>
+            <div class="ax-line"><input class="search-input" id="relVer" placeholder="Version e.g. 1.2.0" style="max-width:160px"><input class="search-input" id="relTitle" placeholder="Short title e.g. Faster ordering and bug fixes"></div>
+            <div class="field"><label>Patch notes — one per line. Start a line with fix:, new:, improved: or security: (## makes a heading)</label><textarea id="relNotes" rows="6" placeholder="fix: Order total now includes add-ons&#10;new: Dark and light themes&#10;improved: Faster account page"></textarea></div>
+            <div class="ax-line"><label class="ax-chk"><input type="checkbox" id="relBanner" checked> Show a banner at the top of the website</label><label class="ax-chk"><input type="checkbox" id="relNotify"> Also notify signed-in customers</label><button class="btn-small primary" id="relPublish" type="button">Publish release</button></div>
+            <div id="relMsg" style="font-size:.84rem;min-height:1.2em"></div><div id="relList"></div></div>
           <div class="settings-group" style="grid-column:1/-1"><h3>Pages: privacy, refunds, warranty</h3><div id="siPages"></div></div>
           <div class="settings-group" style="grid-column:1/-1"><h3>Setup guides (shown to customers after shipping)</h3><div id="siGuides"></div><button class="btn-small" id="siAddGuide" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add guide</button></div>
           <div class="settings-group" style="grid-column:1/-1"><h3>Help centre FAQ</h3><div id="siFaq"></div><button class="btn-small" id="siAddFaq" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add question</button></div>
@@ -1259,8 +1309,14 @@
         <div class="panel-header"><h2>Admins</h2></div>
         <div id="tmList"></div>
         <div class="ax-sec">Add an admin</div>
-        <div class="ax-line"><input class="search-input" id="tmId" placeholder="ID or email (e.g. priya)" autocomplete="off"><input class="search-input" id="tmPw" type="password" placeholder="Password (min 6)" autocomplete="new-password"><button class="btn-small primary" id="tmAdd" type="button">Add admin</button></div>
-        <div class="msg-error" id="tmErr" style="color:var(--red);font-size:.82rem;min-height:1.2em"></div>
+        <div class="ax-line"><input class="search-input" id="tmId" placeholder="ID or email (e.g. priya)" autocomplete="off"><input class="search-input" id="tmPw" type="password" placeholder="Password (min 6)" autocomplete="new-password"><label class="ax-chk"><input type="checkbox" id="tmShow"> Show</label><button class="btn-small primary" id="tmAdd" type="button">Add admin</button></div>
+        <div class="hint" style="font-size:.76rem;color:var(--muted)">An ID like <b>priya</b> becomes priya@safeflame.github.io. After adding, the login is tested right away.</div>
+        <div id="tmErr" style="color:var(--red);font-size:.84rem;min-height:1.2em;margin-top:.4rem"></div><div id="tmOk" style="color:var(--green);font-size:.84rem"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><h2>Change my password</h2></div>
+        <div class="ax-line"><input class="search-input" id="cpCur" type="password" placeholder="Current password" autocomplete="current-password"><input class="search-input" id="cpNew" type="password" placeholder="New password (min 6)" autocomplete="new-password"><button class="btn-small primary" id="cpBtn" type="button">Update password</button></div>
+        <div id="cpMsg" style="font-size:.84rem;min-height:1.2em"></div>
       </div>
       <div class="panel">
         <div class="panel-header"><h2>Activity log</h2><div class="panel-actions"><input class="search-input" id="actSearch" placeholder="Search activity…"></div></div>
@@ -1353,6 +1409,7 @@
   </div>
 </main>
 
+<div class="ax-back" id="axSearch" style="display:none"><div class="ax-modal" style="max-width:640px"><input id="axSq" class="search-input" placeholder="Search orders, customers, tickets, chats…" autocomplete="off" style="width:100%;font-size:1rem"><div id="axSr" style="margin-top:.6rem;max-height:60vh;overflow-y:auto"></div><div class="hint" style="margin-top:.6rem;font-size:.72rem;color:var(--muted)">Enter opens the first result · Esc closes</div></div></div>
 <div class="ax-back" id="axModal" style="display:none"><div class="ax-modal" id="axModalBody"></div></div>
 <div id="toastContainer"></div>
 
@@ -1399,11 +1456,19 @@
   // Firebase console (Authentication > Users > Add user). Any Google account listed below can also sign in.
   const ADMIN_DOMAIN = 'safeflame.github.io';
   const ADMIN_EMAILS = ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com'];
+  // The extras live in later <script> blocks; wait for them if the dashboard opens before they have loaded.
+  function axBoot() { if (window.__axLoaded) axInit(); else window.addEventListener('load', () => { try { axInit(); } catch (e) { console.error(e); } }); }
   let extraAdmins = [];
   const isAdminUser = u => !!u && (ADMIN_EMAILS.includes(String(u.email || '').toLowerCase()) || extraAdmins.includes(String(u.email || '').toLowerCase()));
+  let adminListError = '';
   async function loadAdminList() {
-    try { const d = await db.collection('settings').doc('admins').get(); extraAdmins = d.exists ? (d.data().emails || []).map(e => String(e).toLowerCase()) : []; } catch (_) {}
+    adminListError = '';
+    try { const d = await db.collection('settings').doc('admins').get(); extraAdmins = d.exists ? (d.data().emails || []).map(e => String(e).toLowerCase()) : []; }
+    catch (e) { adminListError = e.code || e.message || 'error'; }
   }
+  const notAdminMessage = u => adminListError
+    ? 'Signed in as ' + u.email + ', but the admin list could not be read (' + adminListError + '). Publish the latest firestore.rules from your download, then try again.'
+    : u.email + ' is not on the admin list. Ask an existing admin to add it in Team.';
   let dashboardShown = false;
 
   const loginScreen = document.getElementById('loginScreen');
@@ -1431,7 +1496,7 @@
     startListeners();
     startChatListener();
     loadSettingsIntoForm();
-    axInit();
+    axBoot();
     if ('Notification' in window && Notification.permission === 'default') {
       Notification.requestPermission();
     }
@@ -1455,7 +1520,7 @@
       await loadAdminList();
       if (!isAdminUser(result.user)) {
         await auth.signOut();
-        setLoginError('This account does not have admin access.');
+        setLoginError(notAdminMessage(result.user));
       } else {
         setLoginError('');
         showDashboard();
@@ -1468,7 +1533,7 @@
         'auth/network-request-failed': 'Network error. Check your connection.',
         'auth/operation-not-allowed': 'Email/password sign-in is turned off in Firebase.'
       };
-      setLoginError(msgs[e.code] || 'Sign-in failed. Please try again.');
+      setLoginError((msgs[e.code] || 'Sign-in failed. Please try again.') + (msgs[e.code] && /Incorrect/.test(msgs[e.code]) ? ' (Tried: ' + id + ')' : ' [' + (e.code || 'unknown') + ']'));
     }
     loginBtn.disabled = false;
     loginBtn.textContent = 'Sign In';
@@ -1732,7 +1797,7 @@
     const tierLabel = tierLabelFor(order.tier);
     const qty = Number(order.quantity) || 1;
     const unitPrice = priceForOrder(order);
-    const totalPrice = unitPrice * qty + (Number(order.addonsTotal) || 0);
+    const totalPrice = unitPrice * qty + (Number(order.addonsTotal) || 0) + axChargeSum(order.charges);
 
     const tokens = {
       name: order.name || 'there',
@@ -1778,8 +1843,8 @@
         }
       ].concat((order.addons || []).map(a => ({ name: a.name, units: 1, price: Number(a.price).toLocaleString('en-IN') }))),
       cost: {                             // template reads cost.shipping / cost.tax / cost.total
-        shipping: '0',
-        tax: '0',
+        shipping: ((Number((order.charges || {}).shipping) || 0) + (Number((order.charges || {}).handling) || 0)).toLocaleString('en-IN'),
+        tax: ((Number((order.charges || {}).cgst) || 0) + (Number((order.charges || {}).sgst) || 0) + (Number((order.charges || {}).igst) || 0)).toLocaleString('en-IN'),
         total: totalPrice.toLocaleString('en-IN')
       },
 
@@ -2602,7 +2667,11 @@ const axMs = t => typeof t === 'number' ? t : (t && t.toMillis ? t.toMillis() : 
 const axEsc = s => escapeHtml(s == null ? '' : s);
 const axWho = () => (auth.currentUser && auth.currentUser.email) || 'admin';
 const axDate = ms => ms ? new Date(ms).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
-const axValue = o => (priceForOrder(o) * (Number(o.quantity) || 0)) + (Number(o.addonsTotal) || 0);
+const axChargeSum = c => c ? (Number(c.shipping) || 0) + (Number(c.handling) || 0) + (Number(c.cgst) || 0) + (Number(c.sgst) || 0) + (Number(c.igst) || 0) : 0;
+const axValue = o => (priceForOrder(o) * (Number(o.quantity) || 0)) + (Number(o.addonsTotal) || 0) + axChargeSum(o.charges);
+const axTax = o => o.charges ? (Number(o.charges.cgst) || 0) + (Number(o.charges.sgst) || 0) + (Number(o.charges.igst) || 0) : 0;
+function axChargeLines(c) { if (!c) return ''; const L = []; if (c.shipping) L.push('Shipping ' + axInr(c.shipping)); if (c.handling) L.push('Handling ' + axInr(c.handling)); if (c.cgst) L.push('CGST ' + ((c.rates || {}).cgst || '') + '% ' + axInr(c.cgst)); if (c.sgst) L.push('SGST ' + ((c.rates || {}).sgst || '') + '% ' + axInr(c.sgst)); if (c.igst) L.push('IGST ' + ((c.rates || {}).igst || '') + '% ' + axInr(c.igst)); return L.join(' · '); }
+function axComputeCharges(goods, state, c) { const n = x => Number(x) || 0, norm = s => String(s || '').trim().toLowerCase(); const ship = (n(c.freeShippingAbove) > 0 && goods >= n(c.freeShippingAbove)) ? 0 : n(c.shipping), hand = n(c.handling), taxable = goods + (c.taxShipping ? ship + hand : 0), inter = !!(norm(c.sellerState) && norm(state) && norm(state) !== norm(c.sellerState)); const cg = inter ? 0 : Math.round(taxable * n(c.cgst) / 100), sg = inter ? 0 : Math.round(taxable * n(c.sgst) / 100), ig = inter ? Math.round(taxable * n(c.igst) / 100) : 0; return { ship, hand, cg, sg, ig, total: goods + ship + hand + cg + sg + ig }; }
 const axKey = e => axLc(e).replace(/[.#$\[\]\/]/g, '_');
 const axAddr = a => a ? [a.name, a.line1, a.line2, [a.city, a.state].filter(Boolean).join(', '), a.pin, a.phone && ('Ph: ' + a.phone)].filter(Boolean).join(', ') : '';
 const axOrderAddr = o => o.shipping ? axAddr(o.shipping) : (o.address || '');
@@ -2618,6 +2687,7 @@ const AX_DEF = {
   verifyEmail: { subject: 'Verify your SafeFlame AI account', message: 'Hi {{name}}, welcome to SafeFlame AI! Please confirm your email address to activate your account: {{link}}' },
   announcement: { enabled: false, text: '', link: '' }, maintenance: { enabled: false, message: "We're making a few improvements. Please check back shortly." },
   addons: [{ id: 'warranty', name: 'Extended warranty (+1 year)', price: 1499, enabled: true }, { id: 'install', name: 'Professional installation', price: 999, enabled: true }],
+  charges: { shipping: 49, handling: 0, freeShippingAbove: 0, cgst: 2.5, sgst: 2.5, igst: 5, taxShipping: true, sellerState: '', gstin: '', businessName: '' },
   eta: { base: 'Within 3–4 weeks of launch', pro: 'Within 3–4 weeks of launch', elite: 'Within 4–5 weeks of launch' }, lowStockThreshold: 3,
   cannedReplies: ['Thanks for reaching out — let me check that for you.', 'Your order status is in your account under My orders.', 'Is there anything else I can help you with?'],
   faq: [{ q: 'When will SafeFlame AI ship?', a: 'Pre-bookings ship in launch order. Each order shows an estimated delivery window in your account.' }, { q: 'Do I pay when I pre-book?', a: 'No. Pre-booking only reserves your unit — nothing is charged now.' }, { q: 'Can I change or cancel my order?', a: 'Yes, while it is still Pending. Open your account, go to My orders and choose Edit or Cancel.' }]
@@ -2625,7 +2695,7 @@ const AX_DEF = {
 let axCfg = JSON.parse(JSON.stringify(AX_DEF));
 async function axLoadCfg() {
   try { const d = await db.collection('settings').doc('site').get(); const x = d.exists ? d.data() : {};
-    axCfg = { ...AX_DEF, ...x, otpEmail: { ...AX_DEF.otpEmail, ...(x.otpEmail || {}) }, verifyEmail: { ...AX_DEF.verifyEmail, ...(x.verifyEmail || {}) }, announcement: { ...AX_DEF.announcement, ...(x.announcement || {}) }, maintenance: { ...AX_DEF.maintenance, ...(x.maintenance || {}) }, eta: { ...AX_DEF.eta, ...(x.eta || {}) }, addons: Array.isArray(x.addons) ? x.addons : AX_DEF.addons, faq: Array.isArray(x.faq) ? x.faq : AX_DEF.faq, cannedReplies: Array.isArray(x.cannedReplies) ? x.cannedReplies : AX_DEF.cannedReplies };
+    axCfg = { ...AX_DEF, ...x, otpEmail: { ...AX_DEF.otpEmail, ...(x.otpEmail || {}) }, verifyEmail: { ...AX_DEF.verifyEmail, ...(x.verifyEmail || {}) }, announcement: { ...AX_DEF.announcement, ...(x.announcement || {}) }, maintenance: { ...AX_DEF.maintenance, ...(x.maintenance || {}) }, eta: { ...AX_DEF.eta, ...(x.eta || {}) }, charges: { ...AX_DEF.charges, ...(x.charges || {}) }, addons: Array.isArray(x.addons) ? x.addons : AX_DEF.addons, faq: Array.isArray(x.faq) ? x.faq : AX_DEF.faq, cannedReplies: Array.isArray(x.cannedReplies) ? x.cannedReplies : AX_DEF.cannedReplies };
   } catch (e) { console.warn('settings', e); }
   return axCfg;
 }
@@ -2703,7 +2773,7 @@ function axOrderDrawer(id) {
   axOpen('<div class="ax-head"><h2>Order #' + axEsc(orderNumberFor(o)) + ' <span class="status-pill ' + st + '">' + st + '</span></h2><button class="btn-small" id="axX">Close</button></div>' +
     (flags.length ? '<div class="ax-alert">' + flags.map(x => '<div><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 21V4M5.5 5h11l-2 3.5 2 3.5h-11"/></svg> ' + axEsc(x) + '</div>').join('') + '</div>' : '') +
     '<div class="ax-grid"><div><span>Customer</span>' + axEsc(o.name) + '</div><div><span>Email</span>' + axEsc(o.email) + '</div><div><span>Phone</span>' + axEsc(o.phone) + '</div><div><span>Placed</span>' + axDate(axMs(o.createdAt)) + '</div>' +
-    '<div><span>Product</span>' + tierLabelFor(o.tier) + ' × ' + (o.quantity || 1) + '</div><div><span>Unit price</span>' + axInr(priceForOrder(o)) + '</div><div><span>Add-ons</span>' + ((o.addons || []).map(a => axEsc(a.name) + ' (' + axInr(a.price) + ')').join(', ') || '—') + '</div><div><span>Order total</span><b>' + axInr(axValue(o)) + '</b></div>' +
+    '<div><span>Product</span>' + tierLabelFor(o.tier) + ' × ' + (o.quantity || 1) + '</div><div><span>Unit price</span>' + axInr(priceForOrder(o)) + '</div><div><span>Add-ons</span>' + ((o.addons || []).map(a => axEsc(a.name) + ' (' + axInr(a.price) + ')').join(', ') || '—') + '</div><div><span>Order total</span><b>' + axInr(axValue(o)) + '</b></div>' + (o.charges ? '<div class="wide"><span>Charges &amp; tax</span>' + axEsc(axChargeLines(o.charges)) + '</div>' : '') +
     '<div class="wide"><span>Deliver to</span>' + axEsc(axOrderAddr(o) || '—') + '</div>' + (o.gift ? '<div class="wide"><span>Gift for</span>' + axEsc(o.gift.name) + ' · ' + axEsc(o.gift.phone) + '</div>' : '') + (o.deliveryNotes ? '<div class="wide"><span>Delivery instructions</span>' + axEsc(o.deliveryNotes) + '</div>' : '') +
     (o.referredBy ? '<div><span>Referred by code</span>' + axEsc(o.referredBy) + '</div>' : '') + (o.cancelReason ? '<div class="wide"><span>Cancel reason</span>' + axEsc(o.cancelReason) + '</div>' : '') + '</div>' +
     '<div class="ax-sec">Fulfilment</div><div class="ax-grid"><div><span>Tracking number</span><input id="axTrack" class="search-input" value="' + axEsc(o.tracking || '') + '"></div><div><span>Estimated delivery</span><input id="axEta" class="search-input" value="' + axEsc(o.eta || '') + '" placeholder="e.g. 12–15 Jan"></div><div class="wide"><span>Tags (comma separated)</span><input id="axTags" class="search-input" value="' + axEsc((o.tags || []).join(', ')) + '"></div><div class="wide"><span>Internal notes</span><textarea id="axNotes" class="search-input" rows="3">' + axEsc(o.notes || '') + '</textarea></div></div>' +
@@ -2743,7 +2813,7 @@ function axRenderDash() {
   const rev = rows.reduce((s, o) => s + axValue(o), 0), addon = rows.reduce((s, o) => s + (Number(o.addonsTotal) || 0), 0), units = rows.reduce((s, o) => s + (Number(o.quantity) || 0), 0);
   const canc = all.filter(o => (o.status || '') === 'cancelled').length, wl = waitlistData.filter(w => axMs(w.createdAt) >= since).length;
   const emails = new Set(prebookData.map(o => axLc(o.email))), conv = waitlistData.length ? Math.round(100 * waitlistData.filter(w => emails.has(axLc(w.email))).length / waitlistData.length) : 0;
-  $ax('axKpis').innerHTML = [['Revenue', axInr(rev)], ['Orders', rows.length], ['Avg. order', axInr(rows.length ? Math.round(rev / rows.length) : 0)], ['Units', units], ['Add-on revenue', axInr(addon)], ['Cancel rate', (all.length ? Math.round(100 * canc / all.length) : 0) + '%'], ['New waitlist', wl], ['Waitlist → order', conv + '%']].map(k => '<div class="stat-card"><div class="num">' + k[1] + '</div><div class="label">' + k[0] + '</div></div>').join('');
+  $ax('axKpis').innerHTML = [['Revenue', axInr(rev)], ['Orders', rows.length], ['Avg. order', axInr(rows.length ? Math.round(rev / rows.length) : 0)], ['Units', units], ['Add-on revenue', axInr(addon)], ['GST collected', axInr(rows.reduce((s, o) => s + axTax(o), 0))], ['Shipping charged', axInr(rows.reduce((s, o) => s + (Number((o.charges || {}).shipping) || 0) + (Number((o.charges || {}).handling) || 0), 0))], ['Cancel rate', (all.length ? Math.round(100 * canc / all.length) : 0) + '%'], ['New waitlist', wl], ['Waitlist → order', conv + '%']].map(k => '<div class="stat-card"><div class="num">' + k[1] + '</div><div class="label">' + k[0] + '</div></div>').join('');
   // chart data
   const span = days || 30, labels = [], rv = [];
   for (let i = span - 1; i >= 0; i--) { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - i); const a = d.getTime(), b = a + 864e5; labels.push(d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })); rv.push(live.filter(o => axMs(o.createdAt) >= a && axMs(o.createdAt) < b).reduce((s, o) => s + axValue(o), 0)); }
@@ -2938,20 +3008,31 @@ $ax('tmList').addEventListener('click', async e => {
   if (!confirm('Remove admin access for ' + em + '? Their login stays in Firebase but they can no longer open this panel.')) return;
   try { await db.collection('settings').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayRemove(em) }, { merge: true }); extraAdmins = extraAdmins.filter(x => x !== axLc(em)); axLog('admin.remove', em, ''); showToast('Admin removed.', 'success'); } catch (_) { showToast('Could not remove admin.', 'error'); }
 });
+$ax('tmShow').addEventListener('change', e => { $ax('tmPw').type = e.target.checked ? 'text' : 'password'; });
 $ax('tmAdd').addEventListener('click', async () => {
-  let id = axLc($ax('tmId').value), pw = $ax('tmPw').value; const err = $ax('tmErr'); err.textContent = '';
+  let id = axLc($ax('tmId').value), pw = $ax('tmPw').value; const err = $ax('tmErr'), ok = $ax('tmOk'); err.textContent = ''; ok.textContent = '';
   if (!id) return err.textContent = 'Enter an ID or email for the new admin.'; if (!id.includes('@')) id += '@' + ADMIN_DOMAIN;
   if (!isValidEmailAx(id)) return err.textContent = 'That ID is not valid.'; if (pw.length < 6) return err.textContent = 'Password must be at least 6 characters.';
-  $ax('tmAdd').disabled = true; let created = true;
+  $ax('tmAdd').disabled = true; let created = true, works = false;
   try {
     const app2 = firebase.apps.find(a => a.name === 'adminCreate') || firebase.initializeApp(firebaseConfig, 'adminCreate');
     try { await app2.auth().createUserWithEmailAndPassword(id, pw); await app2.auth().signOut(); }
     catch (e) { if (e.code === 'auth/email-already-in-use') created = false; else throw e; }
+    try { await app2.auth().signInWithEmailAndPassword(id, pw); works = true; await app2.auth().signOut(); } catch (_) { works = false; }   // prove the login works
     await db.collection('settings').doc('admins').set({ emails: firebase.firestore.FieldValue.arrayUnion(id) }, { merge: true });
     if (!extraAdmins.includes(id)) extraAdmins.push(id); axLog('admin.add', id, created ? 'account created' : 'existing account'); $ax('tmId').value = ''; $ax('tmPw').value = '';
-    showToast(created ? 'Admin created. They can sign in with that ID and password.' : 'That account already existed — it now has admin access with its current password.', 'success');
-  } catch (e) { err.textContent = ({ 'auth/weak-password': 'Password is too weak.', 'auth/operation-not-allowed': 'Email/password sign-in is turned off in Firebase.' })[e.code] || e.message || 'Could not add the admin.'; }
+    if (works) ok.textContent = (created ? 'Admin created. ' : 'That account already existed. ') + 'Login tested: ' + id + ' with the password you typed works.';
+    else { ok.textContent = ''; err.textContent = 'Added to the admin list, but that account already exists and the password you typed does not match it. If it is a Google account, they should use "Sign in with Google"; otherwise remove the user in Firebase > Authentication and add them again.'; }
+    showToast(works ? 'Admin ready.' : 'Added, but the password did not match an existing account.', works ? 'success' : 'error');
+  } catch (e) { err.textContent = ({ 'auth/weak-password': 'Password is too weak.', 'auth/operation-not-allowed': 'Email/password sign-in is turned off in Firebase.', 'permission-denied': 'The account was created but the admin list could not be saved. Publish the latest firestore.rules, then press Add admin again.' })[e.code] || (e.message || 'Could not add the admin.'); }
   $ax('tmAdd').disabled = false;
+});
+$ax('cpBtn').addEventListener('click', async () => {
+  const m = $ax('cpMsg'), cur = $ax('cpCur').value, nw = $ax('cpNew').value, u = auth.currentUser; m.style.color = 'var(--red)'; m.textContent = '';
+  if (!u || !u.providerData.some(p => p.providerId === 'password')) return m.textContent = 'You signed in with Google — change your password in your Google account.';
+  if (!cur || nw.length < 6) return m.textContent = 'Enter your current password and a new one (min 6 characters).';
+  try { await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, cur)); await u.updatePassword(nw); m.style.color = 'var(--green)'; m.textContent = 'Password updated.'; $ax('cpCur').value = ''; $ax('cpNew').value = ''; axLog('admin.password', axWho(), ''); }
+  catch (e) { m.textContent = ({ 'auth/wrong-password': 'Current password is incorrect.', 'auth/invalid-credential': 'Current password is incorrect.', 'auth/weak-password': 'That password is too weak.' })[e.code] || e.message || 'Could not update the password.'; }
 });
 function axRenderActs() {
   const q = axLc($ax('actSearch').value), list = axActs.filter(a => !q || axLc(a.by + ' ' + a.action + ' ' + a.target + ' ' + a.detail).includes(q));
@@ -2961,7 +3042,7 @@ $ax('actSearch').addEventListener('input', axRenderActs);
 
 /* ═════════ DATA: CSV export + backup / restore ═════════ */
 const axCsvSets = {
-  orders: async () => [['Order #', 'Date', 'Name', 'Email', 'Phone', 'Tier', 'Qty', 'Unit price', 'Add-ons', 'Total', 'Status', 'Tracking', 'ETA', 'Address', 'Gift for', 'Delivery notes', 'Tags', 'Notes', 'Referred by']].concat(prebookData.map(o => [orderNumberFor(o), axDate(axMs(o.createdAt)), o.name, o.email, o.phone, tierLabelFor(o.tier), o.quantity, priceForOrder(o), (o.addons || []).map(a => a.name).join('; '), axValue(o), o.status || 'pending', o.tracking || '', o.eta || '', axOrderAddr(o), o.gift ? o.gift.name : '', o.deliveryNotes || '', (o.tags || []).join('; '), o.notes || '', o.referredBy || '']), prebookData.map(o => axMs(o.createdAt))),
+  orders: async () => [['Order #', 'Date', 'Name', 'Email', 'Phone', 'Tier', 'Qty', 'Unit price', 'Add-ons', 'Shipping', 'Handling', 'CGST', 'SGST', 'IGST', 'Total', 'Status', 'Tracking', 'ETA', 'Address', 'Gift for', 'Delivery notes', 'Tags', 'Notes', 'Referred by']].concat(prebookData.map(o => [orderNumberFor(o), axDate(axMs(o.createdAt)), o.name, o.email, o.phone, tierLabelFor(o.tier), o.quantity, priceForOrder(o), (o.addons || []).map(a => a.name).join('; '), (o.charges || {}).shipping || 0, (o.charges || {}).handling || 0, (o.charges || {}).cgst || 0, (o.charges || {}).sgst || 0, (o.charges || {}).igst || 0, axValue(o), o.status || 'pending', o.tracking || '', o.eta || '', axOrderAddr(o), o.gift ? o.gift.name : '', o.deliveryNotes || '', (o.tags || []).join('; '), o.notes || '', o.referredBy || '']), prebookData.map(o => axMs(o.createdAt))),
   waitlist: async () => [['Email', 'Name', 'Date']].concat(waitlistData.map(w => [w.email, w.name || '', axDate(axMs(w.createdAt))]), waitlistData.map(w => axMs(w.createdAt))),
   customers: async () => [['Name', 'Email', 'Phone', 'Orders', 'Units', 'Spent', 'Latest status']].concat(buildCustomerData().map(c => [c.name, c.email, c.phone, c.orderCount, c.totalUnits, c.totalSpent, c.latestStatus]), buildCustomerData().map(c => axMs(c.lastOrderDate))),
   chats: async () => { const s = await db.collection('chats').get(), d = s.docs.map(x => ({ id: x.id, ...x.data() })); return [['Chat ID', 'Name', 'Email', 'Status', 'Rating', 'Started', 'Last message']].concat(d.map(c => [c.id, c.userName, c.userEmail, c.status, c.rating || '', axDate(axMs(c.createdAt)), c.lastMessage || '']), d.map(c => axMs(c.createdAt))); },
@@ -3156,6 +3237,7 @@ const AX_PAGES = { privacy: 'Privacy policy', refund: 'Refund & cancellation pol
 const axGuideRow = g => '<div class="ax-line col"><div class="ax-line"><input class="search-input gd-cat" placeholder="Category" value="' + axEsc(g.category || '') + '" style="max-width:180px"><input class="search-input gd-title" placeholder="Title" value="' + axEsc(g.title || '') + '"><button class="row-delete ax-rm" type="button">Remove</button></div><textarea class="search-input gd-body" rows="4" placeholder="Steps… (## heading, - bullets, 1. numbered, **bold**)">' + axEsc(g.body || '') + '</textarea><input type="hidden" class="gd-id" value="' + axEsc(g.id || '') + '"></div>';
 function axRenderSite2() {
   const c = axCfg, aw = { enabled: false, startHour: 9, endHour: 21, message: '', notifyEmail: '', ...(c.awayMode || {}) }, seo = c.seo || {};
+  const ch = c.charges || {}; $ax('chShip').value = ch.shipping; $ax('chHand').value = ch.handling; $ax('chFree').value = ch.freeShippingAbove; $ax('chCgst').value = ch.cgst; $ax('chSgst').value = ch.sgst; $ax('chIgst').value = ch.igst; $ax('chTaxShip').checked = ch.taxShipping !== false; $ax('chState').value = ch.sellerState || ''; $ax('chBiz').value = ch.businessName || ''; $ax('chGstin').value = ch.gstin || ''; axChargePreview();
   $ax('siKnow').value = c.knowledge || ''; $ax('siAwayOn').checked = !!aw.enabled; $ax('siAwayStart').value = aw.startHour; $ax('siAwayEnd').value = aw.endHour; $ax('siAwayMsg').value = aw.message || ''; $ax('siAwayMail').value = aw.notifyEmail || '';
   $ax('siSeoTitle').value = seo.title || ''; $ax('siSeoDesc').value = seo.description || ''; $ax('siSeoImg').value = seo.image || ''; $ax('siWarr').value = c.warrantyMonths != null ? c.warrantyMonths : 12;
   const pages = c.pages || {}; $ax('siPages').innerHTML = Object.keys(AX_PAGES).map(k => { const p = { title: AX_PAGES[k], body: '', ...(pages[k] || {}) }; return '<div class="ax-line col" data-slug="' + k + '"><input class="search-input pg-title" value="' + axEsc(p.title) + '"><textarea class="search-input pg-body" rows="8" placeholder="Page text (## heading, - bullets, **bold**)">' + axEsc(p.body) + '</textarea></div>'; }).join('');
@@ -3164,12 +3246,16 @@ function axRenderSite2() {
 function axCollectSite2() {
   const pages = {}; document.querySelectorAll('#siPages [data-slug]').forEach(r => { const k = r.dataset.slug, t = r.querySelector('.pg-title').value.trim(), b = r.querySelector('.pg-body').value, old = (axCfg.pages || {})[k] || {}; pages[k] = { title: t || AX_PAGES[k], body: b, updated: (old.title === t && old.body === b && old.updated) ? old.updated : new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }) }; });
   return {
+    charges: axReadCharges(),
     knowledge: $ax('siKnow').value.trim(), warrantyMonths: Math.max(1, Number($ax('siWarr').value) || 12), pages,
     awayMode: { enabled: $ax('siAwayOn').checked, startHour: Math.min(23, Math.max(0, Number($ax('siAwayStart').value) || 0)), endHour: Math.min(24, Math.max(0, Number($ax('siAwayEnd').value) || 0)), message: $ax('siAwayMsg').value.trim(), notifyEmail: $ax('siAwayMail').value.trim() },
     seo: { title: $ax('siSeoTitle').value.trim(), description: $ax('siSeoDesc').value.trim(), image: $ax('siSeoImg').value.trim() },
     guides: [...document.querySelectorAll('#siGuides .ax-line.col')].map((r, i) => ({ id: r.querySelector('.gd-id').value || ('g' + Date.now().toString(36) + i), category: r.querySelector('.gd-cat').value.trim() || 'General', title: r.querySelector('.gd-title').value.trim(), body: r.querySelector('.gd-body').value })).filter(g => g.title && g.body.trim())
   };
 }
+function axReadCharges() { const n = id => Math.max(0, Number($ax(id).value) || 0); return { shipping: n('chShip'), handling: n('chHand'), freeShippingAbove: n('chFree'), cgst: n('chCgst'), sgst: n('chSgst'), igst: n('chIgst'), taxShipping: $ax('chTaxShip').checked, sellerState: $ax('chState').value.trim(), businessName: $ax('chBiz').value.trim(), gstin: $ax('chGstin').value.trim().toUpperCase() }; }
+function axChargePreview() { const c = axReadCharges(), x = axComputeCharges(10000, '', c), y = c.sellerState ? axComputeCharges(10000, '__other__', c) : null; $ax('chPreview').innerHTML = 'Example: a ₹10,000 order in your state → shipping ' + axInr(x.ship) + (x.hand ? ' + handling ' + axInr(x.hand) : '') + ' + CGST ' + axInr(x.cg) + ' + SGST ' + axInr(x.sg) + ' = <b>' + axInr(x.total) + '</b>' + (y ? '<br>Other state → IGST ' + axInr(y.ig) + ' = <b>' + axInr(y.total) + '</b>' : ''); }
+document.addEventListener('input', e => { if (e.target.id && e.target.id.startsWith('ch')) axChargePreview(); });
 function axSeoSnippet() {
   const t = $ax('siSeoTitle').value.trim(), d = $ax('siSeoDesc').value.trim(), i = $ax('siSeoImg').value.trim(), q = x => x.replace(/"/g, '&quot;');
   $ax('siSeoSnippet').value = [t && '<title>' + t + '</title>', d && '<meta name="description" content="' + q(d) + '">', t && '<meta property="og:title" content="' + q(t) + '">', d && '<meta property="og:description" content="' + q(d) + '">', i && '<meta property="og:image" content="' + q(i) + '">', i && '<meta name="twitter:card" content="summary_large_image">'].filter(Boolean).join('\n');
@@ -3242,6 +3328,132 @@ axInit = function () {
 };
 $ax('tab-site').addEventListener('input', e => { if (e.target.closest('#siFwNew')) return; });
 
+</script>
+<script>
+/* New-order alert. The original panel called this function but it was never defined, which broke live updates when an order arrived. */
+function notifyNewOrder(o) {
+  try {
+    showToast('New order #' + orderNumberFor(o) + ' — ' + (o.name || 'customer') + ' · ' + tierLabelFor(o.tier) + ' × ' + (o.quantity || 1) + ' · ' + axInr(axValue(o)), 'success'); playBeep();
+    if ('Notification' in window && Notification.permission === 'granted') new Notification('New SafeFlame order', { body: (o.name || 'A customer') + ' pre-booked ' + tierLabelFor(o.tier) + ' × ' + (o.quantity || 1) });
+  } catch (e) { console.warn('order alert failed', e); }
+}
+/* ═════════ ADMIN POLISH: search, needs-attention, recent activity, theme, sound, tab icons ═════════ */
+const AX_TAB_ICONS = { overview: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l3.5-4 3 2.5L19 8"/></svg>', orders: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3Z"/><path d="m3.5 7.5 8.5 4.5 8.5-4.5M12 12v9"/></svg>', waitlist: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.2"/><path d="M3 20c0-3.3 2.7-5.5 6-5.5s6 2.2 6 5.5M16 5.5a3 3 0 0 1 0 6M18 14.8c1.8.7 3 2.4 3 5.2"/></svg>', customers: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="10" r="3.1"></circle><path d="M6.1 18.7a6.6 6.6 0 0 1 11.8 0"></path></svg>', chats: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg>', tickets: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg>', inbox: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13.5 6 5.5h12l2.5 8M3.5 13.5V19a1 1 0 0 0 1 1h15a1 1 0 0 0 1-1v-5.5h-5l-1.5 2.5h-4L8.5 13.5h-5Z"/></svg>', email: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5.5" width="18" height="13" rx="2.4"/><path d="m3.8 7.5 8.2 6 8.2-6"/></svg>', site: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h3l8 4V6L7 10H4ZM18 9.5a3.5 3.5 0 0 1 0 5"/></svg>', team: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.4 3.1 8 7.5 9.5 4.4-1.5 7.5-5.1 7.5-9.5V6L12 3Z"/><rect x="9.2" y="10.8" width="5.6" height="4.4" rx="1"/><path d="M10.6 10.8V9.6a1.4 1.4 0 0 1 2.8 0v1.2"/></svg>', data: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="7.5" ry="3"/><path d="M4.5 6v12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3V6M4.5 12c0 1.7 3.4 3 7.5 3s7.5-1.3 7.5-3"/></svg>', health: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3.6" width="18" height="7" rx="2.2"></rect><rect x="3" y="13.4" width="18" height="7" rx="2.2"></rect><path d="M14.6 7.1h3.2M14.6 16.9h3.2" stroke-width="1.5"></path><g fill="currentColor" stroke="none"><circle cx="6.9" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="7.1" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.35s" repeatCount="indefinite"></animate></circle><circle cx="6.9" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="0.7s" repeatCount="indefinite"></animate></circle><circle cx="10.2" cy="16.9" r="1.15"><animate attributeName="opacity" values=".18;1;.18" dur="1.6s" begin="1.05s" repeatCount="indefinite"></animate></circle></g></svg>', settings: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6.5h9M18.5 6.5h1.5M4 12h3.5M13 12h7M4 17.5h9M18.5 17.5h1.5"></path><circle cx="15.5" cy="6.5" r="2.3"></circle><circle cx="10" cy="12" r="2.3"></circle><circle cx="15.5" cy="17.5" r="2.3"></circle></svg>' };
+const axGoTab = (tab) => { const b = document.querySelector('.tab-btn[data-tab="' + tab + '"]'); if (b) b.click(); };
+
+/* ── needs attention + recent activity (Overview) ── */
+function axRenderAttn() {
+  if (!$ax('axAttnList')) return;
+  const thr = Number(siteSettings.lowStockThreshold != null ? siteSettings.lowStockThreshold : axCfg.lowStockThreshold) || 3;
+  const live = prebookData.filter(o => (o.status || 'pending') !== 'cancelled'); const sold = { base: 0, pro: 0, elite: 0 };
+  live.forEach(o => { sold[o.tier === 'pro' ? 'pro' : o.tier === 'elite' ? 'elite' : 'base'] += Number(o.quantity) || 0; });
+  const low = ['base', 'pro', 'elite'].filter(t => { const st = Number(siteSettings[t + 'Stock']); return st >= 0 && st - sold[t] <= thr; });
+  const dayAgo = Date.now() - 864e5;
+  const items = [
+    ['orders', '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3Z"/><path d="m3.5 7.5 8.5 4.5 8.5-4.5M12 12v9"/></svg>', 'Pending orders', prebookData.filter(o => (o.status || 'pending') === 'pending').length],
+    ['tickets', '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg>', 'Tickets waiting for you', axTickets.filter(t => t.unreadAdmin && t.status !== 'closed').length],
+    ['chats', '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4.6 5.2h14.8a2.2 2.2 0 0 1 2.2 2.2v7.2a2.2 2.2 0 0 1-2.2 2.2h-6.7l-4.8 3.5v-3.5H4.6a2.2 2.2 0 0 1-2.2-2.2V7.4a2.2 2.2 0 0 1 2.2-2.2Z"></path><g fill="currentColor" stroke="none"><circle cx="8.4" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="12" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.16s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle><circle cx="15.6" cy="11.3" r="1.1"><animate attributeName="cy" values="11.3;9.3;11.3" dur="1.15s" begin="0.32s" repeatCount="indefinite" calcMode="spline" keySplines="0.32 0 0.2 1;0.32 0 0.2 1"></animate></circle></g></svg>', 'Chats asking for a person', (chatsData || []).filter(c => c.status === 'waiting_human').length],
+    ['orders', '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>', 'Installation requests', prebookData.filter(o => o.installation && o.installation.status === 'requested').length],
+    ['inbox', '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8L12 3.5Z"/></svg>', 'Stories to approve', axStories.filter(s => s.status === 'pending').length],
+    ['inbox', '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 13.5 6 5.5h12l2.5 8M3.5 13.5V19a1 1 0 0 0 1 1h15a1 1 0 0 0 1-1v-5.5h-5l-1.5 2.5h-4L8.5 13.5h-5Z"/></svg>', 'New feedback', axFb.filter(f => (f.status || 'new') === 'new').length],
+    ['orders', '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 21V4M5.5 5h11l-2 3.5 2 3.5h-11"/></svg>', 'Orders flagged for review', prebookData.filter(o => (o.status || '') !== 'cancelled' && axFlags(o).length).length],
+    ['email', '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', 'Failed emails (24 hours)', axLogs.filter(l => !l.ok && axMs(l.at) > dayAgo).length],
+    ['overview', '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', 'Tiers low on stock', low.length]
+  ].filter(i => i[3] > 0);
+  $ax('axAttnList').innerHTML = items.length ? items.map(i => '<button class="ax-attn-item" data-go="' + i[0] + '">' + i[1] + '<b>' + i[3] + '</b><span>' + i[2] + '</span></button>').join('') : '<div class="ax-clear"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-dasharray="57" stroke-dashoffset="57"><animate attributeName="stroke-dashoffset" values="57;0;0;57" keyTimes="0;0.34;0.84;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></circle><path d="m8 12.2 2.7 2.8L16 9.4" stroke-dasharray="13" stroke-dashoffset="13"><animate attributeName="stroke-dashoffset" values="13;13;0;0;13" keyTimes="0;0.3;0.52;0.82;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></path></svg> All clear — nothing needs you right now.</div>';
+}
+function axRenderRecent() {
+  if (!$ax('axRecent')) return;
+  $ax('axRecent').innerHTML = axActs.slice(0, 8).map(a => '<div class="ax-row"><span><b>' + axEsc((a.by || '').split('@')[0]) + '</b> · ' + axEsc(a.action) + (a.target ? ' · ' + axEsc(a.target) : '') + (a.detail ? ' <small style="color:var(--muted)">' + axEsc(a.detail) + '</small>' : '') + '</span><small>' + axDate(axMs(a.at)) + '</small></div>').join('') || '<div class="empty-state">No activity recorded yet.</div>';
+}
+document.addEventListener('click', e => { const g = e.target.closest('[data-go]'); if (g && g.closest('#axAttnList, #axRecentHead')) axGoTab(g.dataset.go); });
+
+/* ── global search (Ctrl+K or /) ── */
+function axOpenSearch() { $ax('axSearch').style.display = 'flex'; $ax('axSq').value = ''; axSearchRun(''); setTimeout(() => $ax('axSq').focus(), 30); }
+function axCloseSearch() { $ax('axSearch').style.display = 'none'; }
+function axSearchRun(q) {
+  q = axLc(q); const box = $ax('axSr'); if (!q) { box.innerHTML = '<div class="hint" style="padding:.6rem 0">Type an order number, name, email, phone, ticket subject or chat message.</div>'; return; }
+  const has = (...f) => f.some(x => axLc(x).includes(q)), groups = [];
+  const orders = prebookData.filter(o => has(orderNumberFor(o), o.name, o.email, o.phone, o.tracking)).slice(0, 5).map(o => ({ t: '#' + orderNumberFor(o) + ' · ' + (o.name || '') + ' · ' + (o.status || 'pending'), a: () => { axGoTab('orders'); axOrderDrawer(o.id); } }));
+  const seen = new Set(), custs = []; prebookData.forEach(o => { const e = axLc(o.email); if (!seen.has(e) && has(o.name, o.email, o.phone)) { seen.add(e); custs.push({ t: (o.name || e) + ' · ' + e, a: () => { axGoTab('customers'); axCustomerDrawer(e); } }); } });
+  const tks = axTickets.filter(t => has(t.subject, t.email, t.name, t.lastMessage)).slice(0, 5).map(t => ({ t: t.subject + ' · ' + (t.name || t.email) + ' · ' + t.status, a: () => { axGoTab('tickets'); axOpenTicket(t.id); } }));
+  const chs = (chatsData || []).filter(c => has(c.userName, c.userEmail, c.lastMessage)).slice(0, 5).map(c => ({ t: (c.userName || 'Guest') + ' · ' + (c.lastMessage || '') , a: () => { axGoTab('chats'); setTimeout(() => openChat(c.id), 150); } }));
+  const fbs = axFb.filter(f => has(f.message, f.email, f.name)).slice(0, 4).map(f => ({ t: f.category + ' · ' + (f.name || f.email || '') + ' — ' + f.message.slice(0, 50), a: () => axGoTab('inbox') }));
+  [['Orders', orders], ['Customers', custs.slice(0, 5)], ['Tickets', tks], ['Chats', chs], ['Feedback', fbs]].forEach(([n, l]) => { if (l.length) groups.push([n, l]); });
+  window.__axHits = []; box.innerHTML = groups.length ? groups.map(([n, l]) => '<div class="ax-sec" style="margin:.6rem 0 .2rem;padding-top:.5rem">' + n + '</div>' + l.map(h => { window.__axHits.push(h); return '<div class="ax-row ax-link ax-hit" data-i="' + (window.__axHits.length - 1) + '"><span>' + axEsc(h.t) + '</span></div>'; }).join('')).join('') : '<div class="empty-state">No matches for "' + axEsc(q) + '".</div>';
+}
+$ax('axSq').addEventListener('input', e => axSearchRun(e.target.value));
+$ax('axSq').addEventListener('keydown', e => { if (e.key === 'Enter' && window.__axHits && window.__axHits[0]) { const h = window.__axHits[0]; axCloseSearch(); h.a(); } });
+$ax('axSr').addEventListener('click', e => { const r = e.target.closest('.ax-hit'); if (r) { const h = window.__axHits[+r.dataset.i]; axCloseSearch(); h.a(); } });
+$ax('axSearch').addEventListener('click', e => { if (e.target === $ax('axSearch')) axCloseSearch(); });
+document.addEventListener('keydown', e => {
+  if (!$ax('axHdr') || $ax('axHdr').style.display === 'none') return;
+  const typing = /INPUT|TEXTAREA|SELECT/.test((document.activeElement || {}).tagName || '');
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); axOpenSearch(); }
+  else if (e.key === '/' && !typing) { e.preventDefault(); axOpenSearch(); }
+  else if (e.key === 'Escape') axCloseSearch();
+});
+
+/* ── header buttons: theme, sound ── */
+function axApplyTheme() { const l = localStorage.getItem('sf_admin_theme') === 'light'; document.documentElement.setAttribute('data-admin-theme', l ? 'light' : 'dark'); $ax('axThemeBtn').innerHTML = l ? '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.2A8 8 0 0 1 9.8 4 8 8 0 1 0 20 14.2Z"/></svg>' : '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6 7 7M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4"/></svg>'; $ax('axThemeBtn').title = l ? 'Switch to dark theme' : 'Switch to light theme'; }
+function axApplySound() { const on = localStorage.getItem('sf_admin_sound') !== 'off'; $ax('axSoundBtn').innerHTML = on ? '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg>' : '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9a6 6 0 0 1 12 0c0 6 2.5 7.5 2.5 7.5h-17S6 15 6 9Z"/><path d="M10 20a2 2 0 0 0 4 0"/></svg><s></s>'; $ax('axSoundBtn').classList.toggle('muted', !on); $ax('axSoundBtn').title = on ? 'Alert sounds on — click to mute' : 'Alert sounds muted — click to turn on'; }
+$ax('axThemeBtn').addEventListener('click', () => { localStorage.setItem('sf_admin_theme', localStorage.getItem('sf_admin_theme') === 'light' ? 'dark' : 'light'); axApplyTheme(); });
+$ax('axSoundBtn').addEventListener('click', () => { localStorage.setItem('sf_admin_sound', localStorage.getItem('sf_admin_sound') === 'off' ? 'on' : 'off'); axApplySound(); });
+$ax('axSearchBtn').addEventListener('click', axOpenSearch);
+const axPlayBeepBase = playBeep; playBeep = function () { if (localStorage.getItem('sf_admin_sound') === 'off') return; axPlayBeepBase(); };
+try { if (localStorage.getItem('sf_admin_theme') === 'light') document.documentElement.setAttribute('data-admin-theme', 'light'); } catch (_) {}
+
+/* ── hook into init + renders ── */
+const axInitBase2 = axInit;
+axInit = function () {
+  if (axInit.done3) return; axInit.done3 = true; axInitBase2();
+  $ax('axHdr').style.display = 'flex'; axApplyTheme(); axApplySound();
+  document.querySelectorAll('.tab-btn').forEach(b => { const ic = AX_TAB_ICONS[b.dataset.tab]; if (ic && !b.querySelector('.ic')) b.insertAdjacentHTML('afterbegin', ic + ' '); });
+  ['axFbList', 'axRvList', 'tkList'].forEach(id => { if (!$ax(id).innerHTML.trim()) $ax(id).innerHTML = '<div class="skel-line"></div><div class="skel-line"></div><div class="skel-line"></div>'; });
+  setInterval(() => { try { axRenderAttn(); axRenderRecent(); } catch (_) {} }, 1500);
+};
+
+</script>
+<script>
+
+/* ═════════ WEBSITE RELEASES: banner + patch notes ═════════ */
+let axRels = [];
+function axNextVersion() { const v = (axRels[0] || {}).version || '1.0.0', p = String(v).split('.').map(n => parseInt(n, 10) || 0); while (p.length < 3) p.push(0); p[2]++; return p.join('.'); }
+function axRenderRels() {
+  if (!$ax('relList')) return; if (!$ax('relVer').value) $ax('relVer').placeholder = 'Version e.g. ' + axNextVersion();
+  const latest = (axCfg.latestRelease || siteSettings.latestRelease || {}).version;
+  $ax('relList').innerHTML = axRels.length ? axRels.map(r => '<div class="ax-row"><span><b>v' + axEsc(r.version) + '</b>' + (r.version === latest ? ' <span class="ax-tag warn">live banner</span>' : '') + ' · ' + axEsc(r.title || '') + ' <small style="color:var(--muted)">' + axDate(r.date).split(',')[0] + '</small></span><span><button class="btn-small" data-relre="' + r.id + '">Re-announce</button> <button class="btn-small danger" data-reldel="' + r.id + '">Delete</button></span></div>').join('') : '<div class="hint">No releases published yet.</div>';
+}
+$ax('relPublish').addEventListener('click', async () => {
+  const ver = $ax('relVer').value.trim() || axNextVersion(), title = $ax('relTitle').value.trim(), notes = $ax('relNotes').value.trim(), msg = $ax('relMsg'); msg.style.color = 'var(--red)'; msg.textContent = '';
+  if (!/^\d+(\.\d+){1,3}$/.test(ver)) return msg.textContent = 'Version should look like 1.2.0.';
+  if (axRels.some(r => r.version === ver)) return msg.textContent = 'v' + ver + ' already exists — use a new version number.';
+  if (notes.length < 5) return msg.textContent = 'Add at least one patch note.';
+  $ax('relPublish').disabled = true;
+  try {
+    const rel = { version: ver, title, notes, date: Date.now(), by: axWho() }, ref = await db.collection('releases').add(rel);
+    const latest = { id: ref.id, version: ver, title, date: rel.date, banner: $ax('relBanner').checked, nonce: 0, notes };
+    await db.collection('settings').doc('site').set({ latestRelease: latest }, { merge: true }); axCfg.latestRelease = latest; siteSettings.latestRelease = latest;
+    let n = 0;
+    if ($ax('relNotify').checked) {
+      const us = await db.collection('users').get(), mails = [...new Set(us.docs.map(d => axLc(d.data().email)).filter(Boolean))];
+      for (let i = 0; i < mails.length; i += 400) { const b = db.batch(); mails.slice(i, i + 400).forEach(em => b.set(db.collection('notifications').doc(), { email: em, type: 'release', title: 'SafeFlame AI updated to v' + ver, body: (title || 'Bug fixes and improvements') + ' — see What\'s new.', read: false, createdAt: axTS() })); await b.commit(); n += Math.min(400, mails.length - i); }
+    }
+    axLog('release.publish', 'v' + ver, (n ? n + ' customers notified' : 'banner ' + ($ax('relBanner').checked ? 'on' : 'off')));
+    ['relVer', 'relTitle', 'relNotes'].forEach(id => $ax(id).value = ''); msg.style.color = 'var(--green)'; msg.textContent = 'v' + ver + ' published' + (n ? ' · ' + n + ' customers notified' : '') + '.'; showToast('Release published.', 'success');
+  } catch (e) { msg.textContent = 'Could not publish: ' + (e.message || 'check the Firestore rules.'); }
+  $ax('relPublish').disabled = false;
+});
+$ax('relList').addEventListener('click', async e => {
+  const re = e.target.closest('[data-relre]'), del = e.target.closest('[data-reldel]');
+  if (re) { const r = axRels.find(x => x.id === re.dataset.relre); const latest = { id: r.id, version: r.version, title: r.title || '', date: r.date, banner: true, nonce: Date.now(), notes: r.notes }; await db.collection('settings').doc('site').set({ latestRelease: latest }, { merge: true }).catch(() => {}); axCfg.latestRelease = latest; siteSettings.latestRelease = latest; axLog('release.reannounce', 'v' + r.version, ''); showToast('Banner will show again for v' + r.version + '.', 'success'); axRenderRels(); }
+  if (del && confirm('Delete this release from the changelog?')) { const r = axRels.find(x => x.id === del.dataset.reldel); await db.collection('releases').doc(del.dataset.reldel).delete().catch(() => {}); if (r && (axCfg.latestRelease || {}).version === r.version) { const next = axRels.filter(x => x.id !== r.id)[0]; await db.collection('settings').doc('site').set({ latestRelease: next ? { id: next.id, version: next.version, title: next.title || '', date: next.date, banner: false, nonce: 0 } : firebase.firestore.FieldValue.delete() }, { merge: true }).catch(() => {}); } axLog('release.delete', 'v' + (r || {}).version, ''); }
+});
+const axInitBase4 = axInit;
+axInit = function () { if (axInit.done4) return; axInit.done4 = true; axInitBase4(); db.collection('releases').orderBy('date', 'desc').limit(60).onSnapshot(s => { axRels = s.docs.map(d => ({ id: d.id, ...d.data() })); axRenderRels(); }, e => console.warn('releases', e)); };
+
+
+window.__axLoaded = true;
 </script>
 </body>
 </html>
