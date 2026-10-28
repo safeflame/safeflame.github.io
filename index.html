@@ -1760,6 +1760,22 @@ html[data-theme="light"] .banner{color:#8a5a00}
 .nav-links{gap:.1rem}
 @media(max-width:1320px){.nav-links a{font-size:.8rem;padding:.4rem .55rem}nav{padding:0 1.4rem}.lang-select{max-width:100px}.btn-signin,.nav-cta{padding-left:.8rem;padding-right:.8rem}}
 @media(max-width:1180px){.nav-links a[href="/help"],.nav-links a[href="#waitlist"]{display:none}}
+#sfRelease{position:fixed;top:0;left:0;right:0;z-index:200;display:flex;align-items:center;justify-content:center;gap:.7rem;flex-wrap:wrap;padding:.55rem 3rem .55rem 1rem;background:linear-gradient(90deg,#26C6DA,#66BB6A);color:#06222a;font:600 .85rem Inter,system-ui,sans-serif;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.25)}
+#sfRelease button{border:1px solid rgba(6,34,42,.45);background:rgba(255,255,255,.35);color:#06222a;border-radius:50px;padding:.2rem .8rem;font:600 .78rem Inter,system-ui,sans-serif;cursor:pointer}
+#sfRelease button:hover{background:rgba(255,255,255,.6)}
+#sfRelease #sfRelX{position:absolute;right:.8rem;top:50%;transform:translateY(-50%);border:none;background:none;font-size:1rem;padding:.2rem .4rem}
+.topbar,nav{top:var(--sf-banner-h,0px)}
+.pn-card{background:#0d0d1a;color:#f0f0f8;border:1px solid rgba(255,255,255,.1);border-radius:18px;padding:1.6rem;max-width:520px;width:100%;max-height:88vh;overflow:auto}
+.pn-card h2{font-size:1.25rem;margin:0 0 .2rem}.pn-sub{color:#a0a0b8;font-size:.88rem;margin:0 0 1rem}
+.pn-body h4{margin:.9rem 0 .3rem;font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:#a0a0b8}
+.pn{list-style:none;margin:0;padding:0}.pn li{padding:.45rem 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:.9rem;line-height:1.5}
+.pn-tag{display:inline-block;font-size:.64rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:.1rem .5rem;border-radius:50px;margin-right:.4rem}
+.pn-fix{background:rgba(102,187,106,.18);color:#66BB6A}.pn-new{background:rgba(38,198,218,.18);color:#26C6DA}.pn-imp{background:rgba(255,167,38,.18);color:#FFA726}.pn-sec{background:rgba(239,83,80,.18);color:#EF5350}
+.pn-actions{display:flex;justify-content:space-between;align-items:center;margin-top:1.2rem}.pn-actions a{color:#FF8A65;font-size:.85rem}
+.pn-actions button{background:#FF5722;color:#fff;border:none;border-radius:10px;padding:.65rem 1.4rem;font:600 .9rem Inter,system-ui,sans-serif;cursor:pointer}
+html[data-theme="light"] .pn-card{background:#fff;color:#15151f;border-color:rgba(20,20,40,.12)}html[data-theme="light"] .pn li{border-color:rgba(20,20,40,.08)}
+
+body{padding-top:var(--sf-banner-h,0px)}
 </style>
 </head>
 <body>
@@ -2262,7 +2278,7 @@ html[data-theme="light"] .banner{color:#8a5a00}
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 SafeFlame AI. All rights reserved. · <a href="/privacy">Privacy</a> · <a href="/refund">Refunds</a> · <a href="/warranty">Warranty</a></span>
+    <span>© 2026 SafeFlame AI. All rights reserved. · <a href="/privacy">Privacy</a> · <a href="/refund">Refunds</a> · <a href="/warranty">Warranty</a> · <a href="/whats-new">What's new</a></span>
     <a href="/admin/" style="opacity:.3;font-size:.7rem;">Admin</a>
   </div>
 </footer>
@@ -2679,7 +2695,7 @@ function renderTrackCard(order){
   const tierLabel=tierLabelFor(order.tier);
   const qty=Number(order.quantity)||1;
   const unitPrice=typeof order.unitPrice==='number'?order.unitPrice:tierPriceFor(order.tier);
-  const total=unitPrice*qty+(Number(order.addonsTotal)||0);
+  const ch=order.charges||{}, total=unitPrice*qty+(Number(order.addonsTotal)||0)+(Number(ch.shipping)||0)+(Number(ch.handling)||0)+(Number(ch.cgst)||0)+(Number(ch.sgst)||0)+(Number(ch.igst)||0);
   const dateStr=order.createdAt&&order.createdAt.toDate?order.createdAt.toDate().toLocaleDateString():'—';
   const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   return `<div class="t-order-card"><div class="t-order-top"><span class="t-order-id">Order #${esc(orderNumberFor(order))}</span><span class="t-status ${status}">${esc(status)}</span></div><div class="t-order-details"><div><span>Product</span>SafeFlame AI — ${esc(tierLabel)}</div><div><span>Qty</span>${qty}</div><div><span>Total</span>₹${total.toLocaleString('en-IN')}</div><div><span>Ordered</span>${esc(dateStr)}</div></div></div>`;
@@ -2753,6 +2769,46 @@ function initTheme() {
   applyTheme();
 }
 initTheme();
+
+/* ── "new version" banner + patch notes (published from Admin > Site > Website releases) ── */
+const sfEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function patchNotesHtml(text) {
+  const tags = { fix: ['Fixed', 'fix'], fixed: ['Fixed', 'fix'], new: ['New', 'new'], improved: ['Improved', 'imp'], improve: ['Improved', 'imp'], security: ['Security', 'sec'] };
+  const items = String(text || '').replace(/\r/g, '').split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    if (/^##\s+/.test(l)) return '<h4>' + sfEsc(l.replace(/^##\s+/, '')) + '</h4>';
+    const m = l.replace(/^[-*]\s+/, '').match(/^(fix|fixed|new|improved|improve|security)\s*:\s*(.*)$/i);
+    return m ? '<li><span class="pn-tag pn-' + tags[m[1].toLowerCase()][1] + '">' + tags[m[1].toLowerCase()][0] + '</span> ' + sfEsc(m[2]) + '</li>' : '<li>' + sfEsc(l.replace(/^[-*]\s+/, '')) + '</li>';
+  });
+  return '<ul class="pn">' + items.join('') + '</ul>';
+}
+function sfReleaseModal(rel, notes) {
+  const o = document.createElement('div'); o.id = 'sfRelModal';
+  o.style.cssText = 'position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:1rem;font-family:Inter,system-ui,sans-serif';
+  o.innerHTML = '<div class="pn-card"><h2>What\'s new in v' + sfEsc(rel.version) + '</h2><p class="pn-sub">' + sfEsc(rel.title || 'Bug fixes and improvements') + '</p><div class="pn-body">' + patchNotesHtml(notes) + '</div><div class="pn-actions"><a href="/whats-new">All releases</a><button type="button" id="sfRelOk">Got it</button></div></div>';
+  o.addEventListener('click', e => { if (e.target === o || e.target.id === 'sfRelOk') o.remove(); });
+  document.body.appendChild(o);
+}
+function showReleaseBanner(rel) {
+  try {
+    if (!rel || !rel.version || rel.banner === false) return; const key = rel.version + ':' + (rel.nonce || 0);
+    if (localStorage.getItem('sf_release_seen') === key || document.getElementById('sfRelease')) return;
+    const bar = document.createElement('div'); bar.id = 'sfRelease'; bar.setAttribute('role', 'status');
+    bar.innerHTML = '<span><b>New version live (v' + sfEsc(rel.version) + ')</b> — bug fixes and improvements.</span><button type="button" id="sfRelNotes">What\'s new</button><button type="button" id="sfRelReload">Reload</button><button type="button" id="sfRelX" aria-label="Dismiss">✕</button>';
+    document.body.insertBefore(bar, document.body.firstChild); document.documentElement.style.setProperty('--sf-banner-h', bar.offsetHeight + 'px');
+    const close = () => { localStorage.setItem('sf_release_seen', key); bar.remove(); document.documentElement.style.setProperty('--sf-banner-h', '0px'); };
+    bar.querySelector('#sfRelX').onclick = close; bar.querySelector('#sfRelReload').onclick = () => { localStorage.setItem('sf_release_seen', key); location.reload(); };
+    bar.querySelector('#sfRelNotes').onclick = async () => {
+      let notes = rel.notes || '';
+      if (!notes && rel.id) { try { notes = ((await db.collection('releases').doc(rel.id).get()).data() || {}).notes || ''; } catch (_) {} }
+      sfReleaseModal(rel, notes); close();
+    };
+  } catch (_) {}
+}
+function watchRelease() {
+  try { db.collection('settings').doc('site').onSnapshot(d => { const r = d.exists && d.data().latestRelease; if (r) showReleaseBanner(r); }, () => {}); } catch (_) {}
+}
+if (!window.SF_APP_NAME && location.pathname.indexOf('/admin') !== 0) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watchRelease); else watchRelease(); }
+
 </script>
 </body>
 </html>
