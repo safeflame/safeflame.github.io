@@ -907,6 +907,11 @@ const _fbApp = window.SF_APP_NAME
   : (firebase.apps.length ? firebase.app() : firebase.initializeApp(firebaseConfig));
 const ADMIN_EMAILS = ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com'];
 const isAdminEmail = e => ADMIN_EMAILS.includes(String(e || '').toLowerCase());
+/* admins added in Admin > Team are stored in settings/admins */
+async function checkAdmin(u) {
+  if (!u) return false; if (isAdminEmail(u.email)) return true;
+  try { const d = await db.collection('settings').doc('admins').get(); return d.exists && (d.data().emails || []).map(x => String(x).toLowerCase()).includes(String(u.email).toLowerCase()); } catch (_) { return false; }
+}
 const db = _fbApp.firestore();
 try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {} // avoids long hangs on networks that block Firestore streaming
 const auth = _fbApp.auth();
@@ -926,6 +931,7 @@ const DEFAULT_SETTINGS = {
     { id: 'install', name: 'Professional installation', price: 999, enabled: true }
   ],
   eta: { base: 'Within 3–4 weeks of launch', pro: 'Within 3–4 weeks of launch', elite: 'Within 4–5 weeks of launch' },
+  charges: { shipping: 49, handling: 0, freeShippingAbove: 0, cgst: 2.5, sgst: 2.5, igst: 5, taxShipping: true, sellerState: '', gstin: '', businessName: '' },
   lowStockThreshold: 3, warrantyMonths: 12, firmware: [], knowledge: '',
   awayMode: { enabled: false, startHour: 9, endHour: 21, message: 'Our team is away right now. Leave your message and we will reply as soon as we are back.', notifyEmail: '' },
   seo: { title: '', description: '', image: '' },
@@ -974,6 +980,7 @@ function mergeSettings(data) {
     firmware: Array.isArray(data.firmware) ? data.firmware : [],
     awayMode: { ...DEFAULT_SETTINGS.awayMode, ...(data.awayMode || {}) },
     seo: { ...DEFAULT_SETTINGS.seo, ...(data.seo || {}) },
+    charges: { ...DEFAULT_SETTINGS.charges, ...(data.charges || {}) },
     pages: { privacy: { ...DEFAULT_PAGES.privacy, ...((data.pages || {}).privacy || {}) }, refund: { ...DEFAULT_PAGES.refund, ...((data.pages || {}).refund || {}) }, warranty: { ...DEFAULT_PAGES.warranty, ...((data.pages || {}).warranty || {}) } }
   };
 }
@@ -1016,7 +1023,26 @@ function applySiteControls(s) {
 }
 
 /* ── shared order/notification/log helpers ── */
-const orderTotal = o => (Number(o.unitPrice) || 0) * (Number(o.quantity) || 1) + (Number(o.addonsTotal) || 0);
+const chargesSum = c => c ? (Number(c.shipping) || 0) + (Number(c.handling) || 0) + (Number(c.cgst) || 0) + (Number(c.sgst) || 0) + (Number(c.igst) || 0) : 0;
+const orderTotal = o => (Number(o.unitPrice) || 0) * (Number(o.quantity) || 1) + (Number(o.addonsTotal) || 0) + chargesSum(o.charges);
+/* shipping + handling + GST (CGST/SGST within the seller's state, IGST for other states). Rates and fees are set in Admin > Site. */
+function computeCharges(goods, shipState) {
+  const c = { ...DEFAULT_SETTINGS.charges, ...(siteSettings.charges || {}) }, n = x => Number(x) || 0, norm = s => String(s || '').trim().toLowerCase();
+  const shipping = (n(c.freeShippingAbove) > 0 && goods >= n(c.freeShippingAbove)) ? 0 : n(c.shipping), handling = n(c.handling);
+  const taxable = goods + (c.taxShipping ? shipping + handling : 0), inter = !!(norm(c.sellerState) && norm(shipState) && norm(shipState) !== norm(c.sellerState));
+  const cgst = inter ? 0 : Math.round(taxable * n(c.cgst) / 100), sgst = inter ? 0 : Math.round(taxable * n(c.sgst) / 100), igst = inter ? Math.round(taxable * n(c.igst) / 100) : 0;
+  return { shipping, handling, taxable, cgst, sgst, igst, inter, rates: { cgst: n(c.cgst), sgst: n(c.sgst), igst: n(c.igst) }, total: goods + shipping + handling + cgst + sgst + igst };
+}
+/* the lines shown under an order's subtotal: [label, amount] */
+function chargeLines(ch) {
+  if (!ch) return []; const L = [];
+  if (Number(ch.shipping)) L.push(['Shipping', ch.shipping]); else if (ch.shipping === 0) L.push(['Shipping', 'FREE']);
+  if (Number(ch.handling)) L.push(['Handling', ch.handling]);
+  if (Number(ch.cgst)) L.push(['CGST @ ' + ((ch.rates || {}).cgst || '') + '%', ch.cgst]);
+  if (Number(ch.sgst)) L.push(['SGST @ ' + ((ch.rates || {}).sgst || '') + '%', ch.sgst]);
+  if (Number(ch.igst)) L.push(['IGST @ ' + ((ch.rates || {}).igst || '') + '%', ch.igst]);
+  return L;
+}
 function fmtAddress(a) { return a ? [a.name, a.line1, a.line2, [a.city, a.state].filter(Boolean).join(', '), a.pin, a.phone && ('Ph: ' + a.phone)].filter(Boolean).join(', ') : ''; }
 function pushNotification(n) { return db.collection('notifications').add({ read: false, createdAt: TS(), ...n, email: String(n.email || '').toLowerCase() }).catch(e => console.warn('notification failed', e)); }
 function logEmail(kind, to, subject, ok, error, orderId) { try { db.collection('emailLog').add({ kind: kind || 'email', to: String(to || '').toLowerCase(), subject: String(subject || '').slice(0, 140), ok: !!ok, error: error ? String(error).slice(0, 300) : '', orderId: orderId || '', at: TS() }).catch(() => {}); } catch (_) {} }
@@ -1098,7 +1124,7 @@ function sendOrderEmail(order, status) {
   const lines = [{ name: 'SafeFlame AI — ' + tierLabel, units: qty, price: (unit * qty).toLocaleString('en-IN') }].concat((order.addons || []).map(a => ({ name: a.name, units: 1, price: Number(a.price).toLocaleString('en-IN') })));
   return sendWithCfg(cfg, {
     to_email: order.email, to_name: t.name, subject: renderTokens(cfg.subject, t), email: order.email, order_id: t.order_id,
-    orders: lines, cost: { shipping: '0', tax: '0', total: total.toLocaleString('en-IN') },
+    orders: lines, cost: { shipping: ((Number((order.charges || {}).shipping) || 0) + (Number((order.charges || {}).handling) || 0)).toLocaleString('en-IN'), tax: ((Number((order.charges || {}).cgst) || 0) + (Number((order.charges || {}).sgst) || 0) + (Number((order.charges || {}).igst) || 0)).toLocaleString('en-IN'), total: total.toLocaleString('en-IN') },
     product_name: 'SafeFlame AI — ' + tierLabel, tier: tierLabel, quantity: qty, unit_price: t.unit_price, total_price: t.total_price,
     status, phone: t.phone, address: t.address, tracking: t.tracking, eta: t.eta, message: renderTokens(cfg.message, t)
   }, 'order-' + status, order.id).catch(e => console.warn('Order email failed:', e));
@@ -1250,6 +1276,44 @@ function initTheme() {
   applyTheme();
 }
 if (!window.SF_APP_NAME) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initTheme); else initTheme(); }
+/* ── "new version" banner + patch notes (published from Admin > Site > Website releases) ── */
+const sfEsc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function patchNotesHtml(text) {
+  const tags = { fix: ['Fixed', 'fix'], fixed: ['Fixed', 'fix'], new: ['New', 'new'], improved: ['Improved', 'imp'], improve: ['Improved', 'imp'], security: ['Security', 'sec'] };
+  const items = String(text || '').replace(/\r/g, '').split('\n').map(l => l.trim()).filter(Boolean).map(l => {
+    if (/^##\s+/.test(l)) return '<h4>' + sfEsc(l.replace(/^##\s+/, '')) + '</h4>';
+    const m = l.replace(/^[-*]\s+/, '').match(/^(fix|fixed|new|improved|improve|security)\s*:\s*(.*)$/i);
+    return m ? '<li><span class="pn-tag pn-' + tags[m[1].toLowerCase()][1] + '">' + tags[m[1].toLowerCase()][0] + '</span> ' + sfEsc(m[2]) + '</li>' : '<li>' + sfEsc(l.replace(/^[-*]\s+/, '')) + '</li>';
+  });
+  return '<ul class="pn">' + items.join('') + '</ul>';
+}
+function sfReleaseModal(rel, notes) {
+  const o = document.createElement('div'); o.id = 'sfRelModal';
+  o.style.cssText = 'position:fixed;inset:0;z-index:99997;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;padding:1rem;font-family:Inter,system-ui,sans-serif';
+  o.innerHTML = '<div class="pn-card"><h2>What\'s new in v' + sfEsc(rel.version) + '</h2><p class="pn-sub">' + sfEsc(rel.title || 'Bug fixes and improvements') + '</p><div class="pn-body">' + patchNotesHtml(notes) + '</div><div class="pn-actions"><a href="/whats-new">All releases</a><button type="button" id="sfRelOk">Got it</button></div></div>';
+  o.addEventListener('click', e => { if (e.target === o || e.target.id === 'sfRelOk') o.remove(); });
+  document.body.appendChild(o);
+}
+function showReleaseBanner(rel) {
+  try {
+    if (!rel || !rel.version || rel.banner === false) return; const key = rel.version + ':' + (rel.nonce || 0);
+    if (localStorage.getItem('sf_release_seen') === key || document.getElementById('sfRelease')) return;
+    const bar = document.createElement('div'); bar.id = 'sfRelease'; bar.setAttribute('role', 'status');
+    bar.innerHTML = '<span><b>New version live (v' + sfEsc(rel.version) + ')</b> — bug fixes and improvements.</span><button type="button" id="sfRelNotes">What\'s new</button><button type="button" id="sfRelReload">Reload</button><button type="button" id="sfRelX" aria-label="Dismiss">✕</button>';
+    document.body.insertBefore(bar, document.body.firstChild); document.documentElement.style.setProperty('--sf-banner-h', bar.offsetHeight + 'px');
+    const close = () => { localStorage.setItem('sf_release_seen', key); bar.remove(); document.documentElement.style.setProperty('--sf-banner-h', '0px'); };
+    bar.querySelector('#sfRelX').onclick = close; bar.querySelector('#sfRelReload').onclick = () => { localStorage.setItem('sf_release_seen', key); location.reload(); };
+    bar.querySelector('#sfRelNotes').onclick = async () => {
+      let notes = rel.notes || '';
+      if (!notes && rel.id) { try { notes = ((await db.collection('releases').doc(rel.id).get()).data() || {}).notes || ''; } catch (_) {} }
+      sfReleaseModal(rel, notes); close();
+    };
+  } catch (_) {}
+}
+function watchRelease() {
+  try { db.collection('settings').doc('site').onSnapshot(d => { const r = d.exists && d.data().latestRelease; if (r) showReleaseBanner(r); }, () => {}); } catch (_) {}
+}
+if (!window.SF_APP_NAME && location.pathname.indexOf('/admin') !== 0) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watchRelease); else watchRelease(); }
 </script>
 <script>
 
@@ -1317,7 +1381,7 @@ const h = location.hash.slice(1); if (h && document.querySelector(`.tab-btn[data
 
 let started = false;
 auth.onAuthStateChanged(async u => {
-  if (!u || !ADMIN_EMAILS.includes(String(u.email || '').toLowerCase())) { location.replace('/admin/'); return; }
+  if (!u || !(await checkAdmin(u))) { location.replace('/admin/'); return; }
   if (started) return; started = true;
   await loadSiteSettings();
   fill(siteSettings);
