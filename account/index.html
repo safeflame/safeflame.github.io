@@ -707,16 +707,18 @@ function applySiteControls(s) {
 const chargesSum = c => c ? (Number(c.shipping) || 0) + (Number(c.handling) || 0) + (Number(c.cgst) || 0) + (Number(c.sgst) || 0) + (Number(c.igst) || 0) : 0;
 const orderTotal = o => (Number(o.unitPrice) || 0) * (Number(o.quantity) || 1) + (Number(o.addonsTotal) || 0) + chargesSum(o.charges);
 /* shipping + handling + GST (CGST/SGST within the seller's state, IGST for other states). Rates and fees are set in Admin > Site. */
-function computeCharges(goods, shipState) {
+function computeCharges(goods, shipState, discount) {
+  const gross = goods, disc = Math.max(0, Math.min(Number(discount) || 0, goods)); goods = goods - disc;
   const c = { ...DEFAULT_SETTINGS.charges, ...(siteSettings.charges || {}) }, n = x => Number(x) || 0, norm = s => String(s || '').trim().toLowerCase();
-  const shipping = (n(c.freeShippingAbove) > 0 && goods >= n(c.freeShippingAbove)) ? 0 : n(c.shipping), handling = n(c.handling);
+  const shipping = (n(c.freeShippingAbove) > 0 && gross >= n(c.freeShippingAbove)) ? 0 : n(c.shipping), handling = n(c.handling);
   const taxable = goods + (c.taxShipping ? shipping + handling : 0), inter = !!(norm(c.sellerState) && norm(shipState) && norm(shipState) !== norm(c.sellerState));
   const cgst = inter ? 0 : Math.round(taxable * n(c.cgst) / 100), sgst = inter ? 0 : Math.round(taxable * n(c.sgst) / 100), igst = inter ? Math.round(taxable * n(c.igst) / 100) : 0;
-  return { shipping, handling, taxable, cgst, sgst, igst, inter, rates: { cgst: n(c.cgst), sgst: n(c.sgst), igst: n(c.igst) }, total: goods + shipping + handling + cgst + sgst + igst };
+  return { discount: disc, couponCode: disc ? ((window.sfCouponCode && window.sfCouponCode()) || '') : '', shipping, handling, taxable, cgst, sgst, igst, inter, rates: { cgst: n(c.cgst), sgst: n(c.sgst), igst: n(c.igst) }, total: goods + shipping + handling + cgst + sgst + igst };
 }
 /* the lines shown under an order's subtotal: [label, amount] */
 function chargeLines(ch) {
   if (!ch) return []; const L = [];
+  if (Number(ch.discount)) L.push(['Discount' + (ch.couponCode ? ' (' + ch.couponCode + ')' : ''), '-₹' + Number(ch.discount).toLocaleString('en-IN')]);
   if (Number(ch.shipping)) L.push(['Shipping', ch.shipping]); else if (ch.shipping === 0) L.push(['Shipping', 'FREE']);
   if (Number(ch.handling)) L.push(['Handling', ch.handling]);
   if (Number(ch.cgst)) L.push(['CGST @ ' + ((ch.rates || {}).cgst || '') + '%', ch.cgst]);
@@ -1042,6 +1044,8 @@ async function loadAll() {
   if (qs('welcome') === '1' && !profile.profileComplete) $('welcome').classList.remove('hidden');
   await loadSiteSettings();
   showSec(location.hash.slice(1) || 'profile');
+  if (qs('serial')) { showSec('devices'); setTimeout(() => { registerDevice(); const el = $('dvSerial'); if (el) el.value = String(qs('serial')).toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 24); history.replaceState(null, '', location.pathname + '#devices'); }, 400); }
+  if (qs('ticket')) { ticketModal({ category: qs('cat') || undefined, subject: qs('subj') || undefined }); history.replaceState(null, '', location.pathname + '#tickets'); }
   renderAddresses(); renderCompleteness(); renderLinked(); loadOrders(); watchNotifs(); loadChats(); setupReferral(); loadTickets(); loadStories();
   $('pwForm').classList.toggle('hidden', !isPasswordUser()); $('pwGoogle').classList.toggle('hidden', isPasswordUser());
 }
@@ -1150,8 +1154,9 @@ function editOrder(o) {
     const unit = tier === o.tier ? Number(o.unitPrice) : tierPriceFor(tier);
     const addons = ao.filter(x => document.querySelector('.e-ao[value="' + x.id + '"]').checked).map(x => ({ id: x.id, name: x.name, price: Number(x.price) || 0 }));
     const addonsTotal = addons.reduce((s, x) => s + x.price, 0), shipping = { name: gift ? gN : o.name, phone: gift ? gP : o.phone, ...a };
-    const goods = unit * qty + addonsTotal, charges = o.charges ? computeCharges(goods, a.state) : null;
-    const upd = { quantity: qty, tier, unitPrice: unit, shipping, address: fmtAddress(shipping), gift: gift ? { name: gN, phone: gP } : null, addons, addonsTotal, ...(charges ? { charges } : {}), total: charges ? charges.total : goods, deliveryNotes: sanitize($('eNotes').value), eta: (siteSettings.eta || {})[tier] || o.eta || '', statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: 'pending', at: Date.now(), note: 'Edited by customer' }), editedAt: TS() };
+    const keepWrap = (o.addons || []).filter(x => x.id === 'giftwrap' && gift), addons2 = addons.concat(keepWrap), addonsTotal2 = addons2.reduce((s2, x) => s2 + x.price, 0), goods = unit * qty + addonsTotal2, cp = o.coupon || null, disc = cp ? (cp.type === 'flat' ? Number(cp.value) : Math.min(Number(cp.cap) || Infinity, Math.round(goods * Number(cp.value) / 100))) : 0, charges = o.charges ? computeCharges(goods, a.state, disc) : null;
+    if (charges && cp && charges.discount) charges.couponCode = cp.code;
+    const upd = { quantity: qty, tier, unitPrice: unit, shipping, address: fmtAddress(shipping), gift: gift ? { name: gN, phone: gP, ...(o.gift && o.gift.message ? { message: o.gift.message } : {}), ...(o.gift && o.gift.wrap ? { wrap: true } : {}) } : null, addons: addons2, addonsTotal: addonsTotal2, ...(charges ? { charges } : {}), total: charges ? charges.total : goods - disc, deliveryNotes: sanitize($('eNotes').value), eta: (siteSettings.eta || {})[tier] || o.eta || '', statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: 'pending', at: Date.now(), note: 'Edited by customer' }), editedAt: TS() };
     $('eSave').disabled = true;
     try { await db.collection('preBookings').doc(o.id).update(upd); closeModal(); await loadOrders(); }
     catch (e) { $('eErr').textContent = 'Could not save: ' + (e.message || 'try again.'); $('eSave').disabled = false; }
@@ -1186,17 +1191,50 @@ function rateOrder(o) {
     } catch (e) { $('rErr').textContent = 'Could not send: ' + (e.message || 'try again.'); $('rGo').disabled = false; }
   };
 }
-function installOrder(o) {
+async function sfInstallersFor(o) {
+  try {
+    const sh = o.shipping || {}, pin = String(sh.pin || ''), city = String(sh.city || '').trim().toLowerCase();
+    const snap = await db.collection('installers').get(), out = [];
+    snap.forEach(d => { const x = { id: d.id, ...d.data() }; if (x.active === false) return;
+      if ((x.pins || []).some(p => pin && pin.startsWith(p)) || (x.cities || []).some(c => city && String(c).trim().toLowerCase() === city)) out.push(x); });
+    return out.sort((a, b) => (b.ratingAvg || 0) - (a.ratingAvg || 0));
+  } catch (_) { return []; }
+}
+async function installOrder(o) {
   const i = o.installation, today = new Date().toISOString().slice(0, 10);
+  if (i && i.status === 'completed') return rateInstaller(o);
+  const insList = await sfInstallersFor(o);
   openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>', 'Installation', i ? 'Status: <b>' + esc(i.status) + '</b>' : 'Pick a day and time window that suits you — we\'ll confirm it.') +
-    '<div class="form-row"><div class="field"><label>Preferred date</label><input type="date" id="iDate" min="' + today + '" value="' + esc(i ? i.date : '') + '"></div><div class="field"><label>Time window</label><select id="iSlot"><option>Morning (9am–12pm)</option><option>Afternoon (12pm–4pm)</option><option>Evening (4pm–7pm)</option></select></div></div><div class="msg-error" id="iErr"></div>' +
+    '<div class="form-row"><div class="field"><label>Preferred date</label><input type="date" id="iDate" min="' + today + '" value="' + esc(i ? i.date : '') + '"></div><div class="field"><label>Time window</label><select id="iSlot"><option>Morning (9am–12pm)</option><option>Afternoon (12pm–4pm)</option><option>Evening (4pm–7pm)</option></select></div></div>' +
+    (insList.length ? '<div class="field"><label>Preferred installer</label><select id="iIns"><option value="">No preference, assign one for me</option>' + insList.map(x => '<option value="' + esc(x.id) + '">' + esc(x.name) + (x.ratingCount ? ' · ' + x.ratingAvg + ' ★ (' + x.ratingCount + ')' : '') + '</option>').join('') + '</select>' + insList.filter(x => x.bio).map(x => '<div class="hint" style="margin-top:.3rem"><b>' + esc(x.name) + ':</b> ' + esc(x.bio) + '</div>').join('') + '</div>' : '<div class="hint">We will assign an installer for your area.</div>') +
+    '<div class="msg-error" id="iErr"></div>' +
     '<div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Close</button><button class="btn-primary" style="flex:1" id="iGo">' + (i ? 'Update request' : 'Request installation') + '</button></div>');
   if (i) $('iSlot').value = i.slot;
+  if (i && i.installerId && $('iIns')) $('iIns').value = i.installerId;
   $('iGo').onclick = async () => {
     if (!$('iDate').value) return $('iErr').textContent = 'Choose a date.';
     $('iGo').disabled = true;
-    try { await db.collection('preBookings').doc(o.id).update({ installation: { date: $('iDate').value, slot: $('iSlot').value, status: 'requested', requestedAt: Date.now() }, statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: o.status || 'shipped', at: Date.now(), note: 'Installation requested for ' + $('iDate').value }) }); closeModal(); await loadOrders(); }
+    try { await db.collection('preBookings').doc(o.id).update({ installation: (() => { const sel = $('iIns') ? $('iIns').value : '', pick = insList.find(x => x.id === sel); return { date: $('iDate').value, slot: $('iSlot').value, status: 'requested', requestedAt: Date.now(), installerId: pick ? pick.id : '', installerName: pick ? pick.name : '' }; })(), statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: o.status || 'shipped', at: Date.now(), note: 'Installation requested for ' + $('iDate').value }) }); closeModal(); await loadOrders(); }
     catch (e) { $('iErr').textContent = 'Could not save: ' + (e.message || 'try again.'); $('iGo').disabled = false; }
+  };
+}
+
+function rateInstaller(o) {
+  const i = o.installation; let stars = 0;
+  if (i.rated || !i.installerId) return openModal(mHead('', 'Installation complete', i.installerName ? 'Installed by ' + esc(i.installerName) : 'Thank you') + '<p class="page-sub center">' + (i.rated ? 'Thanks for rating your installer.' : 'Your installation is marked complete.') + '</p><button class="btn-secondary" style="width:100%" onclick="closeModal()">Close</button>');
+  openModal(mHead('', 'Rate your installer', esc(i.installerName || '')) +
+    '<div class="stars" id="rsStars">' + [1, 2, 3, 4, 5].map(n => '<button type="button" data-n="' + n + '" aria-label="' + n + ' stars">★</button>').join('') + '</div>' +
+    '<div class="field"><label>Comment (optional)</label><textarea id="rsTxt" rows="3" maxlength="300" class="input"></textarea></div><div class="msg-error" id="rsErr"></div>' +
+    '<div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Close</button><button class="btn-primary" style="flex:1" id="rsGo">Submit</button></div>');
+  $('rsStars').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; stars = +b.dataset.n; $('rsStars').querySelectorAll('button').forEach(x => x.classList.toggle('on', +x.dataset.n <= stars)); });
+  $('rsGo').onclick = async () => {
+    if (!stars) return $('rsErr').textContent = 'Tap a star rating first.';
+    $('rsGo').disabled = true;
+    try {
+      await db.collection('installerRatings').doc(o.id).set({ installerId: i.installerId, orderId: o.id, uid: user.uid, rating: stars, comment: sanitize($('rsTxt').value), name: (o.name || '').split(' ')[0], createdAt: Date.now() });
+      await db.collection('preBookings').doc(o.id).update({ 'installation.rated': true });
+      closeModal(); await loadOrders();
+    } catch (e) { $('rsErr').textContent = 'Could not send: ' + (e.message || 'try again.'); $('rsGo').disabled = false; }
   };
 }
 
@@ -1464,13 +1502,57 @@ async function loadTickets() {
   $('ticketList').innerHTML = tickets.length ? tickets.map(t => '<div class="t-order-card" data-id="' + esc(t.id) + '" style="cursor:pointer"><div class="t-order-top"><span class="t-order-id">' + (t.unreadUser ? '<span class="unread-dot"></span> ' : '') + esc(t.subject) + '</span><span class="t-status ' + ({ open: 'pending', pending: 'confirmed', resolved: 'shipped', closed: 'cancelled' })[t.status] + '">' + esc(t.status) + '</span></div><div class="hint">' + esc(t.category) + (t.orderNumber ? ' · order #' + esc(t.orderNumber) : '') + ' · ' + esc(fmtD(tsMs(t.updatedAt))) + '</div><div class="hint" style="color:var(--text2)">' + esc(t.lastMessage || '') + '</div></div>').join('')
     : emptyBox('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg>', 'No tickets yet', 'Need help with an order, delivery or your device? Open a ticket and we will reply here.', '<button class="btn-primary" id="newTicketBtn2" type="button">Open a ticket</button>');
 }
+
+/* ── ticket templates (S29), self-help suggestions (S34), satisfaction survey (S28) ── */
+const TK_TEMPLATES = [
+  { n: 'Gas alarm keeps going off', cat: 'Technical problem', subj: 'Gas alarm keeps going off', msg: 'My unit raises a gas alarm even when I am not cooking.\nWhen it started:\nHow often it happens:\nWhat the display shows (gas PPM):\nWhat I have already tried:' },
+  { n: 'Unit will not power on', cat: 'Technical problem', subj: 'Unit does not turn on', msg: 'The unit does not power on.\nIs the power light on?\nWhat power supply am I using:\nWhat I have already tried:' },
+  { n: 'Valve will not open or close', cat: 'Technical problem', subj: 'Gas valve not responding', msg: 'The valve does not respond.\nWhat happens when I press Open / Close:\nAny message on the display:\nWhen it last worked:' },
+  { n: 'Wi-Fi or app will not connect', cat: 'Technical problem', subj: 'Cannot connect to Wi-Fi or dashboard', msg: 'The unit will not connect.\nMy Wi-Fi name and band (2.4 GHz or 5 GHz):\nWhat I see on the display:\nWhat I have already tried:' },
+  { n: 'Delivery is late', cat: 'Delivery', subj: 'My order has not arrived', msg: 'My order has not arrived by the estimated date.\nEstimated date I was given:\nTracking number (if any):' },
+  { n: 'Item arrived damaged', cat: 'Delivery', subj: 'Parcel arrived damaged', msg: 'The parcel or unit arrived damaged.\nWhat is damaged:\nDate it arrived:\n(Please attach a photo below.)' },
+  { n: 'Installation help', cat: 'Installation', subj: 'Help installing my unit', msg: 'I need help with installation.\nStep I am stuck on:\nType of cylinder and regulator:\nKitchen layout notes:' },
+  { n: 'Warranty claim', cat: 'Warranty claim', subj: 'Warranty claim', msg: 'I would like to make a warranty claim.\nDevice serial number:\nWhat went wrong:\nWhen it started:\n(Please attach a photo below.)' },
+  { n: 'Billing or invoice question', cat: 'Billing', subj: 'Question about my invoice', msg: 'I have a question about billing.\nOrder number:\nWhat I need (GST invoice, correction, refund status):' }
+];
+const tkWords = t => String(t || '').toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').split(/\s+/).filter(w => w.length > 3);
+function tkSuggest(text) {
+  const w = [...new Set(tkWords(text))]; if (w.length < 2) return [];
+  const items = (siteSettings.faq || []).map(f => ({ t: f.q, b: f.a, k: 'Answer' })).concat((siteSettings.guides || []).map(g => ({ t: g.title, b: g.body, k: 'Guide' })));
+  return items.map(i => { const hay = (i.t + ' ' + i.b).toLowerCase(); let sc = 0; w.forEach(x => { if (hay.includes(x)) sc += (String(i.t).toLowerCase().includes(x) ? 3 : 1); }); return { ...i, sc }; })
+    .filter(i => i.sc >= 3).sort((a, b) => b.sc - a.sc).slice(0, 3);
+}
+function sfSurveyHtml(t) {
+  if (t.csat) return '<div class="hint" style="margin-top:1rem">Thanks for rating this ticket: ' + '★'.repeat(t.csat.rating) + '☆'.repeat(5 - t.csat.rating) + '</div>';
+  return '<div class="card" style="margin-top:1rem;text-align:center"><b>How did we do?</b><div id="csatStars" style="font-size:1.8rem;margin:.4rem 0;cursor:pointer;color:var(--yellow)" role="radiogroup" aria-label="Rating">' +
+    [1, 2, 3, 4, 5].map(n => '<span data-n="' + n + '" role="radio" aria-label="' + n + ' stars" tabindex="0">☆</span>').join(' ') + '</div>' +
+    '<textarea id="csatTxt" class="input" rows="2" maxlength="400" placeholder="Anything we could have done better? (optional)"></textarea>' +
+    '<div class="msg-error" id="csatErr"></div><button class="btn-primary" id="csatGo" style="margin-top:.6rem">Send rating</button></div>';
+}
+function sfSurveyBind(id, draw) {
+  let rating = 0; const stars = $('csatStars'); if (!stars) return;
+  const paint = n => stars.querySelectorAll('span').forEach(s => { s.textContent = Number(s.dataset.n) <= n ? '★' : '☆'; });
+  stars.addEventListener('click', e => { const s = e.target.closest('span'); if (s) { rating = Number(s.dataset.n); paint(rating); } });
+  stars.addEventListener('keydown', e => { const s = e.target.closest('span'); if (s && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); rating = Number(s.dataset.n); paint(rating); } });
+  $('csatGo').onclick = async () => {
+    if (!rating) return $('csatErr').textContent = 'Tap a star rating first.';
+    $('csatGo').disabled = true;
+    try { await db.collection('tickets').doc(id).update({ csat: { rating, comment: sanitize($('csatTxt').value) }, csatAt: TS() }); draw(); loadTickets(); }
+    catch (e) { $('csatErr').textContent = 'Could not save your rating.'; $('csatGo').disabled = false; }
+  };
+}
 function ticketModal(pre) {
   pre = pre || {};
   openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg>', 'New support ticket') +
-    '<div class="form-row"><div class="field"><label>Topic</label><select id="tkCat">' + ['Order', 'Delivery', 'Installation', 'Technical problem', 'Warranty claim', 'Billing', 'Other'].map(c => '<option>' + c + '</option>').join('') + '</select></div><div class="field"><label>Related order</label><select id="tkOrder"><option value="">None</option>' + orders.map(o => '<option value="' + esc(o.id) + '">#' + esc(orderNumberFor(o)) + '</option>').join('') + '</select></div></div>' +
+    '<div class="form-row"><div class="field"><label>Topic</label><select id="tkCat">' + ['Order', 'Delivery', 'Installation', 'Technical problem', 'Warranty claim', 'Return / replacement', 'Billing', 'Other'].map(c => '<option>' + c + '</option>').join('') + '</select></div><div class="field"><label>Related order</label><select id="tkOrder"><option value="">None</option>' + orders.map(o => '<option value="' + esc(o.id) + '">#' + esc(orderNumberFor(o)) + '</option>').join('') + '</select></div></div>' +
+    '<div class="field"><label>Start from a template (optional)</label><select id="tkTpl"><option value="">Choose a common problem…</option>' + TK_TEMPLATES.map((t, i) => '<option value="' + i + '">' + esc(t.n) + '</option>').join('') + '</select></div>' +
     '<div class="field"><label>Subject</label><input id="tkSubj" maxlength="100"></div><div class="field"><label>Describe the problem</label><textarea id="tkMsg" class="input" rows="4" maxlength="1500"></textarea></div>' +
-    '<div class="field"><label>Photo (optional)</label><input type="file" id="tkImg" accept="image/*"></div><div class="msg-error" id="tkErr"></div>' +
+    '<div id="tkSug"></div>' + '<div class="field"><label>Photo (optional)</label><input type="file" id="tkImg" accept="image/*"></div><div class="msg-error" id="tkErr"></div>' +
     '<div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button><button class="btn-primary" style="flex:1" id="tkGo">Send ticket</button></div>');
+  $('tkTpl').onchange = () => { const t = TK_TEMPLATES[$('tkTpl').value]; if (!t) return; $('tkCat').value = t.cat; $('tkSubj').value = t.subj; if (!$('tkMsg').value.trim() || confirm('Replace what you have typed with this template?')) $('tkMsg').value = t.msg; showSug(); };
+  let sugT; const showSug = () => { const r = tkSuggest($('tkSubj').value + ' ' + $('tkMsg').value); $('tkSug').innerHTML = r.length ? '<div class="hint" style="margin:.2rem 0 .4rem">These might answer it already:</div>' + r.map(i => '<details class="faq-item"><summary>' + esc(i.t) + ' <small style="color:var(--text3)">· ' + i.k + '</small></summary><div class="rich">' + richText(i.b) + '</div></details>').join('') : ''; };
+  $('tkSubj').addEventListener('input', () => { clearTimeout(sugT); sugT = setTimeout(showSug, 350); });
+  $('tkMsg').addEventListener('input', () => { clearTimeout(sugT); sugT = setTimeout(showSug, 350); });
   if (pre.category) $('tkCat').value = pre.category; if (pre.subject) $('tkSubj').value = pre.subject; if (pre.orderId) $('tkOrder').value = pre.orderId;
   $('tkGo').onclick = async () => {
     const subject = sanitize($('tkSubj').value), text = sanitize($('tkMsg').value); if (!subject || text.length < 5) return $('tkErr').textContent = 'Add a subject and describe the problem.';
@@ -1491,11 +1573,12 @@ async function openTicket(id) {
     if (t.unreadUser) db.collection('tickets').doc(id).update({ unreadUser: false }).catch(() => {});
     $('mdlCard').innerHTML = mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg>', esc(t.subject), esc(t.category) + (t.orderNumber ? ' · order #' + esc(t.orderNumber) : '') + ' · <b>' + esc(t.status) + '</b>') +
       '<div class="transcript">' + ms.map(m => '<div class="tr-msg ' + (m.role === 'user' ? 'user' : '') + '"><b>' + (m.role === 'user' ? 'You' : 'SafeFlame team') + '</b>' + esc(m.text) + (m.image ? '<img src="' + esc(m.image) + '" alt="attachment" style="display:block;max-width:100%;border-radius:8px;margin-top:.5rem">' : '') + '</div>').join('') + '</div>' +
-      (t.status === 'closed' ? '<p class="hint" style="margin-top:1rem">This ticket is closed. Open a new one if you still need help.</p>' : '<div class="field" style="margin-top:1rem"><textarea id="tkReply" class="input" rows="2" maxlength="1500" placeholder="Write a reply…"></textarea></div><div class="field"><input type="file" id="tkRImg" accept="image/*"></div><div class="msg-error" id="tkRErr"></div>') +
+      (t.status === 'closed' ? '<p class="hint" style="margin-top:1rem">This ticket is closed. Open a new one if you still need help.</p>' + sfSurveyHtml(t) : '<div class="field" style="margin-top:1rem"><textarea id="tkReply" class="input" rows="2" maxlength="1500" placeholder="Write a reply…"></textarea></div><div class="field"><input type="file" id="tkRImg" accept="image/*"></div><div class="msg-error" id="tkRErr"></div>') +
       '<div style="display:flex;gap:.7rem;margin-top:.6rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Close</button>' + (t.status === 'closed' ? '' : '<button class="btn-secondary" style="flex:1" id="tkCloseBtn">Mark resolved &amp; close</button><button class="btn-primary" style="flex:1" id="tkSend">Send</button>') + '</div>';
+    if (t.status === 'closed') sfSurveyBind(id, draw);
     if (t.status !== 'closed') {
       $('tkSend').onclick = async () => { const text = sanitize($('tkReply').value); if (!text) return; $('tkSend').disabled = true; try { const f = $('tkRImg').files[0], image = f ? await shrinkImage(f, 900, 0.7) : ''; await db.collection('tickets').doc(id).collection('messages').add({ role: 'user', text, image, by: user.email, createdAt: TS() }); await db.collection('tickets').doc(id).update({ lastMessage: text.slice(0, 120), status: 'open', unreadAdmin: true, updatedAt: TS() }); await draw(); loadTickets(); } catch (e) { $('tkRErr').textContent = e.message || 'Could not send.'; $('tkSend').disabled = false; } };
-      $('tkCloseBtn').onclick = async () => { await db.collection('tickets').doc(id).update({ status: 'closed', unreadAdmin: true, updatedAt: TS() }).catch(() => {}); closeModal(); loadTickets(); };
+      $('tkCloseBtn').onclick = async () => { await db.collection('tickets').doc(id).update({ status: 'closed', unreadAdmin: true, updatedAt: TS() }).catch(() => {}); loadTickets(); draw(); };
     }
   };
   try { await draw(); } catch (_) { $('mdlCard').innerHTML = mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', 'Could not load ticket') + '<button class="btn-secondary btn-block" onclick="closeModal()">Close</button>'; }
@@ -1549,6 +1632,263 @@ auth.onAuthStateChanged(async u => {
   if (!(await isVerified(u))) { go('/verify?pending=1&next=/account'); return; }
   if (user && user.uid === u.uid) return; user = u; loadAll();
 });
+</script>
+<script>
+/* SafeFlame AI — cookie and consent banner (S67). Include on every public page.
+   Choice is saved in localStorage as sf_consent = {a: analytics true/false, t: timestamp}.
+   Analytics (Firebase/Google) only starts when the visitor accepts: use window.sfConsent.analytics(). */
+(function () {
+  'use strict';
+  var KEY = 'sf_consent';
+  function read() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (_) { return null; } }
+  function save(a) { try { localStorage.setItem(KEY, JSON.stringify({ a: !!a, t: Date.now() })); } catch (_) {} window.dispatchEvent(new CustomEvent('sf-consent', { detail: { analytics: !!a } })); }
+  window.sfConsent = {
+    analytics: function () { var c = read(); return !!(c && c.a); },
+    decided: function () { return !!read(); },
+    open: function () { show(true); }
+  };
+  function show(force) {
+    if (!force && read()) return;
+    if (document.getElementById('sfCookie')) return;
+    var b = document.createElement('div');
+    b.id = 'sfCookie'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Cookie preferences');
+    b.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:2147483000;width:min(680px,calc(100vw - 24px));background:var(--bg2,#0d0d1a);color:var(--text,#f0f0f8);border:1px solid var(--border,rgba(255,255,255,.14));border-radius:14px;padding:1rem 1.1rem;box-shadow:0 12px 40px rgba(0,0,0,.45);font:14px/1.5 system-ui,sans-serif';
+    var cur = read();
+    b.innerHTML =
+      '<div style="font-weight:700;margin-bottom:.25rem">Cookies and privacy</div>' +
+      '<div style="color:var(--text2,#a0a0b8);font-size:.85rem">We use essential storage to keep you signed in and remember your theme and language. With your OK we also use analytics to see which pages help people. See our <a href="/privacy" style="color:var(--flame2,#ff8a65)">Privacy page</a>.</div>' +
+      '<label id="sfCkRow" style="display:none;margin-top:.6rem;font-size:.85rem"><input type="checkbox" id="sfCkA"' + (cur && cur.a ? ' checked' : '') + '> Allow analytics</label>' +
+      '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem">' +
+      '<button type="button" id="sfCkAll" style="background:var(--flame,#FF5722);color:#fff;border:0;border-radius:9px;padding:.55rem 1rem;font-weight:600;cursor:pointer">Accept all</button>' +
+      '<button type="button" id="sfCkEss" style="background:transparent;color:inherit;border:1px solid var(--border,rgba(255,255,255,.25));border-radius:9px;padding:.55rem 1rem;cursor:pointer">Essential only</button>' +
+      '<button type="button" id="sfCkSet" style="background:transparent;color:var(--text2,#a0a0b8);border:0;padding:.55rem .4rem;cursor:pointer;text-decoration:underline">Choose</button></div>';
+    document.body.appendChild(b);
+    function done(a) { save(a); b.remove(); }
+    b.querySelector('#sfCkAll').onclick = function () { done(true); };
+    b.querySelector('#sfCkEss').onclick = function () { done(false); };
+    b.querySelector('#sfCkSet').onclick = function () {
+      var row = b.querySelector('#sfCkRow'), btn = b.querySelector('#sfCkSet');
+      if (row.style.display === 'none') { row.style.display = 'block'; btn.textContent = 'Save choice'; }
+      else done(b.querySelector('#sfCkA').checked);
+    };
+  }
+  function init() {
+    show(false);
+    // footer link "Cookie settings" on any page that has an element with data-cookie-settings
+    document.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('[data-cookie-settings]'); if (t) { e.preventDefault(); show(true); } });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+<script>
+/* SafeFlame AI — account page extras. Loaded at the end of account.html, after the main script, so it can use
+   the page's globals (user, orders, devices, siteSettings, db, openModal, mHead, esc, ...).
+   S9 order tracking · S10 return/replacement · S11 delivery rating · S12 spare parts · S4 emailed GST invoice
+   S19 device names + kitchens · S61 referral reward tiers */
+(function () {
+  'use strict';
+  var ICON = {
+    truck: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h11v10H3zM14 9h4l3 3v4h-7"/><circle cx="7" cy="17.5" r="1.8"/><circle cx="17" cy="17.5" r="1.8"/></svg>',
+    back: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg>',
+    star: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3.5 2.6 5.4 5.9.8-4.3 4.1 1 5.9-5.2-2.8-5.2 2.8 1-5.9-4.3-4.1 5.9-.8L12 3.5Z"/></svg>',
+    box: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="m3.5 7.5 8.5-4 8.5 4v9l-8.5 4-8.5-4v-9Z"/><path d="m3.5 7.5 8.5 4 8.5-4M12 11.5v9"/></svg>',
+    mail: '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></svg>'
+  };
+  var btn = function (act, label, icon) { return '<button class="btn-secondary" data-act="' + act + '">' + (icon || '') + ' ' + label + '</button>'; };
+  var inrFmt = function (n) { return '₹' + Number(n || 0).toLocaleString('en-IN'); };
+  var cancelRow = function (extra) { return '<div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Close</button>' + (extra || '') + '</div>'; };
+
+  /* ── order card: extra buttons ─────────────────────────────── */
+  var baseOrderCard = orderCard;
+  orderCard = function (o) {
+    var html = baseOrderCard(o), st = (o.status || 'pending').toLowerCase(), mine = o.uid === user.uid, extra = '';
+    if (st !== 'cancelled') {
+      if (st === 'shipped' || o.tracking || o.courier) extra += btn('track', 'Track', ICON.truck);
+      if (st === 'shipped' && mine) {
+        extra += btn('ret', 'Return / replace', ICON.back);
+        if (!o.deliveryRating) extra += btn('drate', 'Rate delivery', ICON.star);
+        if ((siteSettings.parts || []).length) extra += btn('parts', 'Spare parts', ICON.box);
+      }
+      extra += btn('invoice', 'Email invoice', ICON.mail);
+    }
+    var i = html.lastIndexOf('</div></div>');
+    return i < 0 ? html : html.slice(0, i) + extra + html.slice(i);
+  };
+
+  /* ── S9 tracking ───────────────────────────────────────────── */
+  function courierUrl(o) {
+    if (!o.tracking) return '';
+    var tpl = o.trackUrl || '';
+    if (!tpl) { var c = (siteSettings.couriers || []).find(function (x) { return String(x.name).toLowerCase() === String(o.courier || '').toLowerCase(); }); tpl = c ? c.url : ''; }
+    if (!tpl || !/^https?:\/\//i.test(tpl)) return '';
+    return tpl.indexOf('{n}') >= 0 ? tpl.replace('{n}', encodeURIComponent(o.tracking)) : tpl;
+  }
+  function trackOrder(o) {
+    var ev = (o.trackEvents || []).slice().sort(function (a, b) { return Number(b.at) - Number(a.at); });
+    var url = courierUrl(o);
+    openModal(mHead(ICON.truck, 'Track order #' + esc(orderNumberFor(o)), (o.courier ? esc(o.courier) : 'Shipment') + (o.tracking ? ' · ' + esc(o.tracking) : '')) +
+      timelineHtml(o) +
+      (o.eta && (o.status || '') !== 'cancelled' ? '<div class="hint" style="margin-top:.6rem">Estimated delivery: <b>' + esc(o.eta) + '</b></div>' : '') +
+      (o.tracking ? '<div class="field" style="margin-top:.8rem"><label>Tracking number</label><div style="display:flex;gap:.5rem"><input readonly id="trkNo" value="' + esc(o.tracking) + '"><button class="btn-secondary" id="trkCopy" type="button">Copy</button></div></div>'
+        : '<div class="hint" style="margin-top:.8rem">A tracking number will appear here once your order is handed to the courier.</div>') +
+      (ev.length ? '<div class="hint" style="margin:1rem 0 .3rem;text-transform:uppercase;letter-spacing:.08em">Courier updates</div>' + ev.map(function (e) { return '<div class="stat-row"><span>' + esc(e.text) + '</span><span>' + esc(fmtD(Number(e.at))) + '</span></div>'; }).join('') : '') +
+      '<div class="hint" style="margin:.8rem 0">Updates here are entered by our team. For live scans, use the courier’s own tracking page.</div>' +
+      cancelRow(url ? '<a class="btn-primary" style="flex:1;text-align:center;text-decoration:none" target="_blank" rel="noopener noreferrer" href="' + esc(url) + '">Open courier site</a>' : ''));
+    var c = $('trkCopy'); if (c) c.onclick = function () { try { navigator.clipboard.writeText(o.tracking); c.textContent = 'Copied'; } catch (_) { $('trkNo').select(); } };
+  }
+
+  /* ── S10 return / replacement (uses the ticket system) ─────── */
+  function returnOrder(o) {
+    var cat = 'Return / replacement';
+    ticketModal({ category: cat, subject: 'Return or replacement for order #' + orderNumberFor(o), orderId: o.id });
+    var m = $('tkMsg');
+    if (m && !m.value) m.value = 'I would like a: (return / replacement)\nReason: (damaged on arrival / wrong item / not working / changed my mind)\nWhat happened:\nWhat I would like us to do:\n\nPlease attach a photo below if the item is damaged or not working. Our refund rules are on the Refunds page.';
+  }
+
+  /* ── S11 delivery rating (separate from the product rating) ── */
+  function rateDelivery(o) {
+    var stars = 0, TAGS = ['On time', 'Well packed', 'Courier was polite', 'Item arrived intact', 'Late', 'Poor packaging', 'Hard to reach courier'];
+    openModal(mHead(ICON.truck, 'Rate the delivery of #' + esc(orderNumberFor(o)), 'This is about the delivery only, not the product.') +
+      '<div class="stars" id="dStars">' + [1, 2, 3, 4, 5].map(function (n) { return '<button type="button" data-n="' + n + '" aria-label="' + n + ' stars">' + ICON.star + '</button>'; }).join('') + '</div>' +
+      '<div style="display:flex;flex-wrap:wrap;gap:.4rem;margin:.6rem 0">' + TAGS.map(function (t) { return '<label class="check-row" style="margin:0"><input type="checkbox" class="dTag" value="' + esc(t) + '"> ' + esc(t) + '</label>'; }).join('') + '</div>' +
+      '<div class="field"><label>Comment (optional)</label><textarea id="dText" rows="3" maxlength="400" class="input"></textarea></div><div class="msg-error" id="dErr"></div>' +
+      cancelRow('<button class="btn-primary" style="flex:1" id="dGo">Submit</button>'));
+    $('dStars').addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; stars = +b.dataset.n; $('dStars').querySelectorAll('button').forEach(function (x) { x.classList.toggle('on', +x.dataset.n <= stars); }); });
+    $('dGo').onclick = async function () {
+      if (!stars) return ($('dErr').textContent = 'Tap a star rating first.');
+      $('dGo').disabled = true;
+      try {
+        var tags = Array.prototype.map.call(document.querySelectorAll('.dTag:checked'), function (x) { return x.value; });
+        await db.collection('preBookings').doc(o.id).update({ deliveryRating: { rating: stars, tags: tags, comment: sanitize($('dText').value), at: Date.now() } });
+        closeModal(); await loadOrders();
+      } catch (e) { $('dErr').textContent = 'Could not send: ' + (e.message || 'try again.'); $('dGo').disabled = false; }
+    };
+  }
+
+  /* ── S12 spare parts reorder ───────────────────────────────── */
+  function partsModal(o) {
+    var parts = (siteSettings.parts || []).filter(function (p) { return p && p.name && Number(p.price) > 0 && p.available !== false; });
+    if (!parts.length) return openModal(mHead(ICON.box, 'Spare parts', 'No spare parts are listed for sale yet.') + cancelRow());
+    var ship = o.shipping || {}, addr = fmtAddress(ship) || o.address || '';
+    openModal(mHead(ICON.box, 'Order spare parts', 'Sensors, filters and more for your unit.') +
+      parts.map(function (p, i) {
+        return '<div class="stat-row" style="align-items:center"><span><b>' + esc(p.name) + '</b><br><small style="color:var(--text3)">' + esc(p.note || '') + '</small></span><span style="display:flex;gap:.5rem;align-items:center">' + inrFmt(p.price) + ' <input type="number" class="prQty" data-i="' + i + '" min="0" max="10" value="0" style="width:64px"></span></div>';
+      }).join('') +
+      '<div class="hint" style="margin:.8rem 0">Delivered to: ' + esc(addr || 'the address on your order') + '. Shipping and GST are added when we confirm the order.</div>' +
+      '<div class="stat-row"><span>Items total</span><b id="prTot">₹0</b></div><div class="msg-error" id="prErr"></div>' +
+      cancelRow('<button class="btn-primary" style="flex:1" id="prGo">Send request</button>'));
+    var calc = function () { var t = 0; document.querySelectorAll('.prQty').forEach(function (x) { t += (Number(parts[x.dataset.i].price) || 0) * Math.max(0, Math.min(10, Number(x.value) || 0)); }); $('prTot').textContent = inrFmt(t); return t; };
+    document.querySelectorAll('.prQty').forEach(function (x) { x.addEventListener('input', calc); });
+    $('prGo').onclick = async function () {
+      var items = [];
+      document.querySelectorAll('.prQty').forEach(function (x) { var q = Math.max(0, Math.min(10, Math.floor(Number(x.value) || 0))); if (q) items.push({ name: parts[x.dataset.i].name, price: Number(parts[x.dataset.i].price), qty: q }); });
+      if (!items.length) return ($('prErr').textContent = 'Choose at least one part.');
+      $('prGo').disabled = true;
+      try {
+        var n = 'P' + Date.now().toString(36).toUpperCase().slice(-6);
+        await db.collection('partOrders').add({ ref: n, uid: user.uid, email: user.email.toLowerCase(), name: profile.displayName || user.displayName || o.name || '', phone: o.phone || '', orderId: o.id, orderNumber: String(orderNumberFor(o)), items: items, goodsTotal: calc(), shipping: ship, address: addr, status: 'requested', createdAt: TS() });
+        openModal(mHead(ICON.box, 'Request sent', 'Reference ' + n) + '<p class="page-sub center">We will confirm the total with shipping and GST and contact you to arrange payment.</p>' + cancelRow());
+      } catch (e) { $('prErr').textContent = 'Could not send: ' + (e.message || 'try again.'); $('prGo').disabled = false; }
+    };
+  }
+
+  /* ── S4 GST invoice by email ───────────────────────────────── */
+  function invoiceText(o) {
+    var bz = siteSettings.charges || {}, ch = o.charges || {}, qty = Number(o.quantity) || 1, unit = Number(o.unitPrice) || 0, no = 'INV-' + orderNumberFor(o);
+    var L = [];
+    L.push('TAX INVOICE ' + no, 'Date: ' + (fmtD(tsMs(o.createdAt)) || ''), 'Order: #' + orderNumberFor(o));
+    if (bz.businessName || bz.gstin) L.push('Seller: ' + [bz.businessName, bz.gstin && 'GSTIN ' + bz.gstin].filter(Boolean).join(', '));
+    L.push('Bill to: ' + (o.name || '') + ', ' + (o.email || ''), 'Ship to: ' + (fmtAddress(o.shipping) || o.address || ''), '');
+    L.push('SafeFlame AI — ' + tierLabelFor(o.tier) + ' x ' + qty + ': ' + inrFmt(unit * qty));
+    (o.addons || []).forEach(function (a) { L.push(a.name + ': ' + inrFmt(a.price)); });
+    L.push('');
+    chargeLines(ch).forEach(function (l) { L.push(l[0] + ': ' + (typeof l[1] === 'number' ? inrFmt(l[1]) : l[1])); });
+    if (ch.taxable) L.push('Taxable value: ' + inrFmt(ch.taxable));
+    L.push('TOTAL: ' + inrFmt(orderTotal(o)), '', 'This is a computer-generated invoice. You can also download the PDF receipt from your account.');
+    return L.join('\n');
+  }
+  async function invoiceOrder(o) {
+    var key = 'sf_inv_' + o.id, last = Number(localStorage.getItem(key) || 0);
+    if (Date.now() - last < 60000) return openModal(mHead(ICON.mail, 'Please wait a moment', 'You just asked for this invoice. Check your inbox and spam folder.') + cancelRow());
+    openModal(mHead(ICON.mail, 'Sending invoice…') + '<p class="page-sub center">Sending to ' + esc(o.email || user.email) + '</p>');
+    try {
+      var cfg = (siteSettings.statusEmails && (siteSettings.statusEmails.confirmed || siteSettings.statusEmails.pending)) || {};
+      var tierLabel = tierLabelFor(o.tier), qty = Number(o.quantity) || 1, ch = o.charges || {};
+      await sendWithCfg(cfg, {
+        to_email: o.email || user.email, to_name: o.name || 'there', email: o.email || user.email, order_id: orderNumberFor(o),
+        subject: 'GST invoice INV-' + orderNumberFor(o) + ' | SafeFlame AI', message: invoiceText(o),
+        orders: [{ name: 'SafeFlame AI — ' + tierLabel, units: qty, price: ((Number(o.unitPrice) || 0) * qty).toLocaleString('en-IN') }].concat((o.addons || []).map(function (a) { return { name: a.name, units: 1, price: Number(a.price).toLocaleString('en-IN') }; })),
+        cost: { shipping: ((Number(ch.shipping) || 0) + (Number(ch.handling) || 0)).toLocaleString('en-IN'), tax: ((Number(ch.cgst) || 0) + (Number(ch.sgst) || 0) + (Number(ch.igst) || 0)).toLocaleString('en-IN'), total: orderTotal(o).toLocaleString('en-IN') },
+        product_name: 'SafeFlame AI — ' + tierLabel, tier: tierLabel, quantity: qty, total_price: inrFmt(orderTotal(o)), status: 'Invoice', phone: o.phone || '', address: fmtAddress(o.shipping) || o.address || '', tracking: o.tracking || '', eta: o.eta || ''
+      }, 'invoice', o.id);
+      localStorage.setItem(key, String(Date.now()));
+      openModal(mHead(ICON.mail, 'Invoice sent', 'Check ' + esc(o.email || user.email)) + '<p class="page-sub center">If it does not arrive in a few minutes, look in spam, or download the PDF receipt instead.</p>' + cancelRow());
+    } catch (e) {
+      openModal(mHead(ICON.mail, 'Could not send the invoice', e && e.message === 'EMAILJS_NOT_CONFIGURED' ? 'Email sending is not set up yet.' : 'Please try again shortly.') + '<p class="page-sub center">You can still download the PDF receipt from this order.</p>' + cancelRow());
+    }
+  }
+
+  // hook the new buttons into the existing order click handler
+  document.getElementById('orders').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]'); if (!b) return;
+    var map = { track: trackOrder, ret: returnOrder, drate: rateDelivery, parts: partsModal, invoice: invoiceOrder }, fn = map[b.dataset.act]; if (!fn) return;
+    e.stopImmediatePropagation();
+    var c = b.closest('.t-order-card'), o = c && orders.find(function (x) { return x.id === c.dataset.id; }); if (o) fn(o);
+  }, true);
+
+  /* ── S19 device names and kitchens ─────────────────────────── */
+  var baseRenderDevices = renderDevices;
+  renderDevices = function () {
+    baseRenderDevices();
+    var cards = document.querySelectorAll('#devList .t-order-card'); if (!cards.length) return;
+    var kitchens = {};
+    cards.forEach(function (c) {
+      var d = devices.find(function (x) { return x.id === c.dataset.id; }); if (!d) return;
+      kitchens[d.kitchen || 'My kitchen'] = 1;
+      var title = c.querySelector('.t-order-id');
+      if (title && d.nickname) title.innerHTML = esc(d.nickname) + ' <small style="color:var(--text3)">' + esc(d.serial) + '</small>';
+      var tag = document.createElement('div'); tag.className = 'hint'; tag.style.marginTop = '.3rem'; tag.textContent = 'Kitchen: ' + (d.kitchen || 'My kitchen');
+      var det = c.querySelector('.t-order-details'); if (det) det.parentNode.insertBefore(tag, det);
+      var act = c.querySelector('.order-actions'); if (act) { var r = document.createElement('button'); r.className = 'btn-secondary'; r.dataset.dv = 'rename'; r.textContent = 'Rename'; act.appendChild(r); }
+    });
+    var list = $('devList'), n = Object.keys(kitchens).length, sum = document.getElementById('devSummary');
+    if (!sum) { sum = document.createElement('div'); sum.id = 'devSummary'; sum.className = 'hint'; sum.style.marginBottom = '.6rem'; list.parentNode.insertBefore(sum, list); }
+    sum.textContent = devices.length + (devices.length === 1 ? ' device' : ' devices') + ' in ' + n + (n === 1 ? ' kitchen' : ' kitchens');
+  };
+  $('devList').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-dv="rename"]'); if (!b) return; e.stopImmediatePropagation();
+    var d = devices.find(function (x) { return x.id === b.closest('.t-order-card').dataset.id; }); if (!d) return;
+    var known = Array.from(new Set(devices.map(function (x) { return x.kitchen; }).filter(Boolean)));
+    openModal(mHead(ICON.box, 'Name this device', esc(d.serial)) +
+      '<div class="field"><label>Device name</label><input id="dnName" maxlength="40" placeholder="e.g. Main kitchen unit" value="' + esc(d.nickname || '') + '"></div>' +
+      '<div class="field"><label>Kitchen or location</label><input id="dnKit" maxlength="40" list="dnKits" placeholder="e.g. Home, Parents’ house, Shop" value="' + esc(d.kitchen || '') + '"><datalist id="dnKits">' + known.map(function (k) { return '<option value="' + esc(k) + '">'; }).join('') + '</datalist></div><div class="msg-error" id="dnErr"></div>' +
+      cancelRow('<button class="btn-primary" style="flex:1" id="dnGo">Save</button>'));
+    $('dnGo').onclick = async function () {
+      $('dnGo').disabled = true;
+      try { await db.collection('devices').doc(d.id).update({ nickname: sanitize($('dnName').value), kitchen: sanitize($('dnKit').value) }); closeModal(); await loadDevices(); }
+      catch (err) { $('dnErr').textContent = 'Could not save: ' + (err.message || 'try again.'); $('dnGo').disabled = false; }
+    };
+  }, true);
+
+  /* ── S61 referral tiers ────────────────────────────────────── */
+  var baseLoadReferrals = loadReferrals;
+  loadReferrals = async function () {
+    await baseLoadReferrals();
+    var tiers = (siteSettings.referralTiers || []).filter(function (t) { return t && Number(t.count) > 0 && t.reward; }).sort(function (a, b) { return a.count - b.count; });
+    var host = document.getElementById('refTiers');
+    if (!host) { host = document.createElement('div'); host.id = 'refTiers'; host.style.marginTop = '1rem'; var l = $('refList'); l.parentNode.insertBefore(host, l); }
+    if (!tiers.length) { host.innerHTML = ''; return; }
+    var n = 0;
+    try { var s = await db.collection('preBookings').where('referredBy', '==', myRef).get(); n = s.docs.filter(function (d) { return String(d.data().status || 'pending').toLowerCase() !== 'cancelled'; }).length; } catch (_) {}
+    var next = tiers.find(function (t) { return n < t.count; });
+    host.innerHTML = '<div class="hint" style="text-transform:uppercase;letter-spacing:.08em;margin-bottom:.4rem">Reward tiers</div>' +
+      tiers.map(function (t) { var ok = n >= t.count; return '<div class="stat-row"><span>' + (ok ? '✓ ' : '') + '<b>' + esc(t.name || (t.count + ' friends')) + '</b> · ' + t.count + ' ' + (t.count === 1 ? 'friend' : 'friends') + '</span><span style="color:' + (ok ? 'var(--green)' : 'var(--text2)') + '">' + esc(t.reward) + '</span></div>'; }).join('') +
+      '<div class="hint" style="margin-top:.4rem">' + (next ? (next.count - n) + ' more ' + (next.count - n === 1 ? 'friend' : 'friends') + ' to reach ' + esc(next.name || 'the next tier') + '. Cancelled orders do not count.' : 'You have reached every tier. Thank you!') + '</div>';
+  };
+
+  // tickets: make "Return / replacement" a selectable topic (the new-ticket form builds its list from this)
+  try { renderOrders(); renderDevices(); } catch (_) {}
+})();
 </script>
 </body>
 </html>
