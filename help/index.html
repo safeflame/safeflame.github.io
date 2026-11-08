@@ -341,7 +341,7 @@ body{padding-top:calc(70px + var(--sf-banner-h,0px))}
   <div class="card-icon"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.6 2.2c-.7.4-1.1 1-1.1 1.8M12 17h.01"/></svg></div>
   <h1 class="page-title center">How can we help?</h1>
   <p class="page-sub center">Search the answers below, chat with us, or send feedback.</p>
-  <div class="seg" id="helpTabs"><button class="active" data-t="faqTab" type="button">Answers</button><button data-t="ideasTab" type="button">Ideas &amp; roadmap</button></div>
+  <div class="seg" id="helpTabs"><button class="active" data-t="faqTab" type="button">Answers</button><button data-t="fixTab" type="button">Troubleshooter</button><button data-t="ideasTab" type="button">Ideas &amp; roadmap</button></div>
   <div id="faqTab">
   <div class="field" style="position:relative"><input id="q" class="input" placeholder="Search questions…" autocomplete="off" style="padding-left:2.6rem"><span style="position:absolute;left:.9rem;top:50%;transform:translateY(-50%);color:var(--text3)"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="6.5"/><path d="m20 20-4.2-4.2"/></svg></span></div>
   <div id="faq" class="faq"></div>
@@ -367,6 +367,7 @@ body{padding-top:calc(70px + var(--sf-banner-h,0px))}
   </div>
   </div>
 
+  <div id="fixTab" class="hidden"><div class="card" id="fixCard" aria-live="polite"></div></div>
   <div id="ideasTab" class="hidden">
     <div class="card">
       <div class="section-title"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4h3l8 4V6L7 10H4ZM18 9.5a3.5 3.5 0 0 1 0 5"/></svg> Suggest a feature <span class="hint" id="ideaSignin"></span></div>
@@ -838,9 +839,53 @@ $('fbForm').addEventListener('submit', async e => {
 });
 
 /* ── tabs ── */
-function helpTab(id) { ['faqTab', 'ideasTab'].forEach(t => $(t).classList.toggle('hidden', t !== id)); document.querySelectorAll('#helpTabs button').forEach(b => b.classList.toggle('active', b.dataset.t === id)); history.replaceState(null, '', id === 'ideasTab' ? '#ideas' : location.pathname); }
+
+/* ── Troubleshooting wizard (yes/no steps) ── */
+const FIX = {
+  start: { q: 'Can you smell gas right now, or hear a hiss near the cylinder or pipe?', y: 'danger', n: 'what' },
+  danger: { end: 'danger', t: 'Treat this as an emergency', b: 'Do not switch any lights, appliances or phones on or off in the kitchen. Close the cylinder valve or regulator if you can reach it safely. Open doors and windows, get everyone outside, and call your gas supplier’s emergency number or the emergency services from outside. Do not go back in until it has been checked.' },
+  what: { q: 'What is happening?', opts: [['The gas alarm is sounding', 'alarm'], ['The display is blank or the unit has no power', 'power'], ['The valve will not open or close', 'valve'], ['It will not connect to Wi-Fi or the dashboard', 'wifi'], ['Alerts or the camera are not working', 'alerts']] },
+  alarm: { q: 'Did the alarm start while you were cooking, or near a strong spray, vapour or smoke (cleaners, aerosols, heavy frying)?', y: 'alarm2', n: 'alarmReal' },
+  alarm2: { q: 'Does it stop within a few minutes after you ventilate the kitchen?', y: { end: 'tip', t: 'Likely a nuisance trigger', b: 'Gas sensors can react to alcohol vapour, aerosols and heavy cooking fumes. Ventilate while cooking and keep sprays away from the unit. If it keeps happening, open a ticket and tell us the gas PPM shown when it sounds.' }, n: 'alarmReal' },
+  alarmReal: { end: 'danger', t: 'Do not ignore it', b: 'If the alarm continues in fresh air, or you are not sure, treat it as a real leak: no switches or flames, close the cylinder valve, ventilate, leave, and call your gas supplier’s emergency line. Once it has been checked, open a ticket so we can look at the logs.' },
+  power: { q: 'Is the power adapter plugged in firmly, and does the socket work with another device?', y: 'power2', n: { end: 'tip', t: 'Check the power first', b: 'Plug the adapter in firmly, try another socket and check the cable for damage. If the display now lights up, you are done.' } },
+  power2: { q: 'Is any light on the unit or its boards on, even dimly?', y: { end: 'ticket', t: 'The unit has power but no display', b: 'Take a photo of the unit with the power on and open a ticket. Please do not open the casing yourself.', cat: 'Technical problem', subj: 'Display is blank but unit has power' }, n: { end: 'ticket', t: 'No power reaching the unit', b: 'Try a different adapter of the same rating if you have one. If it still does not start, open a ticket. It may be covered by warranty.', cat: 'Warranty claim', subj: 'Unit will not power on' } },
+  valve: { q: 'Is the cylinder valve and regulator itself open, and does the manual valve lever move freely?', y: 'valve2', n: { end: 'tip', t: 'Check the cylinder and regulator', b: 'The unit cannot open gas that is not there. Open the cylinder valve and regulator, wait a few seconds, then try again from the display or dashboard.' } },
+  valve2: { q: 'Does the unit show an active alarm, or has it closed the valve because it detected a problem?', y: { end: 'tip', t: 'The valve is shut on purpose', b: 'After a safety shutoff, the unit keeps the valve closed until the cause is gone. Ventilate, make sure there is no leak, then reset from the display. If you are unsure whether it is safe, call a gas technician before resetting.' }, n: { end: 'ticket', t: 'The valve does not respond', b: 'Note what you see on the display when you press Open or Close, then open a ticket.', cat: 'Technical problem', subj: 'Gas valve not responding' } },
+  wifi: { q: 'Is your Wi-Fi a 2.4 GHz network (many ESP32 boards cannot join 5 GHz only networks)?', y: 'wifi2', n: { end: 'tip', t: 'Use a 2.4 GHz network', b: 'Turn on the 2.4 GHz band on your router, or use a phone hotspot to test. Then set up the connection again.' } },
+  wifi2: { q: 'Do other devices work normally on the same Wi-Fi, and is the unit within reasonable range of the router?', y: { end: 'ticket', t: 'Let us look at the connection', b: 'Tell us your router brand and what the unit’s display says about the network.', cat: 'Technical problem', subj: 'Cannot connect to Wi-Fi or dashboard' }, n: { end: 'tip', t: 'Fix the network first', b: 'Restart the router, move the unit’s Wi-Fi closer or add an extender, then try again.' } },
+  alerts: { q: 'Are the alerts missing on your phone only (for example Telegram or SMS), while the unit itself still alarms?', y: { end: 'tip', t: 'Check the phone side', b: 'Make sure notifications are allowed for the app, battery saver is not blocking it, and your Telegram chat or phone number was entered correctly in the dashboard. If it still fails, open a ticket.' }, n: { end: 'ticket', t: 'Tell us what you see', b: 'Describe which alerts or camera views are missing and since when.', cat: 'Technical problem', subj: 'Alerts or camera not working' } }
+};
+let fixPath = ['start'];
+function renderFix() {
+  const key = fixPath[fixPath.length - 1], resolve = n => typeof n === 'string' ? FIX[n] : n; const nd = resolve(key);
+  let h = '';
+  if (nd.end) {
+    const col = nd.end === 'danger' ? 'var(--red)' : nd.end === 'tip' ? 'var(--green)' : 'var(--flame2)';
+    h = '<h2 class="page-title" style="font-size:1.15rem;color:' + col + '">' + esc(nd.t) + '</h2><p style="margin:.6rem 0 1rem;color:var(--text2)">' + esc(nd.b) + '</p>';
+    if (nd.end === 'ticket') h += '<a class="btn-primary" href="/account?ticket=1&cat=' + encodeURIComponent(nd.cat || 'Technical problem') + '&subj=' + encodeURIComponent(nd.subj || '') + '#tickets">Open a support ticket</a> ';
+    else if (nd.end === 'tip') h += '<a class="btn-secondary" href="/account?ticket=1&cat=Technical%20problem#tickets">That did not fix it</a> ';
+    h += '<button class="btn-secondary" type="button" id="fixRestart">Start again</button>';
+  } else {
+    h = '<div class="hint" style="margin-bottom:.4rem">Step ' + fixPath.length + '</div><h2 class="page-title" style="font-size:1.1rem">' + esc(nd.q) + '</h2><div style="display:grid;gap:.6rem;margin-top:1rem">' +
+      (nd.opts ? nd.opts.map(o => '<button class="btn-secondary fixGo" data-to="' + o[1] + '" type="button" style="text-align:left">' + esc(o[0]) + '</button>').join('')
+        : '<button class="btn-primary fixGo" data-yn="y" type="button">Yes</button><button class="btn-secondary fixGo" data-yn="n" type="button">No</button>') + '</div>' +
+      (fixPath.length > 1 ? '<button class="btn-secondary" type="button" id="fixBack" style="margin-top:1rem">Back</button>' : '');
+  }
+  $('fixCard').innerHTML = h;
+}
+$('fixCard').addEventListener('click', e => {
+  if (e.target.id === 'fixRestart') { fixPath = ['start']; return renderFix(); }
+  if (e.target.id === 'fixBack') { fixPath.pop(); return renderFix(); }
+  const b = e.target.closest('.fixGo'); if (!b) return;
+  const cur = typeof fixPath[fixPath.length - 1] === 'string' ? FIX[fixPath[fixPath.length - 1]] : fixPath[fixPath.length - 1];
+  const next = b.dataset.to || cur[b.dataset.yn]; fixPath.push(next); renderFix();
+});
+renderFix();
+function helpTab(id) { ['faqTab', 'fixTab', 'ideasTab'].forEach(t => $(t).classList.toggle('hidden', t !== id)); document.querySelectorAll('#helpTabs button').forEach(b => b.classList.toggle('active', b.dataset.t === id)); history.replaceState(null, '', id === 'ideasTab' ? '#ideas' : location.pathname); }
 document.querySelectorAll('#helpTabs button').forEach(b => b.addEventListener('click', () => helpTab(b.dataset.t)));
 if (location.hash === '#ideas') helpTab('ideasTab');
+if (location.hash === '#fix') helpTab('fixTab');
 
 /* ── ideas & voting ── */
 let ideas = [];
@@ -865,6 +910,53 @@ $('ideaBtn').onclick = async () => {
   catch (x) { $('ideaErr').textContent = 'Could not send your idea. Please try again.'; }
   $('ideaBtn').disabled = false;
 };
+</script>
+<script>
+/* SafeFlame AI — cookie and consent banner (S67). Include on every public page.
+   Choice is saved in localStorage as sf_consent = {a: analytics true/false, t: timestamp}.
+   Analytics (Firebase/Google) only starts when the visitor accepts: use window.sfConsent.analytics(). */
+(function () {
+  'use strict';
+  var KEY = 'sf_consent';
+  function read() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (_) { return null; } }
+  function save(a) { try { localStorage.setItem(KEY, JSON.stringify({ a: !!a, t: Date.now() })); } catch (_) {} window.dispatchEvent(new CustomEvent('sf-consent', { detail: { analytics: !!a } })); }
+  window.sfConsent = {
+    analytics: function () { var c = read(); return !!(c && c.a); },
+    decided: function () { return !!read(); },
+    open: function () { show(true); }
+  };
+  function show(force) {
+    if (!force && read()) return;
+    if (document.getElementById('sfCookie')) return;
+    var b = document.createElement('div');
+    b.id = 'sfCookie'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Cookie preferences');
+    b.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:2147483000;width:min(680px,calc(100vw - 24px));background:var(--bg2,#0d0d1a);color:var(--text,#f0f0f8);border:1px solid var(--border,rgba(255,255,255,.14));border-radius:14px;padding:1rem 1.1rem;box-shadow:0 12px 40px rgba(0,0,0,.45);font:14px/1.5 system-ui,sans-serif';
+    var cur = read();
+    b.innerHTML =
+      '<div style="font-weight:700;margin-bottom:.25rem">Cookies and privacy</div>' +
+      '<div style="color:var(--text2,#a0a0b8);font-size:.85rem">We use essential storage to keep you signed in and remember your theme and language. With your OK we also use analytics to see which pages help people. See our <a href="/privacy" style="color:var(--flame2,#ff8a65)">Privacy page</a>.</div>' +
+      '<label id="sfCkRow" style="display:none;margin-top:.6rem;font-size:.85rem"><input type="checkbox" id="sfCkA"' + (cur && cur.a ? ' checked' : '') + '> Allow analytics</label>' +
+      '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem">' +
+      '<button type="button" id="sfCkAll" style="background:var(--flame,#FF5722);color:#fff;border:0;border-radius:9px;padding:.55rem 1rem;font-weight:600;cursor:pointer">Accept all</button>' +
+      '<button type="button" id="sfCkEss" style="background:transparent;color:inherit;border:1px solid var(--border,rgba(255,255,255,.25));border-radius:9px;padding:.55rem 1rem;cursor:pointer">Essential only</button>' +
+      '<button type="button" id="sfCkSet" style="background:transparent;color:var(--text2,#a0a0b8);border:0;padding:.55rem .4rem;cursor:pointer;text-decoration:underline">Choose</button></div>';
+    document.body.appendChild(b);
+    function done(a) { save(a); b.remove(); }
+    b.querySelector('#sfCkAll').onclick = function () { done(true); };
+    b.querySelector('#sfCkEss').onclick = function () { done(false); };
+    b.querySelector('#sfCkSet').onclick = function () {
+      var row = b.querySelector('#sfCkRow'), btn = b.querySelector('#sfCkSet');
+      if (row.style.display === 'none') { row.style.display = 'block'; btn.textContent = 'Save choice'; }
+      else done(b.querySelector('#sfCkA').checked);
+    };
+  }
+  function init() {
+    show(false);
+    // footer link "Cookie settings" on any page that has an element with data-cookie-settings
+    document.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('[data-cookie-settings]'); if (t) { e.preventDefault(); show(true); } });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
 </script>
 </body>
 </html>
