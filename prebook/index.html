@@ -574,16 +574,18 @@ function applySiteControls(s) {
 const chargesSum = c => c ? (Number(c.shipping) || 0) + (Number(c.handling) || 0) + (Number(c.cgst) || 0) + (Number(c.sgst) || 0) + (Number(c.igst) || 0) : 0;
 const orderTotal = o => (Number(o.unitPrice) || 0) * (Number(o.quantity) || 1) + (Number(o.addonsTotal) || 0) + chargesSum(o.charges);
 /* shipping + handling + GST (CGST/SGST within the seller's state, IGST for other states). Rates and fees are set in Admin > Site. */
-function computeCharges(goods, shipState) {
+function computeCharges(goods, shipState, discount) {
+  const gross = goods, disc = Math.max(0, Math.min(Number(discount) || 0, goods)); goods = goods - disc;
   const c = { ...DEFAULT_SETTINGS.charges, ...(siteSettings.charges || {}) }, n = x => Number(x) || 0, norm = s => String(s || '').trim().toLowerCase();
-  const shipping = (n(c.freeShippingAbove) > 0 && goods >= n(c.freeShippingAbove)) ? 0 : n(c.shipping), handling = n(c.handling);
+  const shipping = (n(c.freeShippingAbove) > 0 && gross >= n(c.freeShippingAbove)) ? 0 : n(c.shipping), handling = n(c.handling);
   const taxable = goods + (c.taxShipping ? shipping + handling : 0), inter = !!(norm(c.sellerState) && norm(shipState) && norm(shipState) !== norm(c.sellerState));
   const cgst = inter ? 0 : Math.round(taxable * n(c.cgst) / 100), sgst = inter ? 0 : Math.round(taxable * n(c.sgst) / 100), igst = inter ? Math.round(taxable * n(c.igst) / 100) : 0;
-  return { shipping, handling, taxable, cgst, sgst, igst, inter, rates: { cgst: n(c.cgst), sgst: n(c.sgst), igst: n(c.igst) }, total: goods + shipping + handling + cgst + sgst + igst };
+  return { discount: disc, couponCode: disc ? ((window.sfCouponCode && window.sfCouponCode()) || '') : '', shipping, handling, taxable, cgst, sgst, igst, inter, rates: { cgst: n(c.cgst), sgst: n(c.sgst), igst: n(c.igst) }, total: goods + shipping + handling + cgst + sgst + igst };
 }
 /* the lines shown under an order's subtotal: [label, amount] */
 function chargeLines(ch) {
   if (!ch) return []; const L = [];
+  if (Number(ch.discount)) L.push(['Discount' + (ch.couponCode ? ' (' + ch.couponCode + ')' : ''), '-₹' + Number(ch.discount).toLocaleString('en-IN')]);
   if (Number(ch.shipping)) L.push(['Shipping', ch.shipping]); else if (ch.shipping === 0) L.push(['Shipping', 'FREE']);
   if (Number(ch.handling)) L.push(['Handling', ch.handling]);
   if (Number(ch.cgst)) L.push(['CGST @ ' + ((ch.rates || {}).cgst || '') + '%', ch.cgst]);
@@ -897,7 +899,8 @@ function selectTier(t) {
 document.querySelectorAll('.tier-opt').forEach(o => o.addEventListener('click', () => { if (!o.classList.contains('sold-out')) selectTier(o.dataset.tier); }));
 /* ── delivery, add-ons, totals ── */
 let savedAddrs = [];
-const selectedAddons = () => (siteSettings.addons || []).filter(a => a.enabled && $('ao-' + a.id) && $('ao-' + a.id).checked).map(a => ({ id: a.id, name: a.name, price: Number(a.price) || 0 }));
+const baseSelectedAddons = () => (siteSettings.addons || []).filter(a => a.enabled && $('ao-' + a.id) && $('ao-' + a.id).checked).map(a => ({ id: a.id, name: a.name, price: Number(a.price) || 0 }));
+function selectedAddons() { return baseSelectedAddons().concat(window.sfExtraAddons ? window.sfExtraAddons() : []); }
 function renderAddons() {
   const list = (siteSettings.addons || []).filter(a => a.enabled);
   $('addonsWrap').classList.toggle('hidden', !list.length);
@@ -906,7 +909,7 @@ function renderAddons() {
 }
 function currentGoods() { const q = Math.min(Math.max(parseInt($('qty').value, 10) || 1, 1), 10), ao = selectedAddons(); return { q, unit: tierPriceFor(selectedTier), ao, goods: tierPriceFor(selectedTier) * q + ao.reduce((x, a) => x + a.price, 0) }; }
 function renderTotals() {
-  const g = currentGoods(), ch = computeCharges(g.goods, $('aState').value);
+  const g = currentGoods(), ch = computeCharges(g.goods, $('aState').value, window.sfDiscount ? window.sfDiscount(g.goods) : 0);
   $('totals').innerHTML = '<div><span>' + esc(tierLabelFor(selectedTier)) + ' × ' + g.q + '</span><span>' + fmtINR(g.unit * g.q) + '</span></div>' + g.ao.map(a => '<div><span>' + esc(a.name) + '</span><span>' + fmtINR(a.price) + '</span></div>').join('') + chargeLines(ch).map(l => '<div><span>' + esc(l[0]) + '</span><span>' + (typeof l[1] === 'number' ? fmtINR(l[1]) : esc(l[1])) + '</span></div>').join('') + '<div style="border-top:1px solid var(--border);margin-top:.3rem;padding-top:.5rem;font-weight:700"><span style="color:var(--text)">Total (pay later)</span><span>' + fmtINR(ch.total) + '</span></div>';
   const eta = (siteSettings.eta || {})[selectedTier]; $('etaLine').textContent = eta ? 'Estimated delivery: ' + eta : '';
 }
@@ -995,10 +998,11 @@ $('form').addEventListener('submit', async e => {
   if (!line1 || !city || !state) { btn.disabled = false; btn.textContent = label; return err.textContent = 'Please enter your delivery address (line 1, city and state).'; }
   if (!/^\d{6}$/.test(pin)) { btn.disabled = false; btn.textContent = label; return err.textContent = 'Enter a valid 6-digit PIN code.'; }
   if (gift && (!gName || !gPhone)) { btn.disabled = false; btn.textContent = label; return err.textContent = 'Enter the recipient\'s name and mobile number.'; }
+  if (window.sfCouponRecheck) { const cm = await window.sfCouponRecheck(); if (cm) { btn.disabled = false; btn.textContent = label; return err.textContent = cm; } }
   const ao = selectedAddons(), aoT = ao.reduce((x, a) => x + a.price, 0), unitPrice = tierPriceFor(selectedTier);
   const shipping = { name: gift ? gName : name, phone: gift ? gPhone : phone, line1, line2, city, state, pin };
-  const charges = computeCharges(unitPrice * quantity + aoT, state);
-  pending = { name, email, phone, quantity, tier: selectedTier, unitPrice, otpChannel: 'email', charges, uid: auth.currentUser ? auth.currentUser.uid : null, shipping, address: fmtAddress(shipping), gift: gift ? { name: gName, phone: gPhone } : null, addons: ao, addonsTotal: aoT, total: charges.total, deliveryNotes: dNotes, eta: (siteSettings.eta || {})[selectedTier] || '', referredBy: referral(), saveAddr: !gift && !$('saveAddrRow').classList.contains('hidden') && $('saveAddr').checked };
+  const charges = computeCharges(unitPrice * quantity + aoT, state, window.sfDiscount ? window.sfDiscount(unitPrice * quantity + aoT) : 0);
+  pending = { name, email, phone, quantity, tier: selectedTier, unitPrice, otpChannel: 'email', charges, uid: auth.currentUser ? auth.currentUser.uid : null, shipping, address: fmtAddress(shipping), gift: gift ? { name: gName, phone: gPhone, ...(window.sfGiftExtra ? window.sfGiftExtra() : {}) } : null, coupon: window.sfCouponInfo ? window.sfCouponInfo() : null, addons: ao, addonsTotal: aoT, total: charges.total, deliveryNotes: dNotes, eta: (siteSettings.eta || {})[selectedTier] || '', referredBy: referral(), saveAddr: !gift && !$('saveAddrRow').classList.contains('hidden') && $('saveAddr').checked };
   btn.textContent = 'Sending OTP…';
   try { await sendOtp(); }
   catch (x) { console.warn(x); err.textContent = sendErrMsg(x); btn.disabled = false; btn.textContent = label; resetCaptcha(); return; }
@@ -1057,6 +1061,166 @@ $('verifyBtn').onclick = async () => {
   } catch (x) { er.textContent = 'Booking failed. Please try again. ' + (x.message || ''); }
   btn.disabled = false; btn.textContent = 'Verify & Confirm Booking';
 };
+</script>
+<script>
+/* SafeFlame AI — cookie and consent banner (S67). Include on every public page.
+   Choice is saved in localStorage as sf_consent = {a: analytics true/false, t: timestamp}.
+   Analytics (Firebase/Google) only starts when the visitor accepts: use window.sfConsent.analytics(). */
+(function () {
+  'use strict';
+  var KEY = 'sf_consent';
+  function read() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (_) { return null; } }
+  function save(a) { try { localStorage.setItem(KEY, JSON.stringify({ a: !!a, t: Date.now() })); } catch (_) {} window.dispatchEvent(new CustomEvent('sf-consent', { detail: { analytics: !!a } })); }
+  window.sfConsent = {
+    analytics: function () { var c = read(); return !!(c && c.a); },
+    decided: function () { return !!read(); },
+    open: function () { show(true); }
+  };
+  function show(force) {
+    if (!force && read()) return;
+    if (document.getElementById('sfCookie')) return;
+    var b = document.createElement('div');
+    b.id = 'sfCookie'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Cookie preferences');
+    b.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:2147483000;width:min(680px,calc(100vw - 24px));background:var(--bg2,#0d0d1a);color:var(--text,#f0f0f8);border:1px solid var(--border,rgba(255,255,255,.14));border-radius:14px;padding:1rem 1.1rem;box-shadow:0 12px 40px rgba(0,0,0,.45);font:14px/1.5 system-ui,sans-serif';
+    var cur = read();
+    b.innerHTML =
+      '<div style="font-weight:700;margin-bottom:.25rem">Cookies and privacy</div>' +
+      '<div style="color:var(--text2,#a0a0b8);font-size:.85rem">We use essential storage to keep you signed in and remember your theme and language. With your OK we also use analytics to see which pages help people. See our <a href="/privacy" style="color:var(--flame2,#ff8a65)">Privacy page</a>.</div>' +
+      '<label id="sfCkRow" style="display:none;margin-top:.6rem;font-size:.85rem"><input type="checkbox" id="sfCkA"' + (cur && cur.a ? ' checked' : '') + '> Allow analytics</label>' +
+      '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem">' +
+      '<button type="button" id="sfCkAll" style="background:var(--flame,#FF5722);color:#fff;border:0;border-radius:9px;padding:.55rem 1rem;font-weight:600;cursor:pointer">Accept all</button>' +
+      '<button type="button" id="sfCkEss" style="background:transparent;color:inherit;border:1px solid var(--border,rgba(255,255,255,.25));border-radius:9px;padding:.55rem 1rem;cursor:pointer">Essential only</button>' +
+      '<button type="button" id="sfCkSet" style="background:transparent;color:var(--text2,#a0a0b8);border:0;padding:.55rem .4rem;cursor:pointer;text-decoration:underline">Choose</button></div>';
+    document.body.appendChild(b);
+    function done(a) { save(a); b.remove(); }
+    b.querySelector('#sfCkAll').onclick = function () { done(true); };
+    b.querySelector('#sfCkEss').onclick = function () { done(false); };
+    b.querySelector('#sfCkSet').onclick = function () {
+      var row = b.querySelector('#sfCkRow'), btn = b.querySelector('#sfCkSet');
+      if (row.style.display === 'none') { row.style.display = 'block'; btn.textContent = 'Save choice'; }
+      else done(b.querySelector('#sfCkA').checked);
+    };
+  }
+  function init() {
+    show(false);
+    // footer link "Cookie settings" on any page that has an element with data-cookie-settings
+    document.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('[data-cookie-settings]'); if (t) { e.preventDefault(); show(true); } });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+<script>
+/* SafeFlame AI — prebook page extras: S1 coupon codes, S8 gift message and gift wrap.
+   Loaded at the end of prebook.html. prebook.html calls window.sfDiscount, sfCouponCode, sfCouponInfo,
+   sfCouponRecheck, sfExtraAddons and sfGiftExtra when they exist.
+
+   HOW COUPONS ARE CHECKED (and the limit of doing this in the browser):
+   Admin > Promotions stores each coupon as a SHA-256 hash of its code, so codes can't be read from the page.
+   Usage limits are counted from existing orders. A determined person could still tamper with their own browser,
+   so every order records the coupon it used and the discount, and you can check it in Admin > Orders before confirming. */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var E = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); };
+  var inr = function (n) { return '₹' + Number(n || 0).toLocaleString('en-IN'); };
+  var applied = null;                         // { code, def }
+
+  function hashCode(code) {
+    var data = new TextEncoder().encode('sf:' + String(code).trim().toUpperCase());
+    return crypto.subtle.digest('SHA-256', data).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return x.toString(16).padStart(2, '0'); }).join(''); });
+  }
+  function calc(def, goods) {
+    if (!def) return 0;
+    if (Number(def.min) > 0 && goods < Number(def.min)) return 0;
+    if (def.tiers && def.tiers.length && def.tiers.indexOf(selectedTier) < 0) return 0;
+    var d = def.type === 'flat' ? Number(def.value) : Math.round(goods * Number(def.value) / 100);
+    if (def.type !== 'flat' && Number(def.cap) > 0) d = Math.min(d, Number(def.cap));
+    return Math.max(0, Math.min(d, goods));
+  }
+  function reasonInvalid(def, h) {
+    if (!def || def.active === false) return Promise.resolve('That code is not valid.');
+    if (def.expires && Date.now() > new Date(def.expires + 'T23:59:59+05:30').getTime()) return Promise.resolve('That code has expired.');
+    if (!Number(def.maxUses)) return Promise.resolve('');
+    return db.collection('preBookings').where('coupon.h', '==', h).get().then(function (s) {
+      var n = 0; s.forEach(function (d) { if (String(d.data().status || 'pending').toLowerCase() !== 'cancelled') n++; });
+      return n >= Number(def.maxUses) ? 'That code has been fully used.' : '';
+    }).catch(function () { return ''; });          // if the count can't be read, don't block the customer
+  }
+
+  window.sfCouponCode = function () { return applied ? applied.code : ''; };
+  window.sfDiscount = function (goods) { return applied ? calc(applied.def, goods) : 0; };
+  window.sfCouponInfo = function () {
+    if (!applied) return null; var g = currentGoods().goods; if (!calc(applied.def, g)) return null;
+    return { code: applied.code, h: applied.h, type: applied.def.type, value: Number(applied.def.value), cap: Number(applied.def.cap) || 0 };
+  };
+  window.sfCouponRecheck = async function () {
+    if (!applied) return '';
+    try { await loadSiteSettings(); } catch (_) {}
+    var def = (siteSettings.coupons || []).filter(function (c) { return c.h === applied.h; })[0];
+    var why = await reasonInvalid(def, applied.h);
+    if (why) { applied = null; renderBox(); renderTotals(); return why + ' Your total has been updated, please review it and try again.'; }
+    applied.def = def; renderTotals();
+    return '';
+  };
+
+  function renderBox(msg, ok) {
+    var box = $('cpBox'); if (!box) return;
+    if (applied) {
+      var g = currentGoods().goods, d = calc(applied.def, g);
+      box.innerHTML = '<div class="check-row" style="justify-content:space-between;margin:0"><span><b>' + E(applied.code) + '</b> ' + (d ? 'saves ' + inr(d) : '<span style="color:var(--yellow)">does not apply to the current selection</span>') + '</span><button type="button" class="btn-secondary" id="cpRm" style="padding:.3rem .7rem">Remove</button></div>' +
+        (applied.def.label ? '<div class="hint" style="margin-top:.3rem">' + E(applied.def.label) + '</div>' : '');
+      $('cpRm').onclick = function () { applied = null; renderBox(); renderTotals(); };
+    } else {
+      box.innerHTML = '<div style="display:flex;gap:.5rem"><input id="cpCode" placeholder="Coupon code" maxlength="30" autocomplete="off" autocapitalize="characters" style="flex:1"><button type="button" class="btn-secondary" id="cpApply">Apply</button></div>' +
+        '<div id="cpMsg" class="hint" style="margin-top:.3rem;min-height:1em;color:' + (ok ? 'var(--green)' : 'var(--red)') + '">' + E(msg || '') + '</div>';
+      $('cpApply').onclick = apply; $('cpCode').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
+    }
+  }
+  async function apply() {
+    var code = $('cpCode').value.trim().toUpperCase(); if (!code) return;
+    $('cpApply').disabled = true;
+    var h = await hashCode(code), def = (siteSettings.coupons || []).filter(function (c) { return c.h === h; })[0];
+    var why = await reasonInvalid(def, h);
+    if (why) { renderBox(why, false); return; }
+    var g = currentGoods().goods;
+    if (Number(def.min) > 0 && g < Number(def.min)) { renderBox('This code needs an order of at least ' + inr(def.min) + '.', false); return; }
+    if (def.tiers && def.tiers.length && def.tiers.indexOf(selectedTier) < 0) { renderBox('This code is only for: ' + def.tiers.join(', ') + '.', false); return; }
+    applied = { code: code, h: h, def: def }; renderBox(); renderTotals();
+  }
+
+  /* gift extras */
+  var wrapPrice = function () { return Number(siteSettings.giftWrapPrice) || 0; };
+  window.sfExtraAddons = function () {
+    var w = $('gWrap');
+    return $('isGift') && $('isGift').checked && w && w.checked ? [{ id: 'giftwrap', name: 'Gift wrap + printed card', price: wrapPrice() }] : [];
+  };
+  window.sfGiftExtra = function () {
+    var m = ($('gMsg').value || '').replace(/<[^>]*>/g, '').replace(/[<>"'`]/g, '').trim().slice(0, 200), w = !!($('gWrap') && $('gWrap').checked);
+    return Object.assign(m ? { message: m } : {}, w ? { wrap: true } : {});
+  };
+
+  function install() {
+    if ($('cpBox') || !$('totals')) return;
+    var box = document.createElement('div'); box.id = 'cpBox'; box.style.cssText = 'margin:.4rem 0 .8rem';
+    $('totals').parentNode.insertBefore(box, $('totals')); renderBox();
+
+    var gf = $('giftFields'); if (!gf) return;
+    var ex = document.createElement('div'); ex.id = 'giftExtra'; ex.className = 'hidden';
+    var wrapOn = siteSettings.giftWrapOn !== false;
+    ex.innerHTML = '<div class="field"><label for="gMsg">Message for the gift card (optional)</label><textarea id="gMsg" rows="2" maxlength="200" class="input" placeholder="e.g. Happy housewarming! Stay safe."></textarea></div>' +
+      (wrapOn ? '<label class="check-row"><input type="checkbox" id="gWrap"> Gift wrap with a printed card <span style="margin-left:auto;color:var(--flame2);font-weight:600">' + (wrapPrice() ? '+' + inr(wrapPrice()) : 'Free') + '</span></label>' : '');
+    gf.parentNode.insertBefore(ex, gf.nextSibling);
+    $('isGift').addEventListener('change', function () { ex.classList.toggle('hidden', !$('isGift').checked); renderTotals(); });
+    if ($('gWrap')) $('gWrap').addEventListener('change', renderTotals);
+    ['qty', 'aState'].forEach(function (id) { var el = $(id); if (el) el.addEventListener('input', function () { if (applied) renderBox(); }); });
+    document.querySelectorAll('.tier-opt').forEach(function (o) { o.addEventListener('click', function () { setTimeout(function () { if (applied) renderBox(); }, 0); }); });
+  }
+  // wait until prebook's init() has loaded the site settings
+  (function wait(n) { try { if (typeof siteSettings !== 'undefined' && typeof loadSiteSettings === 'function' && $('totals')) { setTimeout(install, 0); return; } } catch (_) {} if (n < 60) setTimeout(function () { wait(n + 1); }, 150); })(0);
+  // settings arrive asynchronously: rebuild the gift-wrap row once they have
+  var t = setInterval(function () { try { if (siteSettings && (siteSettings.giftWrapOn === false || siteSettings.giftWrapPrice !== undefined || siteSettings.coupons)) { clearInterval(t); var e = $('giftExtra'); if (e) { e.remove(); } var c = $('cpBox'); if (c) c.remove(); install(); renderTotals(); } } catch (_) {} }, 400);
+  setTimeout(function () { clearInterval(t); }, 8000);
+})();
 </script>
 </body>
 </html>
