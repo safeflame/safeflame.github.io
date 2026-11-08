@@ -2278,7 +2278,7 @@ body{padding-top:var(--sf-banner-h,0px)}
     </div>
   </div>
   <div class="footer-bottom">
-    <span>© 2026 SafeFlame AI. All rights reserved. · <a href="/privacy">Privacy</a> · <a href="/refund">Refunds</a> · <a href="/warranty">Warranty</a> · <a href="/whats-new">What's new</a></span>
+    <span>© 2026 SafeFlame AI. All rights reserved. · <a href="/privacy">Privacy</a> · <a href="/refund">Refunds</a> · <a href="/warranty">Warranty</a> · <a href="/whats-new">What's new</a> · <a href="#" data-cookie-settings>Cookie settings</a></span>
     <a href="/admin/" style="opacity:.3;font-size:.7rem;">Admin</a>
   </div>
 </footer>
@@ -2321,7 +2321,9 @@ firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 try { db.settings({ experimentalAutoDetectLongPolling: true, merge: true }); } catch (_) {}
 let analytics = null;
-try { analytics = firebase.analytics(); } catch(e){}
+function startAnalytics(){ if(analytics || !(window.sfConsent && window.sfConsent.analytics())) return; try { analytics = firebase.analytics(); } catch(e){} }
+startAnalytics();
+window.addEventListener('sf-consent', startAnalytics);
 function logEvent(n, p){ try{ if(analytics) analytics.logEvent(n, p||{}); }catch(e){} }
 
 // ── DEFAULT SETTINGS ─────────────────────────────────
@@ -2809,6 +2811,392 @@ function watchRelease() {
 }
 if (!window.SF_APP_NAME && location.pathname.indexOf('/admin') !== 0) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', watchRelease); else watchRelease(); }
 
+</script>
+<script>
+/* SafeFlame AI — cookie and consent banner (S67). Include on every public page.
+   Choice is saved in localStorage as sf_consent = {a: analytics true/false, t: timestamp}.
+   Analytics (Firebase/Google) only starts when the visitor accepts: use window.sfConsent.analytics(). */
+(function () {
+  'use strict';
+  var KEY = 'sf_consent';
+  function read() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (_) { return null; } }
+  function save(a) { try { localStorage.setItem(KEY, JSON.stringify({ a: !!a, t: Date.now() })); } catch (_) {} window.dispatchEvent(new CustomEvent('sf-consent', { detail: { analytics: !!a } })); }
+  window.sfConsent = {
+    analytics: function () { var c = read(); return !!(c && c.a); },
+    decided: function () { return !!read(); },
+    open: function () { show(true); }
+  };
+  function show(force) {
+    if (!force && read()) return;
+    if (document.getElementById('sfCookie')) return;
+    var b = document.createElement('div');
+    b.id = 'sfCookie'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Cookie preferences');
+    b.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:2147483000;width:min(680px,calc(100vw - 24px));background:var(--bg2,#0d0d1a);color:var(--text,#f0f0f8);border:1px solid var(--border,rgba(255,255,255,.14));border-radius:14px;padding:1rem 1.1rem;box-shadow:0 12px 40px rgba(0,0,0,.45);font:14px/1.5 system-ui,sans-serif';
+    var cur = read();
+    b.innerHTML =
+      '<div style="font-weight:700;margin-bottom:.25rem">Cookies and privacy</div>' +
+      '<div style="color:var(--text2,#a0a0b8);font-size:.85rem">We use essential storage to keep you signed in and remember your theme and language. With your OK we also use analytics to see which pages help people. See our <a href="/privacy" style="color:var(--flame2,#ff8a65)">Privacy page</a>.</div>' +
+      '<label id="sfCkRow" style="display:none;margin-top:.6rem;font-size:.85rem"><input type="checkbox" id="sfCkA"' + (cur && cur.a ? ' checked' : '') + '> Allow analytics</label>' +
+      '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem">' +
+      '<button type="button" id="sfCkAll" style="background:var(--flame,#FF5722);color:#fff;border:0;border-radius:9px;padding:.55rem 1rem;font-weight:600;cursor:pointer">Accept all</button>' +
+      '<button type="button" id="sfCkEss" style="background:transparent;color:inherit;border:1px solid var(--border,rgba(255,255,255,.25));border-radius:9px;padding:.55rem 1rem;cursor:pointer">Essential only</button>' +
+      '<button type="button" id="sfCkSet" style="background:transparent;color:var(--text2,#a0a0b8);border:0;padding:.55rem .4rem;cursor:pointer;text-decoration:underline">Choose</button></div>';
+    document.body.appendChild(b);
+    function done(a) { save(a); b.remove(); }
+    b.querySelector('#sfCkAll').onclick = function () { done(true); };
+    b.querySelector('#sfCkEss').onclick = function () { done(false); };
+    b.querySelector('#sfCkSet').onclick = function () {
+      var row = b.querySelector('#sfCkRow'), btn = b.querySelector('#sfCkSet');
+      if (row.style.display === 'none') { row.style.display = 'block'; btn.textContent = 'Save choice'; }
+      else done(b.querySelector('#sfCkA').checked);
+    };
+  }
+  function init() {
+    show(false);
+    // footer link "Cookie settings" on any page that has an element with data-cookie-settings
+    document.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('[data-cookie-settings]'); if (t) { e.preventDefault(); show(true); } });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+<script>
+/* SafeFlame AI — homepage extras (S72 currency, S66 countdown + notify me, S69 social proof,
+   S64 tier finder + compare, S65 savings calculator, S70 3D exploded view).
+   Loaded at the end of index.html, after the main script. Uses the page's `db`, `siteSettings`,
+   `renderPricing` and `applySiteSettings`. Everything here fails quietly if one of them is missing. */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function S() { try { return siteSettings || {}; } catch (_) { return {}; } }   // `siteSettings` is a top-level let, so it is not on window
+  var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); };
+
+  /* ── S72 · CURRENCY ─────────────────────────────────────────── */
+  var CUR = {
+    INR: { sym: '₹', rate: 1, loc: 'en-IN', name: 'INR ₹' },
+    USD: { sym: '$', rate: 0.0118, loc: 'en-US', name: 'USD $' },
+    EUR: { sym: '€', rate: 0.0102, loc: 'de-DE', name: 'EUR €' },
+    GBP: { sym: '£', rate: 0.0089, loc: 'en-GB', name: 'GBP £' },
+    AED: { sym: 'AED ', rate: 0.0433, loc: 'en-AE', name: 'AED' },
+    SGD: { sym: 'S$', rate: 0.0153, loc: 'en-SG', name: 'SGD S$' }
+  };
+  var curCode = 'INR';
+  try { var saved = localStorage.getItem('sf_cur'); if (saved && CUR[saved]) curCode = saved; } catch (_) {}
+
+  function money(inr) {
+    var c = CUR[curCode], v = Number(inr) * c.rate;
+    var digits = curCode === 'INR' ? 0 : (v >= 100 ? 0 : 2);
+    return c.sym + v.toLocaleString(c.loc, { maximumFractionDigits: digits });
+  }
+  window.sfMoney = money;
+
+  function loadRates() {          // live rates, cached for 12 hours; static rates above are the fallback
+    try {
+      var cached = JSON.parse(localStorage.getItem('sf_rates') || 'null');
+      if (cached && Date.now() - cached.t < 43200000) { apply(cached.r); return; }
+    } catch (_) {}
+    fetch('https://open.er-api.com/v6/latest/INR').then(function (r) { return r.json(); }).then(function (j) {
+      if (!j || !j.rates) return;
+      var r = {}; Object.keys(CUR).forEach(function (k) { if (j.rates[k]) r[k] = j.rates[k]; });
+      try { localStorage.setItem('sf_rates', JSON.stringify({ t: Date.now(), r: r })); } catch (_) {}
+      apply(r);
+    }).catch(function () {});
+    function apply(r) { Object.keys(r).forEach(function (k) { if (CUR[k] && k !== 'INR') CUR[k].rate = r[k]; }); refreshAll(); }
+  }
+
+  function installCurrency() {
+    var pricing = $('pricing'); if (!pricing || $('curSel')) return;
+    var grid = pricing.querySelector('.pricing-grid'); if (!grid) return;
+    var bar = document.createElement('div');
+    bar.id = 'curBar'; bar.style.cssText = 'display:flex;gap:.6rem;align-items:center;justify-content:center;flex-wrap:wrap;margin:0 0 1.2rem';
+    bar.innerHTML = '<label for="curSel" style="font-size:.82rem;color:var(--text2)">Show prices in</label>' +
+      '<select id="curSel" class="lang-select" translate="no" style="font-size:.85rem;padding:.4rem .6rem">' + Object.keys(CUR).map(function (k) { return '<option value="' + k + '"' + (k === curCode ? ' selected' : '') + '>' + CUR[k].name + '</option>'; }).join('') + '</select>' +
+      '<span id="curNote" style="flex-basis:100%;text-align:center;color:var(--text3);font-size:.78rem"></span>';
+    grid.parentNode.insertBefore(bar, grid);
+    $('curSel').addEventListener('change', function () {
+      curCode = this.value; try { localStorage.setItem('sf_cur', curCode); } catch (_) {}
+      refreshAll();
+    });
+  }
+
+  function priceOf(t) { var s = (S()); return Number(s[t + 'Price']) || ({ base: 24999, pro: 39999, elite: 54999 })[t]; }
+
+  function patchPricing() {       // show prices in the chosen currency everywhere renderPricing is used
+    if (typeof window.renderPricing !== 'function') return;
+    window.renderPricing = function (tier, price, orig) {
+      var el = $('price-' + tier), oEl = $('price-original-' + tier), lEl = $('tierPriceLabel-' + tier);
+      if (el) el.textContent = money(price);
+      if (lEl) lEl.textContent = money(price);
+      if (oEl) { if (orig && orig > price) { oEl.textContent = money(orig); oEl.style.display = 'inline'; } else oEl.style.display = 'none'; }
+    };
+  }
+
+  function currencyNote() {
+    var n = $('curNote'); if (!n) return;
+    n.textContent = curCode === 'INR' ? '' : 'Shown in ' + curCode + ' for reference. You are charged in Indian rupees (₹) at checkout, so your bank’s rate may differ slightly.';
+  }
+
+  /* ── S66 + S69 · COUNTDOWN WITH NOTIFY ME, SOCIAL PROOF ───────── */
+  function installCountdown() {
+    if ($('sfLaunch')) return;
+    var hero = $('top'); if (!hero) return;
+    var sec = document.createElement('section');
+    sec.id = 'sfLaunch';
+    sec.style.cssText = 'padding:2.2rem 1.25rem;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:var(--bg2)';
+    sec.innerHTML =
+      '<div class="container" style="text-align:center;max-width:760px;margin:0 auto">' +
+      '<div class="section-label" id="sfLaunchLabel">Launch countdown</div>' +
+      '<div class="countdown" id="sfCd" style="justify-content:center">' +
+      '<div class="cd-item"><span class="cd-num" id="cdDays">--</span><span class="cd-label">Days</span></div>' +
+      '<div class="cd-item"><span class="cd-num" id="cdHours">--</span><span class="cd-label">Hours</span></div>' +
+      '<div class="cd-item"><span class="cd-num" id="cdMins">--</span><span class="cd-label">Mins</span></div>' +
+      '<div class="cd-item"><span class="cd-num" id="cdSecs">--</span><span class="cd-label">Secs</span></div></div>' +
+      '<p id="sfProof" style="display:none;margin:1rem 0 0;color:var(--text2);font-size:.92rem"></p>' +
+      '<form id="sfNotify" style="margin-top:1.2rem"><div class="input-email" style="max-width:460px;margin:0 auto">' +
+      '<input type="email" id="sfNotifyEmail" placeholder="Your email — we’ll tell you the day it opens" required autocomplete="email">' +
+      '<button type="submit" class="btn-primary">Notify me</button></div>' +
+      '<div id="sfNotifyMsg" role="status" style="min-height:1.2rem;margin-top:.5rem;font-size:.82rem;color:var(--text2)"></div></form></div>';
+    hero.parentNode.insertBefore(sec, hero.nextSibling);
+
+    $('sfNotify').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var email = $('sfNotifyEmail').value.trim().toLowerCase(), msg = $('sfNotifyMsg'), btn = e.target.querySelector('button');
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg.textContent = 'Please enter a valid email.'; return; }
+      btn.disabled = true; msg.textContent = '';
+      try { if (localStorage.getItem('sf_notified') === email) { msg.textContent = 'You’re already on the list.'; btn.disabled = false; return; } } catch (_) {}
+      db.collection('waitlist').add({ email: email, source: 'countdown', createdAt: firebase.firestore.FieldValue.serverTimestamp() }).then(function () {
+        try { localStorage.setItem('sf_notified', email); } catch (_) {}
+        msg.style.color = 'var(--green)'; msg.textContent = 'Done. We’ll email you when pre-bookings open.'; e.target.reset();
+        try { logEvent('waitlist_joined', { source: 'countdown' }); } catch (_) {}
+      }).catch(function () { msg.style.color = 'var(--red)'; msg.textContent = 'Could not save that right now. Please try again.'; }).then(function () { btn.disabled = false; });
+    });
+    refreshCountdown();
+  }
+
+  function refreshCountdown() {
+    var s = S(), label = $('sfLaunchLabel'), proof = $('sfProof'), form = $('sfNotify');
+    if (!label) return;
+    var live = s.launchDate && new Date(s.launchDate) - new Date() <= 0;
+    label.textContent = live ? 'We’re open' : 'Launch countdown';
+    if (form) form.style.display = live ? 'none' : '';
+    var n = Number(s.socialProofCount) || 0;              // set in Admin > Site > Social proof
+    if (proof) {
+      if (n > 0) { proof.style.display = ''; proof.innerHTML = '<b style="color:var(--flame2)">' + n.toLocaleString('en-IN') + '</b> ' + esc(s.socialProofText || 'households have pre-booked'); }
+      else proof.style.display = 'none';
+    }
+  }
+
+  /* ── S64 · TIER FINDER + COMPARE ────────────────────────────── */
+  var TIERS = {
+    base:  { name: '4" Base',  disp: '4" LCD',    cams: 1, touch: false, rooms: false, cpu: 'Standard', support: 'Standard',  dash: false },
+    pro:   { name: '7" Pro',   disp: '7" Touch',  cams: 2, touch: true,  rooms: false, cpu: 'Standard', support: 'Priority',  dash: true },
+    elite: { name: '9" Elite', disp: '9" Touch',  cams: 4, touch: true,  rooms: true,  cpu: 'Upgraded', support: 'Priority + extended warranty', dash: true }
+  };
+  var ROWS = [
+    ['Display', function (t) { return t.disp; }],
+    ['Cameras', function (t) { return t.cams + '×'; }],
+    ['Customisable dashboard', function (t) { return t.dash ? '✓' : '—'; }],
+    ['Multi-room monitoring', function (t) { return t.rooms ? '✓' : '—'; }],
+    ['Processor', function (t) { return t.cpu; }],
+    ['Support', function (t) { return t.support; }]
+  ];
+
+  function installCompare() {
+    if ($('sfCompare')) return;
+    var pricing = $('pricing'); if (!pricing) return;
+    var sec = document.createElement('section');
+    sec.id = 'sfCompare';
+    sec.innerHTML =
+      '<div class="container"><div class="section-label reveal">Not sure which tier?</div>' +
+      '<h2 class="section-title reveal">Find your tier, then compare</h2>' +
+      '<p class="section-sub reveal">Every tier has the full safety system. Answer three quick questions and we’ll point you to the right display.</p>' +
+      '<div id="sfFinder" style="display:grid;gap:1rem;max-width:860px;margin:0 auto 1.6rem">' +
+      q('sfQ1', 'How much do you want to watch?', [['1', 'One kitchen, one camera'], ['2', 'Kitchen plus one more view'], ['4', 'Several rooms, full coverage']]) +
+      q('sfQ2', 'Do you want a touchscreen?', [['no', 'A simple display is fine'], ['yes', 'Yes, touch controls']]) +
+      q('sfQ3', 'Which matters more to you?', [['price', 'Lowest price'], ['support', 'Priority support and longer warranty']]) +
+      '</div><div id="sfPick" style="max-width:860px;margin:0 auto 2.4rem"></div>' +
+      '<h3 style="text-align:center;font-family:\'Space Grotesk\',sans-serif;margin:0 0 1rem">Side-by-side</h3>' +
+      '<div style="display:flex;gap:.8rem;justify-content:center;flex-wrap:wrap;margin-bottom:1rem">' + sel('sfA', 'base') + '<span style="align-self:center;color:var(--text3)">vs</span>' + sel('sfB', 'pro') + '</div>' +
+      '<div class="spec-table-wrap" style="max-width:860px;margin:0 auto"><table class="spec-table" id="sfCmpTable"></table></div></div>';
+    pricing.parentNode.insertBefore(sec, pricing.nextSibling);
+
+    function q(id, title, opts) {
+      return '<fieldset style="border:1px solid var(--border);border-radius:var(--radius2);padding:.9rem 1rem;background:var(--surface)"><legend style="padding:0 .5rem;font-weight:600;font-size:.9rem">' + title + '</legend><div style="display:flex;gap:.6rem;flex-wrap:wrap">' +
+        opts.map(function (o, i) { return '<label class="check-row" style="margin:0;cursor:pointer"><input type="radio" name="' + id + '" value="' + o[0] + '"' + (i === 0 ? ' checked' : '') + '> ' + o[1] + '</label>'; }).join('') + '</div></fieldset>';
+    }
+    function sel(id, v) {
+      return '<select id="' + id + '" class="lang-select" style="font-size:.95rem;padding:.55rem .8rem" aria-label="Tier">' + Object.keys(TIERS).map(function (k) { return '<option value="' + k + '"' + (k === v ? ' selected' : '') + '>' + TIERS[k].name + '</option>'; }).join('') + '</select>';
+    }
+    sec.addEventListener('change', renderCompare);
+    renderCompare();
+  }
+
+  function val(name) { var r = document.querySelector('input[name="' + name + '"]:checked'); return r ? r.value : ''; }
+
+  function renderCompare() {
+    var cams = Number(val('sfQ1')) || 1, touch = val('sfQ2') === 'yes', support = val('sfQ3') === 'support';
+    var pick = cams >= 4 || (support && cams > 2) ? 'elite' : (cams >= 2 || touch || support) ? 'pro' : 'base';
+    var why = [];
+    if (cams >= 4) why.push('covers several rooms with up to 4 cameras and multi-room zone monitoring');
+    else if (cams === 2) why.push('gives you a second camera');
+    if (touch && pick !== 'base') why.push('has a touchscreen with on-screen manual override');
+    if (support && pick !== 'base') why.push('includes priority support' + (pick === 'elite' ? ' and an extended warranty' : ''));
+    if (pick === 'base') why.push('has the full safety system with one camera at the lowest price');
+    var t = TIERS[pick];
+    $('sfPick').innerHTML = '<div style="border:1px solid var(--border2);background:rgba(255,87,34,.07);border-radius:var(--radius);padding:1.2rem 1.4rem;display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap">' +
+      '<div><div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--flame2)">We suggest</div>' +
+      '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:1.3rem;font-weight:700">' + t.name + ' · ' + money(priceOf(pick)) + '</div>' +
+      '<div style="color:var(--text2);font-size:.9rem;margin-top:.2rem">It ' + why.join(', and ') + '.</div></div>' +
+      '<a class="btn-primary" href="/prebook?tier=' + pick + '" style="text-decoration:none">Pre-book ' + t.name + '</a></div>';
+
+    var a = $('sfA').value, b = $('sfB').value, A = TIERS[a], B = TIERS[b];
+    var html = '<thead><tr><th>Spec</th><th>' + A.name + '</th><th>' + B.name + '</th></tr></thead><tbody>' +
+      '<tr><td>Price</td><td>' + money(priceOf(a)) + '</td><td>' + money(priceOf(b)) + '</td></tr>';
+    ROWS.forEach(function (r) {
+      var x = r[1](A), y = r[1](B), diff = x !== y;
+      var st = diff ? ' style="background:rgba(255,87,34,.08);font-weight:600"' : '';
+      html += '<tr><td>' + r[0] + '</td><td' + st + '>' + esc(x) + '</td><td' + st + '>' + esc(y) + '</td></tr>';
+    });
+    html += '</tbody>';
+    $('sfCmpTable').innerHTML = html;
+    var foot = $('sfCmpFoot');
+    if (!foot) { foot = document.createElement('p'); foot.id = 'sfCmpFoot'; foot.style.cssText = 'text-align:center;color:var(--text3);font-size:.78rem;margin-top:.6rem'; $('sfCmpTable').parentNode.appendChild(foot); }
+    foot.textContent = a === b ? 'Pick two different tiers to see what changes.' : 'Highlighted rows are where the two tiers differ. Gas, flame and pressure sensing, auto shutoff and alerts are the same on every tier.';
+  }
+
+  /* ── S65 · SAVINGS CALCULATOR ───────────────────────────────── */
+  function installCalc() {
+    if ($('sfCalc')) return;
+    var anchor = $('sfCompare') || $('pricing'); if (!anchor) return;
+    var sec = document.createElement('section');
+    sec.id = 'sfCalc';
+    sec.innerHTML =
+      '<div class="container"><div class="section-label reveal">Do the maths</div>' +
+      '<h2 class="section-title reveal">What is a leak risk worth to you?</h2>' +
+      '<p class="section-sub reveal">Change the numbers to match your home. The risk figures are <b>your own assumptions</b>, not statistics, so use what feels realistic.</p>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.2rem;max-width:960px;margin:0 auto">' +
+      '<div style="border:1px solid var(--border);border-radius:var(--radius);padding:1.2rem;background:var(--surface)">' +
+      slider('cCyl', 'Cylinders used per year', 4, 30, 1, 12, '') +
+      slider('cPrice', 'Price per cylinder (₹)', 600, 2500, 50, 950, '') +
+      slider('cWaste', 'Gas lost to leaks or forgotten burners (%)', 0, 10, 0.5, 2, '%') +
+      slider('cCost', 'Cost of a serious kitchen incident (₹)', 50000, 2000000, 50000, 500000, '') +
+      slider('cProb', 'Chance of that happening in a year (%)', 0.05, 2, 0.05, 0.3, '%') +
+      '<div style="margin-top:.8rem"><label style="font-size:.82rem;color:var(--text2)">Tier</label> <select id="cTier" class="lang-select" style="margin-left:.4rem"><option value="base">4" Base</option><option value="pro" selected>7" Pro</option><option value="elite">9" Elite</option></select></div></div>' +
+      '<div id="sfCalcOut" style="border:1px solid var(--border2);border-radius:var(--radius);padding:1.2rem;background:rgba(255,87,34,.05)"></div></div>' +
+      '<p style="text-align:center;color:var(--text3);font-size:.76rem;margin:1rem auto 0;max-width:640px">An estimate to help you think, not a promise. SafeFlame AI is a safety device first; any gas saving is a bonus. Your own risk and cost will differ.</p></div>';
+    anchor.parentNode.insertBefore(sec, anchor.nextSibling);
+    function slider(id, label, min, max, step, v, unit) {
+      return '<div style="margin-bottom:.9rem"><div style="display:flex;justify-content:space-between;font-size:.85rem"><label for="' + id + '">' + label + '</label><b id="' + id + 'V" style="color:var(--flame2)"></b></div>' +
+        '<input type="range" id="' + id + '" min="' + min + '" max="' + max + '" step="' + step + '" value="' + v + '" data-unit="' + unit + '" style="width:100%;accent-color:var(--flame)"></div>';
+    }
+    sec.addEventListener('input', renderCalc);
+    renderCalc();
+  }
+
+  function renderCalc() {
+    var g = function (id) { return Number($(id).value); };
+    ['cCyl', 'cPrice', 'cWaste', 'cCost', 'cProb'].forEach(function (id) {
+      var el = $(id), u = el.dataset.unit, v = Number(el.value);
+      $(id + 'V').textContent = u === '%' ? v + '%' : (id === 'cCyl' ? v : money(v));
+    });
+    var gasYear = g('cCyl') * g('cPrice'), saved = gasYear * g('cWaste') / 100;
+    var risk = g('cCost') * g('cProb') / 100;
+    var unit = priceOf($('cTier').value), total = saved + risk;
+    var payback = total > 0 ? unit / total : 0;
+    $('sfCalcOut').innerHTML =
+      row('Gas you buy each year', money(gasYear)) +
+      row('Gas wasted at your assumption', money(saved) + ' / year') +
+      row('Expected yearly cost of a serious incident', money(risk) + ' / year') +
+      '<hr style="border:0;border-top:1px solid var(--border);margin:.8rem 0">' +
+      row('Combined yearly exposure', '<b style="font-size:1.15rem;color:var(--flame2)">' + money(total) + '</b>') +
+      row('Over 5 years', money(total * 5)) +
+      row('Unit price (' + TIERS[$('cTier').value].name + ')', money(unit)) +
+      '<div style="margin-top:.9rem;padding:.7rem .9rem;border-radius:var(--radius2);background:var(--surface2);font-size:.88rem;color:var(--text2)">' +
+      (total > 0 ? 'On these numbers, the unit’s price equals about <b>' + (payback < 10 ? payback.toFixed(1) : '10+') + ' years</b> of that exposure. Injuries and lives are not in this sum, because they cannot be priced.' : 'Raise an assumption to see a result.') + '</div>';
+    function row(a, b) { return '<div style="display:flex;justify-content:space-between;gap:1rem;padding:.3rem 0;font-size:.9rem"><span style="color:var(--text2)">' + a + '</span><span>' + b + '</span></div>'; }
+  }
+
+  /* ── S70 · 3D EXPLODED VIEW ─────────────────────────────────── */
+  var LAYERS = [
+    { n: 'Display and front panel', c: '#26C6DA', d: 'The 4", 7" or 9" screen on the front. It shows live gas, flame, pressure and cylinder weight, and says plainly whether it is safe to leave the kitchen.' },
+    { n: 'Sensor array', c: '#66BB6A', d: 'The MQ2 gas sensor, flame sensor and pressure sensor. Together they catch a leak, a flame that should not be there, and a pressure drop.' },
+    { n: 'ESP32 control boards', c: '#FFA726', d: 'Three ESP32 boards run detection, alerts and the dashboard. Safety decisions are made on the device, so it keeps working without the internet.' },
+    { n: 'Relay and exhaust-fan driver', c: '#FF8A65', d: 'Switches the exhaust fans on when gas is detected and drives the valve motor.' },
+    { n: 'Valve actuator and base plate', c: '#EF5350', d: 'The part that closes the LPG line automatically. Your cylinder weight is measured at the base.' }
+  ];
+
+  function installExplode() {
+    if ($('sfExplode')) return;
+    var anchor = $('sfCalc') || $('pricing'); if (!anchor) return;
+    var sec = document.createElement('section');
+    sec.id = 'sfExplode';
+    sec.innerHTML =
+      '<div class="container"><div class="section-label reveal">Inside the box</div>' +
+      '<h2 class="section-title reveal">Pull it apart</h2>' +
+      '<p class="section-sub reveal">Drag the model to turn it. Use the slider to open it up, and tap a layer to read what it does. This is a simplified illustration, not a CAD render.</p>' +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1.4rem;max-width:960px;margin:0 auto;align-items:center">' +
+      '<div><div id="xvScene" style="height:340px;perspective:1000px;touch-action:none;cursor:grab;display:flex;align-items:center;justify-content:center;user-select:none" aria-label="Exploded 3D view of the device. Drag to rotate."><div id="xvStage" style="position:relative;width:220px;height:140px;transform-style:preserve-3d"></div></div>' +
+      '<label style="display:block;text-align:center;font-size:.82rem;color:var(--text2)">Closed <input type="range" id="xvGap" min="0" max="60" value="34" style="width:55%;vertical-align:middle;accent-color:var(--flame)"> Exploded</label></div>' +
+      '<div id="xvList" style="display:grid;gap:.5rem"></div></div></div>';
+    anchor.parentNode.insertBefore(sec, anchor.nextSibling);
+
+    var stage = $('xvStage'), list = $('xvList'), rotZ = -35, rotX = 58, sel = 0;
+    stage.innerHTML = LAYERS.slice().reverse().map(function (l, i) {          // bottom layer first
+      return '<div class="xvl" data-i="' + (LAYERS.length - 1 - i) + '" style="position:absolute;inset:0;border-radius:12px;border:1.5px solid ' + l.c + ';background:' + l.c + '26;backdrop-filter:blur(2px);display:flex;align-items:flex-end;padding:.5rem .7rem;font-size:.7rem;font-weight:700;color:var(--text);transition:box-shadow .2s,background .2s">' + l.n + '</div>';
+    }).join('');
+    list.innerHTML = LAYERS.map(function (l, i) {
+      return '<button type="button" class="xvb" data-i="' + i + '" style="text-align:left;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--radius2);padding:.7rem .9rem;cursor:pointer;font:inherit"><b style="color:' + l.c + '">●</b> <b>' + l.n + '</b><div class="xvd" style="display:none;color:var(--text2);font-size:.85rem;margin-top:.3rem">' + l.d + '</div></button>';
+    }).join('');
+
+    function paint() {
+      var gap = Number($('xvGap').value);
+      stage.style.transform = 'rotateX(' + rotX + 'deg) rotateZ(' + rotZ + 'deg)';
+      Array.prototype.forEach.call(stage.children, function (el, k) {
+        el.style.transform = 'translateZ(' + (k * gap) + 'px)';
+        var on = Number(el.dataset.i) === sel;
+        el.style.boxShadow = on ? '0 0 26px ' + LAYERS[sel].c : 'none';
+        el.style.background = LAYERS[Number(el.dataset.i)].c + (on ? '55' : '26');
+      });
+      Array.prototype.forEach.call(list.children, function (b) {
+        var on = Number(b.dataset.i) === sel;
+        b.style.borderColor = on ? LAYERS[sel].c : 'var(--border)';
+        b.querySelector('.xvd').style.display = on ? 'block' : 'none';
+      });
+    }
+    list.addEventListener('click', function (e) { var b = e.target.closest('.xvb'); if (b) { sel = Number(b.dataset.i); paint(); } });
+    stage.addEventListener('click', function (e) { var l = e.target.closest('.xvl'); if (l) { sel = Number(l.dataset.i); paint(); } });
+    $('xvGap').addEventListener('input', paint);
+
+    var scene = $('xvScene'), drag = null;
+    scene.addEventListener('pointerdown', function (e) { drag = { x: e.clientX, y: e.clientY, z: rotZ, r: rotX }; scene.style.cursor = 'grabbing'; try { scene.setPointerCapture(e.pointerId); } catch (_) {} });
+    scene.addEventListener('pointermove', function (e) { if (!drag) return; rotZ = drag.z + (e.clientX - drag.x) * 0.5; rotX = Math.max(20, Math.min(80, drag.r - (e.clientY - drag.y) * 0.3)); paint(); });
+    scene.addEventListener('pointerup', function () { drag = null; scene.style.cursor = 'grab'; });
+    scene.addEventListener('pointercancel', function () { drag = null; });
+    paint();
+  }
+
+  /* ── WIRING ─────────────────────────────────────────────────── */
+  function refreshAll() {
+    var s = S();
+    ['base', 'pro', 'elite'].forEach(function (t) { if (typeof window.renderPricing === 'function') window.renderPricing(t, s[t + 'Price'] || priceOf(t), s[t + 'OriginalPrice']); });
+    currencyNote(); refreshCountdown();
+    if ($('sfCompare')) renderCompare();
+    if ($('sfCalc')) renderCalc();
+    var sel = $('curSel'); if (sel) sel.value = curCode;
+  }
+
+  function init() {
+    patchPricing(); installCurrency(); installCountdown(); installCompare(); installCalc(); installExplode();
+    if (typeof window.applySiteSettings === 'function') {
+      var orig = window.applySiteSettings;
+      window.applySiteSettings = function () { orig.apply(this, arguments); refreshAll(); };
+    }
+    refreshAll(); loadRates();
+    try { if (typeof window.updateCountdown === 'function') window.updateCountdown(); } catch (_) {}
+    // let the page's scroll-reveal pick up the new sections
+    document.querySelectorAll('#sfCompare .reveal,#sfCalc .reveal,#sfExplode .reveal').forEach(function (el) { el.classList.add('visible'); el.classList.add('in'); });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
 </script>
 </body>
 </html>
