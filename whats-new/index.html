@@ -780,5 +780,52 @@ db.collection('releases').orderBy('date', 'desc').limit(50).onSnapshot(sn => {
   document.getElementById('relList').innerHTML = list.length ? list.map((r, i) => '<div class="card" style="margin-bottom:1rem"><div style="display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap"><h2 style="font-size:1.1rem;margin:0">v' + esc(r.version) + (i === 0 ? ' <span class="t-status shipped">latest</span>' : '') + '</h2><span class="hint">' + esc(new Date(r.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })) + '</span></div><p class="page-sub" style="margin:.2rem 0 .6rem">' + esc(r.title || '') + '</p><div class="pn-body">' + patchNotesHtml(r.notes) + '</div></div>').join('') : '<div class="empty-rich"><b>No releases yet</b><p>Updates will be listed here.</p></div>';
 }, () => { document.getElementById('relList').innerHTML = '<div class="empty">Could not load releases.</div>'; });
 </script>
+<script>
+/* SafeFlame AI — cookie and consent banner (S67). Include on every public page.
+   Choice is saved in localStorage as sf_consent = {a: analytics true/false, t: timestamp}.
+   Analytics (Firebase/Google) only starts when the visitor accepts: use window.sfConsent.analytics(). */
+(function () {
+  'use strict';
+  var KEY = 'sf_consent';
+  function read() { try { return JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (_) { return null; } }
+  function save(a) { try { localStorage.setItem(KEY, JSON.stringify({ a: !!a, t: Date.now() })); } catch (_) {} window.dispatchEvent(new CustomEvent('sf-consent', { detail: { analytics: !!a } })); }
+  window.sfConsent = {
+    analytics: function () { var c = read(); return !!(c && c.a); },
+    decided: function () { return !!read(); },
+    open: function () { show(true); }
+  };
+  function show(force) {
+    if (!force && read()) return;
+    if (document.getElementById('sfCookie')) return;
+    var b = document.createElement('div');
+    b.id = 'sfCookie'; b.setAttribute('role', 'dialog'); b.setAttribute('aria-label', 'Cookie preferences');
+    b.style.cssText = 'position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:2147483000;width:min(680px,calc(100vw - 24px));background:var(--bg2,#0d0d1a);color:var(--text,#f0f0f8);border:1px solid var(--border,rgba(255,255,255,.14));border-radius:14px;padding:1rem 1.1rem;box-shadow:0 12px 40px rgba(0,0,0,.45);font:14px/1.5 system-ui,sans-serif';
+    var cur = read();
+    b.innerHTML =
+      '<div style="font-weight:700;margin-bottom:.25rem">Cookies and privacy</div>' +
+      '<div style="color:var(--text2,#a0a0b8);font-size:.85rem">We use essential storage to keep you signed in and remember your theme and language. With your OK we also use analytics to see which pages help people. See our <a href="/privacy" style="color:var(--flame2,#ff8a65)">Privacy page</a>.</div>' +
+      '<label id="sfCkRow" style="display:none;margin-top:.6rem;font-size:.85rem"><input type="checkbox" id="sfCkA"' + (cur && cur.a ? ' checked' : '') + '> Allow analytics</label>' +
+      '<div style="display:flex;gap:.5rem;flex-wrap:wrap;margin-top:.8rem">' +
+      '<button type="button" id="sfCkAll" style="background:var(--flame,#FF5722);color:#fff;border:0;border-radius:9px;padding:.55rem 1rem;font-weight:600;cursor:pointer">Accept all</button>' +
+      '<button type="button" id="sfCkEss" style="background:transparent;color:inherit;border:1px solid var(--border,rgba(255,255,255,.25));border-radius:9px;padding:.55rem 1rem;cursor:pointer">Essential only</button>' +
+      '<button type="button" id="sfCkSet" style="background:transparent;color:var(--text2,#a0a0b8);border:0;padding:.55rem .4rem;cursor:pointer;text-decoration:underline">Choose</button></div>';
+    document.body.appendChild(b);
+    function done(a) { save(a); b.remove(); }
+    b.querySelector('#sfCkAll').onclick = function () { done(true); };
+    b.querySelector('#sfCkEss').onclick = function () { done(false); };
+    b.querySelector('#sfCkSet').onclick = function () {
+      var row = b.querySelector('#sfCkRow'), btn = b.querySelector('#sfCkSet');
+      if (row.style.display === 'none') { row.style.display = 'block'; btn.textContent = 'Save choice'; }
+      else done(b.querySelector('#sfCkA').checked);
+    };
+  }
+  function init() {
+    show(false);
+    // footer link "Cookie settings" on any page that has an element with data-cookie-settings
+    document.addEventListener('click', function (e) { var t = e.target.closest && e.target.closest('[data-cookie-settings]'); if (t) { e.preventDefault(); show(true); } });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
 </body>
 </html>
