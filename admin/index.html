@@ -3455,5 +3455,2856 @@ axInit = function () { if (axInit.done4) return; axInit.done4 = true; axInitBase
 
 window.__axLoaded = true;
 </script>
+<script>
+//---------------------------------------------------------------------
+//
+// QR Code Generator for JavaScript
+//
+// Copyright (c) 2009 Kazuhiko Arase
+//
+// URL: http://www.d-project.com/
+//
+// Licensed under the MIT license:
+//  http://www.opensource.org/licenses/mit-license.php
+//
+// The word 'QR Code' is registered trademark of
+// DENSO WAVE INCORPORATED
+//  http://www.denso-wave.com/qrcode/faqpatent-e.html
+//
+//---------------------------------------------------------------------
+
+var qrcode = function() {
+
+  //---------------------------------------------------------------------
+  // qrcode
+  //---------------------------------------------------------------------
+
+  /**
+   * qrcode
+   * @param typeNumber 1 to 40
+   * @param errorCorrectionLevel 'L','M','Q','H'
+   */
+  var qrcode = function(typeNumber, errorCorrectionLevel) {
+
+    var PAD0 = 0xEC;
+    var PAD1 = 0x11;
+
+    var _typeNumber = typeNumber;
+    var _errorCorrectionLevel = QRErrorCorrectionLevel[errorCorrectionLevel];
+    var _modules = null;
+    var _moduleCount = 0;
+    var _dataCache = null;
+    var _dataList = [];
+
+    var _this = {};
+
+    var makeImpl = function(test, maskPattern) {
+
+      _moduleCount = _typeNumber * 4 + 17;
+      _modules = function(moduleCount) {
+        var modules = new Array(moduleCount);
+        for (var row = 0; row < moduleCount; row += 1) {
+          modules[row] = new Array(moduleCount);
+          for (var col = 0; col < moduleCount; col += 1) {
+            modules[row][col] = null;
+          }
+        }
+        return modules;
+      }(_moduleCount);
+
+      setupPositionProbePattern(0, 0);
+      setupPositionProbePattern(_moduleCount - 7, 0);
+      setupPositionProbePattern(0, _moduleCount - 7);
+      setupPositionAdjustPattern();
+      setupTimingPattern();
+      setupTypeInfo(test, maskPattern);
+
+      if (_typeNumber >= 7) {
+        setupTypeNumber(test);
+      }
+
+      if (_dataCache == null) {
+        _dataCache = createData(_typeNumber, _errorCorrectionLevel, _dataList);
+      }
+
+      mapData(_dataCache, maskPattern);
+    };
+
+    var setupPositionProbePattern = function(row, col) {
+
+      for (var r = -1; r <= 7; r += 1) {
+
+        if (row + r <= -1 || _moduleCount <= row + r) continue;
+
+        for (var c = -1; c <= 7; c += 1) {
+
+          if (col + c <= -1 || _moduleCount <= col + c) continue;
+
+          if ( (0 <= r && r <= 6 && (c == 0 || c == 6) )
+              || (0 <= c && c <= 6 && (r == 0 || r == 6) )
+              || (2 <= r && r <= 4 && 2 <= c && c <= 4) ) {
+            _modules[row + r][col + c] = true;
+          } else {
+            _modules[row + r][col + c] = false;
+          }
+        }
+      }
+    };
+
+    var getBestMaskPattern = function() {
+
+      var minLostPoint = 0;
+      var pattern = 0;
+
+      for (var i = 0; i < 8; i += 1) {
+
+        makeImpl(true, i);
+
+        var lostPoint = QRUtil.getLostPoint(_this);
+
+        if (i == 0 || minLostPoint > lostPoint) {
+          minLostPoint = lostPoint;
+          pattern = i;
+        }
+      }
+
+      return pattern;
+    };
+
+    var setupTimingPattern = function() {
+
+      for (var r = 8; r < _moduleCount - 8; r += 1) {
+        if (_modules[r][6] != null) {
+          continue;
+        }
+        _modules[r][6] = (r % 2 == 0);
+      }
+
+      for (var c = 8; c < _moduleCount - 8; c += 1) {
+        if (_modules[6][c] != null) {
+          continue;
+        }
+        _modules[6][c] = (c % 2 == 0);
+      }
+    };
+
+    var setupPositionAdjustPattern = function() {
+
+      var pos = QRUtil.getPatternPosition(_typeNumber);
+
+      for (var i = 0; i < pos.length; i += 1) {
+
+        for (var j = 0; j < pos.length; j += 1) {
+
+          var row = pos[i];
+          var col = pos[j];
+
+          if (_modules[row][col] != null) {
+            continue;
+          }
+
+          for (var r = -2; r <= 2; r += 1) {
+
+            for (var c = -2; c <= 2; c += 1) {
+
+              if (r == -2 || r == 2 || c == -2 || c == 2
+                  || (r == 0 && c == 0) ) {
+                _modules[row + r][col + c] = true;
+              } else {
+                _modules[row + r][col + c] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+
+    var setupTypeNumber = function(test) {
+
+      var bits = QRUtil.getBCHTypeNumber(_typeNumber);
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[Math.floor(i / 3)][i % 3 + _moduleCount - 8 - 3] = mod;
+      }
+
+      for (var i = 0; i < 18; i += 1) {
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+        _modules[i % 3 + _moduleCount - 8 - 3][Math.floor(i / 3)] = mod;
+      }
+    };
+
+    var setupTypeInfo = function(test, maskPattern) {
+
+      var data = (_errorCorrectionLevel << 3) | maskPattern;
+      var bits = QRUtil.getBCHTypeInfo(data);
+
+      // vertical
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 6) {
+          _modules[i][8] = mod;
+        } else if (i < 8) {
+          _modules[i + 1][8] = mod;
+        } else {
+          _modules[_moduleCount - 15 + i][8] = mod;
+        }
+      }
+
+      // horizontal
+      for (var i = 0; i < 15; i += 1) {
+
+        var mod = (!test && ( (bits >> i) & 1) == 1);
+
+        if (i < 8) {
+          _modules[8][_moduleCount - i - 1] = mod;
+        } else if (i < 9) {
+          _modules[8][15 - i - 1 + 1] = mod;
+        } else {
+          _modules[8][15 - i - 1] = mod;
+        }
+      }
+
+      // fixed module
+      _modules[_moduleCount - 8][8] = (!test);
+    };
+
+    var mapData = function(data, maskPattern) {
+
+      var inc = -1;
+      var row = _moduleCount - 1;
+      var bitIndex = 7;
+      var byteIndex = 0;
+      var maskFunc = QRUtil.getMaskFunction(maskPattern);
+
+      for (var col = _moduleCount - 1; col > 0; col -= 2) {
+
+        if (col == 6) col -= 1;
+
+        while (true) {
+
+          for (var c = 0; c < 2; c += 1) {
+
+            if (_modules[row][col - c] == null) {
+
+              var dark = false;
+
+              if (byteIndex < data.length) {
+                dark = ( ( (data[byteIndex] >>> bitIndex) & 1) == 1);
+              }
+
+              var mask = maskFunc(row, col - c);
+
+              if (mask) {
+                dark = !dark;
+              }
+
+              _modules[row][col - c] = dark;
+              bitIndex -= 1;
+
+              if (bitIndex == -1) {
+                byteIndex += 1;
+                bitIndex = 7;
+              }
+            }
+          }
+
+          row += inc;
+
+          if (row < 0 || _moduleCount <= row) {
+            row -= inc;
+            inc = -inc;
+            break;
+          }
+        }
+      }
+    };
+
+    var createBytes = function(buffer, rsBlocks) {
+
+      var offset = 0;
+
+      var maxDcCount = 0;
+      var maxEcCount = 0;
+
+      var dcdata = new Array(rsBlocks.length);
+      var ecdata = new Array(rsBlocks.length);
+
+      for (var r = 0; r < rsBlocks.length; r += 1) {
+
+        var dcCount = rsBlocks[r].dataCount;
+        var ecCount = rsBlocks[r].totalCount - dcCount;
+
+        maxDcCount = Math.max(maxDcCount, dcCount);
+        maxEcCount = Math.max(maxEcCount, ecCount);
+
+        dcdata[r] = new Array(dcCount);
+
+        for (var i = 0; i < dcdata[r].length; i += 1) {
+          dcdata[r][i] = 0xff & buffer.getBuffer()[i + offset];
+        }
+        offset += dcCount;
+
+        var rsPoly = QRUtil.getErrorCorrectPolynomial(ecCount);
+        var rawPoly = qrPolynomial(dcdata[r], rsPoly.getLength() - 1);
+
+        var modPoly = rawPoly.mod(rsPoly);
+        ecdata[r] = new Array(rsPoly.getLength() - 1);
+        for (var i = 0; i < ecdata[r].length; i += 1) {
+          var modIndex = i + modPoly.getLength() - ecdata[r].length;
+          ecdata[r][i] = (modIndex >= 0)? modPoly.getAt(modIndex) : 0;
+        }
+      }
+
+      var totalCodeCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalCodeCount += rsBlocks[i].totalCount;
+      }
+
+      var data = new Array(totalCodeCount);
+      var index = 0;
+
+      for (var i = 0; i < maxDcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < dcdata[r].length) {
+            data[index] = dcdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      for (var i = 0; i < maxEcCount; i += 1) {
+        for (var r = 0; r < rsBlocks.length; r += 1) {
+          if (i < ecdata[r].length) {
+            data[index] = ecdata[r][i];
+            index += 1;
+          }
+        }
+      }
+
+      return data;
+    };
+
+    var createData = function(typeNumber, errorCorrectionLevel, dataList) {
+
+      var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, errorCorrectionLevel);
+
+      var buffer = qrBitBuffer();
+
+      for (var i = 0; i < dataList.length; i += 1) {
+        var data = dataList[i];
+        buffer.put(data.getMode(), 4);
+        buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+        data.write(buffer);
+      }
+
+      // calc num max data.
+      var totalDataCount = 0;
+      for (var i = 0; i < rsBlocks.length; i += 1) {
+        totalDataCount += rsBlocks[i].dataCount;
+      }
+
+      if (buffer.getLengthInBits() > totalDataCount * 8) {
+        throw 'code length overflow. ('
+          + buffer.getLengthInBits()
+          + '>'
+          + totalDataCount * 8
+          + ')';
+      }
+
+      // end code
+      if (buffer.getLengthInBits() + 4 <= totalDataCount * 8) {
+        buffer.put(0, 4);
+      }
+
+      // padding
+      while (buffer.getLengthInBits() % 8 != 0) {
+        buffer.putBit(false);
+      }
+
+      // padding
+      while (true) {
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD0, 8);
+
+        if (buffer.getLengthInBits() >= totalDataCount * 8) {
+          break;
+        }
+        buffer.put(PAD1, 8);
+      }
+
+      return createBytes(buffer, rsBlocks);
+    };
+
+    _this.addData = function(data, mode) {
+
+      mode = mode || 'Byte';
+
+      var newData = null;
+
+      switch(mode) {
+      case 'Numeric' :
+        newData = qrNumber(data);
+        break;
+      case 'Alphanumeric' :
+        newData = qrAlphaNum(data);
+        break;
+      case 'Byte' :
+        newData = qr8BitByte(data);
+        break;
+      case 'Kanji' :
+        newData = qrKanji(data);
+        break;
+      default :
+        throw 'mode:' + mode;
+      }
+
+      _dataList.push(newData);
+      _dataCache = null;
+    };
+
+    _this.isDark = function(row, col) {
+      if (row < 0 || _moduleCount <= row || col < 0 || _moduleCount <= col) {
+        throw row + ',' + col;
+      }
+      return _modules[row][col];
+    };
+
+    _this.getModuleCount = function() {
+      return _moduleCount;
+    };
+
+    _this.make = function() {
+      if (_typeNumber < 1) {
+        var typeNumber = 1;
+
+        for (; typeNumber < 40; typeNumber++) {
+          var rsBlocks = QRRSBlock.getRSBlocks(typeNumber, _errorCorrectionLevel);
+          var buffer = qrBitBuffer();
+
+          for (var i = 0; i < _dataList.length; i++) {
+            var data = _dataList[i];
+            buffer.put(data.getMode(), 4);
+            buffer.put(data.getLength(), QRUtil.getLengthInBits(data.getMode(), typeNumber) );
+            data.write(buffer);
+          }
+
+          var totalDataCount = 0;
+          for (var i = 0; i < rsBlocks.length; i++) {
+            totalDataCount += rsBlocks[i].dataCount;
+          }
+
+          if (buffer.getLengthInBits() <= totalDataCount * 8) {
+            break;
+          }
+        }
+
+        _typeNumber = typeNumber;
+      }
+
+      makeImpl(false, getBestMaskPattern() );
+    };
+
+    _this.createTableTag = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var qrHtml = '';
+
+      qrHtml += '<table style="';
+      qrHtml += ' border-width: 0px; border-style: none;';
+      qrHtml += ' border-collapse: collapse;';
+      qrHtml += ' padding: 0px; margin: ' + margin + 'px;';
+      qrHtml += '">';
+      qrHtml += '<tbody>';
+
+      for (var r = 0; r < _this.getModuleCount(); r += 1) {
+
+        qrHtml += '<tr>';
+
+        for (var c = 0; c < _this.getModuleCount(); c += 1) {
+          qrHtml += '<td style="';
+          qrHtml += ' border-width: 0px; border-style: none;';
+          qrHtml += ' border-collapse: collapse;';
+          qrHtml += ' padding: 0px; margin: 0px;';
+          qrHtml += ' width: ' + cellSize + 'px;';
+          qrHtml += ' height: ' + cellSize + 'px;';
+          qrHtml += ' background-color: ';
+          qrHtml += _this.isDark(r, c)? '#000000' : '#ffffff';
+          qrHtml += ';';
+          qrHtml += '"/>';
+        }
+
+        qrHtml += '</tr>';
+      }
+
+      qrHtml += '</tbody>';
+      qrHtml += '</table>';
+
+      return qrHtml;
+    };
+
+    _this.createSvgTag = function(cellSize, margin, alt, title) {
+
+      var opts = {};
+      if (typeof arguments[0] == 'object') {
+        // Called by options.
+        opts = arguments[0];
+        // overwrite cellSize and margin.
+        cellSize = opts.cellSize;
+        margin = opts.margin;
+        alt = opts.alt;
+        title = opts.title;
+      }
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      // Compose alt property surrogate
+      alt = (typeof alt === 'string') ? {text: alt} : alt || {};
+      alt.text = alt.text || null;
+      alt.id = (alt.text) ? alt.id || 'qrcode-description' : null;
+
+      // Compose title property surrogate
+      title = (typeof title === 'string') ? {text: title} : title || {};
+      title.text = title.text || null;
+      title.id = (title.text) ? title.id || 'qrcode-title' : null;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var c, mc, r, mr, qrSvg='', rect;
+
+      rect = 'l' + cellSize + ',0 0,' + cellSize +
+        ' -' + cellSize + ',0 0,-' + cellSize + 'z ';
+
+      qrSvg += '<svg version="1.1" xmlns="http://www.w3.org/2000/svg"';
+      qrSvg += !opts.scalable ? ' width="' + size + 'px" height="' + size + 'px"' : '';
+      qrSvg += ' viewBox="0 0 ' + size + ' ' + size + '" ';
+      qrSvg += ' preserveAspectRatio="xMinYMin meet"';
+      qrSvg += (title.text || alt.text) ? ' role="img" aria-labelledby="' +
+          escapeXml([title.id, alt.id].join(' ').trim() ) + '"' : '';
+      qrSvg += '>';
+      qrSvg += (title.text) ? '<title id="' + escapeXml(title.id) + '">' +
+          escapeXml(title.text) + '</title>' : '';
+      qrSvg += (alt.text) ? '<description id="' + escapeXml(alt.id) + '">' +
+          escapeXml(alt.text) + '</description>' : '';
+      qrSvg += '<rect width="100%" height="100%" fill="white" cx="0" cy="0"/>';
+      qrSvg += '<path d="';
+
+      for (r = 0; r < _this.getModuleCount(); r += 1) {
+        mr = r * cellSize + margin;
+        for (c = 0; c < _this.getModuleCount(); c += 1) {
+          if (_this.isDark(r, c) ) {
+            mc = c*cellSize+margin;
+            qrSvg += 'M' + mc + ',' + mr + rect;
+          }
+        }
+      }
+
+      qrSvg += '" stroke="transparent" fill="black"/>';
+      qrSvg += '</svg>';
+
+      return qrSvg;
+    };
+
+    _this.createDataURL = function(cellSize, margin) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      return createDataURL(size, size, function(x, y) {
+        if (min <= x && x < max && min <= y && y < max) {
+          var c = Math.floor( (x - min) / cellSize);
+          var r = Math.floor( (y - min) / cellSize);
+          return _this.isDark(r, c)? 0 : 1;
+        } else {
+          return 1;
+        }
+      } );
+    };
+
+    _this.createImgTag = function(cellSize, margin, alt) {
+
+      cellSize = cellSize || 2;
+      margin = (typeof margin == 'undefined')? cellSize * 4 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+
+      var img = '';
+      img += '<img';
+      img += '\u0020src="';
+      img += _this.createDataURL(cellSize, margin);
+      img += '"';
+      img += '\u0020width="';
+      img += size;
+      img += '"';
+      img += '\u0020height="';
+      img += size;
+      img += '"';
+      if (alt) {
+        img += '\u0020alt="';
+        img += escapeXml(alt);
+        img += '"';
+      }
+      img += '/>';
+
+      return img;
+    };
+
+    var escapeXml = function(s) {
+      var escaped = '';
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charAt(i);
+        switch(c) {
+        case '<': escaped += '&lt;'; break;
+        case '>': escaped += '&gt;'; break;
+        case '&': escaped += '&amp;'; break;
+        case '"': escaped += '&quot;'; break;
+        default : escaped += c; break;
+        }
+      }
+      return escaped;
+    };
+
+    var _createHalfASCII = function(margin) {
+      var cellSize = 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r1, r2, p;
+
+      var blocks = {
+        '██': '█',
+        '█ ': '▀',
+        ' █': '▄',
+        '  ': ' '
+      };
+
+      var blocksLastLineNoMargin = {
+        '██': '▀',
+        '█ ': '▀',
+        ' █': ' ',
+        '  ': ' '
+      };
+
+      var ascii = '';
+      for (y = 0; y < size; y += 2) {
+        r1 = Math.floor((y - min) / cellSize);
+        r2 = Math.floor((y + 1 - min) / cellSize);
+        for (x = 0; x < size; x += 1) {
+          p = '█';
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r1, Math.floor((x - min) / cellSize))) {
+            p = ' ';
+          }
+
+          if (min <= x && x < max && min <= y+1 && y+1 < max && _this.isDark(r2, Math.floor((x - min) / cellSize))) {
+            p += ' ';
+          }
+          else {
+            p += '█';
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          ascii += (margin < 1 && y+1 >= max) ? blocksLastLineNoMargin[p] : blocks[p];
+        }
+
+        ascii += '\n';
+      }
+
+      if (size % 2 && margin > 0) {
+        return ascii.substring(0, ascii.length - size - 1) + Array(size+1).join('▀');
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.createASCII = function(cellSize, margin) {
+      cellSize = cellSize || 1;
+
+      if (cellSize < 2) {
+        return _createHalfASCII(margin);
+      }
+
+      cellSize -= 1;
+      margin = (typeof margin == 'undefined')? cellSize * 2 : margin;
+
+      var size = _this.getModuleCount() * cellSize + margin * 2;
+      var min = margin;
+      var max = size - margin;
+
+      var y, x, r, p;
+
+      var white = Array(cellSize+1).join('██');
+      var black = Array(cellSize+1).join('  ');
+
+      var ascii = '';
+      var line = '';
+      for (y = 0; y < size; y += 1) {
+        r = Math.floor( (y - min) / cellSize);
+        line = '';
+        for (x = 0; x < size; x += 1) {
+          p = 1;
+
+          if (min <= x && x < max && min <= y && y < max && _this.isDark(r, Math.floor((x - min) / cellSize))) {
+            p = 0;
+          }
+
+          // Output 2 characters per pixel, to create full square. 1 character per pixels gives only half width of square.
+          line += p ? white : black;
+        }
+
+        for (r = 0; r < cellSize; r += 1) {
+          ascii += line + '\n';
+        }
+      }
+
+      return ascii.substring(0, ascii.length-1);
+    };
+
+    _this.renderTo2dContext = function(context, cellSize) {
+      cellSize = cellSize || 2;
+      var length = _this.getModuleCount();
+      for (var row = 0; row < length; row++) {
+        for (var col = 0; col < length; col++) {
+          context.fillStyle = _this.isDark(row, col) ? 'black' : 'white';
+          context.fillRect(row * cellSize, col * cellSize, cellSize, cellSize);
+        }
+      }
+    }
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrcode.stringToBytes
+  //---------------------------------------------------------------------
+
+  qrcode.stringToBytesFuncs = {
+    'default' : function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        bytes.push(c & 0xff);
+      }
+      return bytes;
+    }
+  };
+
+  qrcode.stringToBytes = qrcode.stringToBytesFuncs['default'];
+
+  //---------------------------------------------------------------------
+  // qrcode.createStringToBytes
+  //---------------------------------------------------------------------
+
+  /**
+   * @param unicodeData base64 string of byte array.
+   * [16bit Unicode],[16bit Bytes], ...
+   * @param numChars
+   */
+  qrcode.createStringToBytes = function(unicodeData, numChars) {
+
+    // create conversion map.
+
+    var unicodeMap = function() {
+
+      var bin = base64DecodeInputStream(unicodeData);
+      var read = function() {
+        var b = bin.read();
+        if (b == -1) throw 'eof';
+        return b;
+      };
+
+      var count = 0;
+      var unicodeMap = {};
+      while (true) {
+        var b0 = bin.read();
+        if (b0 == -1) break;
+        var b1 = read();
+        var b2 = read();
+        var b3 = read();
+        var k = String.fromCharCode( (b0 << 8) | b1);
+        var v = (b2 << 8) | b3;
+        unicodeMap[k] = v;
+        count += 1;
+      }
+      if (count != numChars) {
+        throw count + ' != ' + numChars;
+      }
+
+      return unicodeMap;
+    }();
+
+    var unknownChar = '?'.charCodeAt(0);
+
+    return function(s) {
+      var bytes = [];
+      for (var i = 0; i < s.length; i += 1) {
+        var c = s.charCodeAt(i);
+        if (c < 128) {
+          bytes.push(c);
+        } else {
+          var b = unicodeMap[s.charAt(i)];
+          if (typeof b == 'number') {
+            if ( (b & 0xff) == b) {
+              // 1byte
+              bytes.push(b);
+            } else {
+              // 2bytes
+              bytes.push(b >>> 8);
+              bytes.push(b & 0xff);
+            }
+          } else {
+            bytes.push(unknownChar);
+          }
+        }
+      }
+      return bytes;
+    };
+  };
+
+  //---------------------------------------------------------------------
+  // QRMode
+  //---------------------------------------------------------------------
+
+  var QRMode = {
+    MODE_NUMBER :    1 << 0,
+    MODE_ALPHA_NUM : 1 << 1,
+    MODE_8BIT_BYTE : 1 << 2,
+    MODE_KANJI :     1 << 3
+  };
+
+  //---------------------------------------------------------------------
+  // QRErrorCorrectionLevel
+  //---------------------------------------------------------------------
+
+  var QRErrorCorrectionLevel = {
+    L : 1,
+    M : 0,
+    Q : 3,
+    H : 2
+  };
+
+  //---------------------------------------------------------------------
+  // QRMaskPattern
+  //---------------------------------------------------------------------
+
+  var QRMaskPattern = {
+    PATTERN000 : 0,
+    PATTERN001 : 1,
+    PATTERN010 : 2,
+    PATTERN011 : 3,
+    PATTERN100 : 4,
+    PATTERN101 : 5,
+    PATTERN110 : 6,
+    PATTERN111 : 7
+  };
+
+  //---------------------------------------------------------------------
+  // QRUtil
+  //---------------------------------------------------------------------
+
+  var QRUtil = function() {
+
+    var PATTERN_POSITION_TABLE = [
+      [],
+      [6, 18],
+      [6, 22],
+      [6, 26],
+      [6, 30],
+      [6, 34],
+      [6, 22, 38],
+      [6, 24, 42],
+      [6, 26, 46],
+      [6, 28, 50],
+      [6, 30, 54],
+      [6, 32, 58],
+      [6, 34, 62],
+      [6, 26, 46, 66],
+      [6, 26, 48, 70],
+      [6, 26, 50, 74],
+      [6, 30, 54, 78],
+      [6, 30, 56, 82],
+      [6, 30, 58, 86],
+      [6, 34, 62, 90],
+      [6, 28, 50, 72, 94],
+      [6, 26, 50, 74, 98],
+      [6, 30, 54, 78, 102],
+      [6, 28, 54, 80, 106],
+      [6, 32, 58, 84, 110],
+      [6, 30, 58, 86, 114],
+      [6, 34, 62, 90, 118],
+      [6, 26, 50, 74, 98, 122],
+      [6, 30, 54, 78, 102, 126],
+      [6, 26, 52, 78, 104, 130],
+      [6, 30, 56, 82, 108, 134],
+      [6, 34, 60, 86, 112, 138],
+      [6, 30, 58, 86, 114, 142],
+      [6, 34, 62, 90, 118, 146],
+      [6, 30, 54, 78, 102, 126, 150],
+      [6, 24, 50, 76, 102, 128, 154],
+      [6, 28, 54, 80, 106, 132, 158],
+      [6, 32, 58, 84, 110, 136, 162],
+      [6, 26, 54, 82, 110, 138, 166],
+      [6, 30, 58, 86, 114, 142, 170]
+    ];
+    var G15 = (1 << 10) | (1 << 8) | (1 << 5) | (1 << 4) | (1 << 2) | (1 << 1) | (1 << 0);
+    var G18 = (1 << 12) | (1 << 11) | (1 << 10) | (1 << 9) | (1 << 8) | (1 << 5) | (1 << 2) | (1 << 0);
+    var G15_MASK = (1 << 14) | (1 << 12) | (1 << 10) | (1 << 4) | (1 << 1);
+
+    var _this = {};
+
+    var getBCHDigit = function(data) {
+      var digit = 0;
+      while (data != 0) {
+        digit += 1;
+        data >>>= 1;
+      }
+      return digit;
+    };
+
+    _this.getBCHTypeInfo = function(data) {
+      var d = data << 10;
+      while (getBCHDigit(d) - getBCHDigit(G15) >= 0) {
+        d ^= (G15 << (getBCHDigit(d) - getBCHDigit(G15) ) );
+      }
+      return ( (data << 10) | d) ^ G15_MASK;
+    };
+
+    _this.getBCHTypeNumber = function(data) {
+      var d = data << 12;
+      while (getBCHDigit(d) - getBCHDigit(G18) >= 0) {
+        d ^= (G18 << (getBCHDigit(d) - getBCHDigit(G18) ) );
+      }
+      return (data << 12) | d;
+    };
+
+    _this.getPatternPosition = function(typeNumber) {
+      return PATTERN_POSITION_TABLE[typeNumber - 1];
+    };
+
+    _this.getMaskFunction = function(maskPattern) {
+
+      switch (maskPattern) {
+
+      case QRMaskPattern.PATTERN000 :
+        return function(i, j) { return (i + j) % 2 == 0; };
+      case QRMaskPattern.PATTERN001 :
+        return function(i, j) { return i % 2 == 0; };
+      case QRMaskPattern.PATTERN010 :
+        return function(i, j) { return j % 3 == 0; };
+      case QRMaskPattern.PATTERN011 :
+        return function(i, j) { return (i + j) % 3 == 0; };
+      case QRMaskPattern.PATTERN100 :
+        return function(i, j) { return (Math.floor(i / 2) + Math.floor(j / 3) ) % 2 == 0; };
+      case QRMaskPattern.PATTERN101 :
+        return function(i, j) { return (i * j) % 2 + (i * j) % 3 == 0; };
+      case QRMaskPattern.PATTERN110 :
+        return function(i, j) { return ( (i * j) % 2 + (i * j) % 3) % 2 == 0; };
+      case QRMaskPattern.PATTERN111 :
+        return function(i, j) { return ( (i * j) % 3 + (i + j) % 2) % 2 == 0; };
+
+      default :
+        throw 'bad maskPattern:' + maskPattern;
+      }
+    };
+
+    _this.getErrorCorrectPolynomial = function(errorCorrectLength) {
+      var a = qrPolynomial([1], 0);
+      for (var i = 0; i < errorCorrectLength; i += 1) {
+        a = a.multiply(qrPolynomial([1, QRMath.gexp(i)], 0) );
+      }
+      return a;
+    };
+
+    _this.getLengthInBits = function(mode, type) {
+
+      if (1 <= type && type < 10) {
+
+        // 1 - 9
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 10;
+        case QRMode.MODE_ALPHA_NUM : return 9;
+        case QRMode.MODE_8BIT_BYTE : return 8;
+        case QRMode.MODE_KANJI     : return 8;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 27) {
+
+        // 10 - 26
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 12;
+        case QRMode.MODE_ALPHA_NUM : return 11;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 10;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else if (type < 41) {
+
+        // 27 - 40
+
+        switch(mode) {
+        case QRMode.MODE_NUMBER    : return 14;
+        case QRMode.MODE_ALPHA_NUM : return 13;
+        case QRMode.MODE_8BIT_BYTE : return 16;
+        case QRMode.MODE_KANJI     : return 12;
+        default :
+          throw 'mode:' + mode;
+        }
+
+      } else {
+        throw 'type:' + type;
+      }
+    };
+
+    _this.getLostPoint = function(qrcode) {
+
+      var moduleCount = qrcode.getModuleCount();
+
+      var lostPoint = 0;
+
+      // LEVEL1
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount; col += 1) {
+
+          var sameCount = 0;
+          var dark = qrcode.isDark(row, col);
+
+          for (var r = -1; r <= 1; r += 1) {
+
+            if (row + r < 0 || moduleCount <= row + r) {
+              continue;
+            }
+
+            for (var c = -1; c <= 1; c += 1) {
+
+              if (col + c < 0 || moduleCount <= col + c) {
+                continue;
+              }
+
+              if (r == 0 && c == 0) {
+                continue;
+              }
+
+              if (dark == qrcode.isDark(row + r, col + c) ) {
+                sameCount += 1;
+              }
+            }
+          }
+
+          if (sameCount > 5) {
+            lostPoint += (3 + sameCount - 5);
+          }
+        }
+      };
+
+      // LEVEL2
+
+      for (var row = 0; row < moduleCount - 1; row += 1) {
+        for (var col = 0; col < moduleCount - 1; col += 1) {
+          var count = 0;
+          if (qrcode.isDark(row, col) ) count += 1;
+          if (qrcode.isDark(row + 1, col) ) count += 1;
+          if (qrcode.isDark(row, col + 1) ) count += 1;
+          if (qrcode.isDark(row + 1, col + 1) ) count += 1;
+          if (count == 0 || count == 4) {
+            lostPoint += 3;
+          }
+        }
+      }
+
+      // LEVEL3
+
+      for (var row = 0; row < moduleCount; row += 1) {
+        for (var col = 0; col < moduleCount - 6; col += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row, col + 1)
+              &&  qrcode.isDark(row, col + 2)
+              &&  qrcode.isDark(row, col + 3)
+              &&  qrcode.isDark(row, col + 4)
+              && !qrcode.isDark(row, col + 5)
+              &&  qrcode.isDark(row, col + 6) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount - 6; row += 1) {
+          if (qrcode.isDark(row, col)
+              && !qrcode.isDark(row + 1, col)
+              &&  qrcode.isDark(row + 2, col)
+              &&  qrcode.isDark(row + 3, col)
+              &&  qrcode.isDark(row + 4, col)
+              && !qrcode.isDark(row + 5, col)
+              &&  qrcode.isDark(row + 6, col) ) {
+            lostPoint += 40;
+          }
+        }
+      }
+
+      // LEVEL4
+
+      var darkCount = 0;
+
+      for (var col = 0; col < moduleCount; col += 1) {
+        for (var row = 0; row < moduleCount; row += 1) {
+          if (qrcode.isDark(row, col) ) {
+            darkCount += 1;
+          }
+        }
+      }
+
+      var ratio = Math.abs(100 * darkCount / moduleCount / moduleCount - 50) / 5;
+      lostPoint += ratio * 10;
+
+      return lostPoint;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // QRMath
+  //---------------------------------------------------------------------
+
+  var QRMath = function() {
+
+    var EXP_TABLE = new Array(256);
+    var LOG_TABLE = new Array(256);
+
+    // initialize tables
+    for (var i = 0; i < 8; i += 1) {
+      EXP_TABLE[i] = 1 << i;
+    }
+    for (var i = 8; i < 256; i += 1) {
+      EXP_TABLE[i] = EXP_TABLE[i - 4]
+        ^ EXP_TABLE[i - 5]
+        ^ EXP_TABLE[i - 6]
+        ^ EXP_TABLE[i - 8];
+    }
+    for (var i = 0; i < 255; i += 1) {
+      LOG_TABLE[EXP_TABLE[i] ] = i;
+    }
+
+    var _this = {};
+
+    _this.glog = function(n) {
+
+      if (n < 1) {
+        throw 'glog(' + n + ')';
+      }
+
+      return LOG_TABLE[n];
+    };
+
+    _this.gexp = function(n) {
+
+      while (n < 0) {
+        n += 255;
+      }
+
+      while (n >= 256) {
+        n -= 255;
+      }
+
+      return EXP_TABLE[n];
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrPolynomial
+  //---------------------------------------------------------------------
+
+  function qrPolynomial(num, shift) {
+
+    if (typeof num.length == 'undefined') {
+      throw num.length + '/' + shift;
+    }
+
+    var _num = function() {
+      var offset = 0;
+      while (offset < num.length && num[offset] == 0) {
+        offset += 1;
+      }
+      var _num = new Array(num.length - offset + shift);
+      for (var i = 0; i < num.length - offset; i += 1) {
+        _num[i] = num[i + offset];
+      }
+      return _num;
+    }();
+
+    var _this = {};
+
+    _this.getAt = function(index) {
+      return _num[index];
+    };
+
+    _this.getLength = function() {
+      return _num.length;
+    };
+
+    _this.multiply = function(e) {
+
+      var num = new Array(_this.getLength() + e.getLength() - 1);
+
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        for (var j = 0; j < e.getLength(); j += 1) {
+          num[i + j] ^= QRMath.gexp(QRMath.glog(_this.getAt(i) ) + QRMath.glog(e.getAt(j) ) );
+        }
+      }
+
+      return qrPolynomial(num, 0);
+    };
+
+    _this.mod = function(e) {
+
+      if (_this.getLength() - e.getLength() < 0) {
+        return _this;
+      }
+
+      var ratio = QRMath.glog(_this.getAt(0) ) - QRMath.glog(e.getAt(0) );
+
+      var num = new Array(_this.getLength() );
+      for (var i = 0; i < _this.getLength(); i += 1) {
+        num[i] = _this.getAt(i);
+      }
+
+      for (var i = 0; i < e.getLength(); i += 1) {
+        num[i] ^= QRMath.gexp(QRMath.glog(e.getAt(i) ) + ratio);
+      }
+
+      // recursive call
+      return qrPolynomial(num, 0).mod(e);
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // QRRSBlock
+  //---------------------------------------------------------------------
+
+  var QRRSBlock = function() {
+
+    var RS_BLOCK_TABLE = [
+
+      // L
+      // M
+      // Q
+      // H
+
+      // 1
+      [1, 26, 19],
+      [1, 26, 16],
+      [1, 26, 13],
+      [1, 26, 9],
+
+      // 2
+      [1, 44, 34],
+      [1, 44, 28],
+      [1, 44, 22],
+      [1, 44, 16],
+
+      // 3
+      [1, 70, 55],
+      [1, 70, 44],
+      [2, 35, 17],
+      [2, 35, 13],
+
+      // 4
+      [1, 100, 80],
+      [2, 50, 32],
+      [2, 50, 24],
+      [4, 25, 9],
+
+      // 5
+      [1, 134, 108],
+      [2, 67, 43],
+      [2, 33, 15, 2, 34, 16],
+      [2, 33, 11, 2, 34, 12],
+
+      // 6
+      [2, 86, 68],
+      [4, 43, 27],
+      [4, 43, 19],
+      [4, 43, 15],
+
+      // 7
+      [2, 98, 78],
+      [4, 49, 31],
+      [2, 32, 14, 4, 33, 15],
+      [4, 39, 13, 1, 40, 14],
+
+      // 8
+      [2, 121, 97],
+      [2, 60, 38, 2, 61, 39],
+      [4, 40, 18, 2, 41, 19],
+      [4, 40, 14, 2, 41, 15],
+
+      // 9
+      [2, 146, 116],
+      [3, 58, 36, 2, 59, 37],
+      [4, 36, 16, 4, 37, 17],
+      [4, 36, 12, 4, 37, 13],
+
+      // 10
+      [2, 86, 68, 2, 87, 69],
+      [4, 69, 43, 1, 70, 44],
+      [6, 43, 19, 2, 44, 20],
+      [6, 43, 15, 2, 44, 16],
+
+      // 11
+      [4, 101, 81],
+      [1, 80, 50, 4, 81, 51],
+      [4, 50, 22, 4, 51, 23],
+      [3, 36, 12, 8, 37, 13],
+
+      // 12
+      [2, 116, 92, 2, 117, 93],
+      [6, 58, 36, 2, 59, 37],
+      [4, 46, 20, 6, 47, 21],
+      [7, 42, 14, 4, 43, 15],
+
+      // 13
+      [4, 133, 107],
+      [8, 59, 37, 1, 60, 38],
+      [8, 44, 20, 4, 45, 21],
+      [12, 33, 11, 4, 34, 12],
+
+      // 14
+      [3, 145, 115, 1, 146, 116],
+      [4, 64, 40, 5, 65, 41],
+      [11, 36, 16, 5, 37, 17],
+      [11, 36, 12, 5, 37, 13],
+
+      // 15
+      [5, 109, 87, 1, 110, 88],
+      [5, 65, 41, 5, 66, 42],
+      [5, 54, 24, 7, 55, 25],
+      [11, 36, 12, 7, 37, 13],
+
+      // 16
+      [5, 122, 98, 1, 123, 99],
+      [7, 73, 45, 3, 74, 46],
+      [15, 43, 19, 2, 44, 20],
+      [3, 45, 15, 13, 46, 16],
+
+      // 17
+      [1, 135, 107, 5, 136, 108],
+      [10, 74, 46, 1, 75, 47],
+      [1, 50, 22, 15, 51, 23],
+      [2, 42, 14, 17, 43, 15],
+
+      // 18
+      [5, 150, 120, 1, 151, 121],
+      [9, 69, 43, 4, 70, 44],
+      [17, 50, 22, 1, 51, 23],
+      [2, 42, 14, 19, 43, 15],
+
+      // 19
+      [3, 141, 113, 4, 142, 114],
+      [3, 70, 44, 11, 71, 45],
+      [17, 47, 21, 4, 48, 22],
+      [9, 39, 13, 16, 40, 14],
+
+      // 20
+      [3, 135, 107, 5, 136, 108],
+      [3, 67, 41, 13, 68, 42],
+      [15, 54, 24, 5, 55, 25],
+      [15, 43, 15, 10, 44, 16],
+
+      // 21
+      [4, 144, 116, 4, 145, 117],
+      [17, 68, 42],
+      [17, 50, 22, 6, 51, 23],
+      [19, 46, 16, 6, 47, 17],
+
+      // 22
+      [2, 139, 111, 7, 140, 112],
+      [17, 74, 46],
+      [7, 54, 24, 16, 55, 25],
+      [34, 37, 13],
+
+      // 23
+      [4, 151, 121, 5, 152, 122],
+      [4, 75, 47, 14, 76, 48],
+      [11, 54, 24, 14, 55, 25],
+      [16, 45, 15, 14, 46, 16],
+
+      // 24
+      [6, 147, 117, 4, 148, 118],
+      [6, 73, 45, 14, 74, 46],
+      [11, 54, 24, 16, 55, 25],
+      [30, 46, 16, 2, 47, 17],
+
+      // 25
+      [8, 132, 106, 4, 133, 107],
+      [8, 75, 47, 13, 76, 48],
+      [7, 54, 24, 22, 55, 25],
+      [22, 45, 15, 13, 46, 16],
+
+      // 26
+      [10, 142, 114, 2, 143, 115],
+      [19, 74, 46, 4, 75, 47],
+      [28, 50, 22, 6, 51, 23],
+      [33, 46, 16, 4, 47, 17],
+
+      // 27
+      [8, 152, 122, 4, 153, 123],
+      [22, 73, 45, 3, 74, 46],
+      [8, 53, 23, 26, 54, 24],
+      [12, 45, 15, 28, 46, 16],
+
+      // 28
+      [3, 147, 117, 10, 148, 118],
+      [3, 73, 45, 23, 74, 46],
+      [4, 54, 24, 31, 55, 25],
+      [11, 45, 15, 31, 46, 16],
+
+      // 29
+      [7, 146, 116, 7, 147, 117],
+      [21, 73, 45, 7, 74, 46],
+      [1, 53, 23, 37, 54, 24],
+      [19, 45, 15, 26, 46, 16],
+
+      // 30
+      [5, 145, 115, 10, 146, 116],
+      [19, 75, 47, 10, 76, 48],
+      [15, 54, 24, 25, 55, 25],
+      [23, 45, 15, 25, 46, 16],
+
+      // 31
+      [13, 145, 115, 3, 146, 116],
+      [2, 74, 46, 29, 75, 47],
+      [42, 54, 24, 1, 55, 25],
+      [23, 45, 15, 28, 46, 16],
+
+      // 32
+      [17, 145, 115],
+      [10, 74, 46, 23, 75, 47],
+      [10, 54, 24, 35, 55, 25],
+      [19, 45, 15, 35, 46, 16],
+
+      // 33
+      [17, 145, 115, 1, 146, 116],
+      [14, 74, 46, 21, 75, 47],
+      [29, 54, 24, 19, 55, 25],
+      [11, 45, 15, 46, 46, 16],
+
+      // 34
+      [13, 145, 115, 6, 146, 116],
+      [14, 74, 46, 23, 75, 47],
+      [44, 54, 24, 7, 55, 25],
+      [59, 46, 16, 1, 47, 17],
+
+      // 35
+      [12, 151, 121, 7, 152, 122],
+      [12, 75, 47, 26, 76, 48],
+      [39, 54, 24, 14, 55, 25],
+      [22, 45, 15, 41, 46, 16],
+
+      // 36
+      [6, 151, 121, 14, 152, 122],
+      [6, 75, 47, 34, 76, 48],
+      [46, 54, 24, 10, 55, 25],
+      [2, 45, 15, 64, 46, 16],
+
+      // 37
+      [17, 152, 122, 4, 153, 123],
+      [29, 74, 46, 14, 75, 47],
+      [49, 54, 24, 10, 55, 25],
+      [24, 45, 15, 46, 46, 16],
+
+      // 38
+      [4, 152, 122, 18, 153, 123],
+      [13, 74, 46, 32, 75, 47],
+      [48, 54, 24, 14, 55, 25],
+      [42, 45, 15, 32, 46, 16],
+
+      // 39
+      [20, 147, 117, 4, 148, 118],
+      [40, 75, 47, 7, 76, 48],
+      [43, 54, 24, 22, 55, 25],
+      [10, 45, 15, 67, 46, 16],
+
+      // 40
+      [19, 148, 118, 6, 149, 119],
+      [18, 75, 47, 31, 76, 48],
+      [34, 54, 24, 34, 55, 25],
+      [20, 45, 15, 61, 46, 16]
+    ];
+
+    var qrRSBlock = function(totalCount, dataCount) {
+      var _this = {};
+      _this.totalCount = totalCount;
+      _this.dataCount = dataCount;
+      return _this;
+    };
+
+    var _this = {};
+
+    var getRsBlockTable = function(typeNumber, errorCorrectionLevel) {
+
+      switch(errorCorrectionLevel) {
+      case QRErrorCorrectionLevel.L :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 0];
+      case QRErrorCorrectionLevel.M :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 1];
+      case QRErrorCorrectionLevel.Q :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 2];
+      case QRErrorCorrectionLevel.H :
+        return RS_BLOCK_TABLE[(typeNumber - 1) * 4 + 3];
+      default :
+        return undefined;
+      }
+    };
+
+    _this.getRSBlocks = function(typeNumber, errorCorrectionLevel) {
+
+      var rsBlock = getRsBlockTable(typeNumber, errorCorrectionLevel);
+
+      if (typeof rsBlock == 'undefined') {
+        throw 'bad rs block @ typeNumber:' + typeNumber +
+            '/errorCorrectionLevel:' + errorCorrectionLevel;
+      }
+
+      var length = rsBlock.length / 3;
+
+      var list = [];
+
+      for (var i = 0; i < length; i += 1) {
+
+        var count = rsBlock[i * 3 + 0];
+        var totalCount = rsBlock[i * 3 + 1];
+        var dataCount = rsBlock[i * 3 + 2];
+
+        for (var j = 0; j < count; j += 1) {
+          list.push(qrRSBlock(totalCount, dataCount) );
+        }
+      }
+
+      return list;
+    };
+
+    return _this;
+  }();
+
+  //---------------------------------------------------------------------
+  // qrBitBuffer
+  //---------------------------------------------------------------------
+
+  var qrBitBuffer = function() {
+
+    var _buffer = [];
+    var _length = 0;
+
+    var _this = {};
+
+    _this.getBuffer = function() {
+      return _buffer;
+    };
+
+    _this.getAt = function(index) {
+      var bufIndex = Math.floor(index / 8);
+      return ( (_buffer[bufIndex] >>> (7 - index % 8) ) & 1) == 1;
+    };
+
+    _this.put = function(num, length) {
+      for (var i = 0; i < length; i += 1) {
+        _this.putBit( ( (num >>> (length - i - 1) ) & 1) == 1);
+      }
+    };
+
+    _this.getLengthInBits = function() {
+      return _length;
+    };
+
+    _this.putBit = function(bit) {
+
+      var bufIndex = Math.floor(_length / 8);
+      if (_buffer.length <= bufIndex) {
+        _buffer.push(0);
+      }
+
+      if (bit) {
+        _buffer[bufIndex] |= (0x80 >>> (_length % 8) );
+      }
+
+      _length += 1;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrNumber
+  //---------------------------------------------------------------------
+
+  var qrNumber = function(data) {
+
+    var _mode = QRMode.MODE_NUMBER;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _data;
+
+      var i = 0;
+
+      while (i + 2 < data.length) {
+        buffer.put(strToNum(data.substring(i, i + 3) ), 10);
+        i += 3;
+      }
+
+      if (i < data.length) {
+        if (data.length - i == 1) {
+          buffer.put(strToNum(data.substring(i, i + 1) ), 4);
+        } else if (data.length - i == 2) {
+          buffer.put(strToNum(data.substring(i, i + 2) ), 7);
+        }
+      }
+    };
+
+    var strToNum = function(s) {
+      var num = 0;
+      for (var i = 0; i < s.length; i += 1) {
+        num = num * 10 + chatToNum(s.charAt(i) );
+      }
+      return num;
+    };
+
+    var chatToNum = function(c) {
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      }
+      throw 'illegal char :' + c;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrAlphaNum
+  //---------------------------------------------------------------------
+
+  var qrAlphaNum = function(data) {
+
+    var _mode = QRMode.MODE_ALPHA_NUM;
+    var _data = data;
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _data.length;
+    };
+
+    _this.write = function(buffer) {
+
+      var s = _data;
+
+      var i = 0;
+
+      while (i + 1 < s.length) {
+        buffer.put(
+          getCode(s.charAt(i) ) * 45 +
+          getCode(s.charAt(i + 1) ), 11);
+        i += 2;
+      }
+
+      if (i < s.length) {
+        buffer.put(getCode(s.charAt(i) ), 6);
+      }
+    };
+
+    var getCode = function(c) {
+
+      if ('0' <= c && c <= '9') {
+        return c.charCodeAt(0) - '0'.charCodeAt(0);
+      } else if ('A' <= c && c <= 'Z') {
+        return c.charCodeAt(0) - 'A'.charCodeAt(0) + 10;
+      } else {
+        switch (c) {
+        case ' ' : return 36;
+        case '$' : return 37;
+        case '%' : return 38;
+        case '*' : return 39;
+        case '+' : return 40;
+        case '-' : return 41;
+        case '.' : return 42;
+        case '/' : return 43;
+        case ':' : return 44;
+        default :
+          throw 'illegal char :' + c;
+        }
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qr8BitByte
+  //---------------------------------------------------------------------
+
+  var qr8BitByte = function(data) {
+
+    var _mode = QRMode.MODE_8BIT_BYTE;
+    var _data = data;
+    var _bytes = qrcode.stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return _bytes.length;
+    };
+
+    _this.write = function(buffer) {
+      for (var i = 0; i < _bytes.length; i += 1) {
+        buffer.put(_bytes[i], 8);
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // qrKanji
+  //---------------------------------------------------------------------
+
+  var qrKanji = function(data) {
+
+    var _mode = QRMode.MODE_KANJI;
+    var _data = data;
+
+    var stringToBytes = qrcode.stringToBytesFuncs['SJIS'];
+    if (!stringToBytes) {
+      throw 'sjis not supported.';
+    }
+    !function(c, code) {
+      // self test for sjis support.
+      var test = stringToBytes(c);
+      if (test.length != 2 || ( (test[0] << 8) | test[1]) != code) {
+        throw 'sjis not supported.';
+      }
+    }('\u53cb', 0x9746);
+
+    var _bytes = stringToBytes(data);
+
+    var _this = {};
+
+    _this.getMode = function() {
+      return _mode;
+    };
+
+    _this.getLength = function(buffer) {
+      return ~~(_bytes.length / 2);
+    };
+
+    _this.write = function(buffer) {
+
+      var data = _bytes;
+
+      var i = 0;
+
+      while (i + 1 < data.length) {
+
+        var c = ( (0xff & data[i]) << 8) | (0xff & data[i + 1]);
+
+        if (0x8140 <= c && c <= 0x9FFC) {
+          c -= 0x8140;
+        } else if (0xE040 <= c && c <= 0xEBBF) {
+          c -= 0xC140;
+        } else {
+          throw 'illegal char at ' + (i + 1) + '/' + c;
+        }
+
+        c = ( (c >>> 8) & 0xff) * 0xC0 + (c & 0xff);
+
+        buffer.put(c, 13);
+
+        i += 2;
+      }
+
+      if (i < data.length) {
+        throw 'illegal char at ' + (i + 1);
+      }
+    };
+
+    return _this;
+  };
+
+  //=====================================================================
+  // GIF Support etc.
+  //
+
+  //---------------------------------------------------------------------
+  // byteArrayOutputStream
+  //---------------------------------------------------------------------
+
+  var byteArrayOutputStream = function() {
+
+    var _bytes = [];
+
+    var _this = {};
+
+    _this.writeByte = function(b) {
+      _bytes.push(b & 0xff);
+    };
+
+    _this.writeShort = function(i) {
+      _this.writeByte(i);
+      _this.writeByte(i >>> 8);
+    };
+
+    _this.writeBytes = function(b, off, len) {
+      off = off || 0;
+      len = len || b.length;
+      for (var i = 0; i < len; i += 1) {
+        _this.writeByte(b[i + off]);
+      }
+    };
+
+    _this.writeString = function(s) {
+      for (var i = 0; i < s.length; i += 1) {
+        _this.writeByte(s.charCodeAt(i) );
+      }
+    };
+
+    _this.toByteArray = function() {
+      return _bytes;
+    };
+
+    _this.toString = function() {
+      var s = '';
+      s += '[';
+      for (var i = 0; i < _bytes.length; i += 1) {
+        if (i > 0) {
+          s += ',';
+        }
+        s += _bytes[i];
+      }
+      s += ']';
+      return s;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64EncodeOutputStream
+  //---------------------------------------------------------------------
+
+  var base64EncodeOutputStream = function() {
+
+    var _buffer = 0;
+    var _buflen = 0;
+    var _length = 0;
+    var _base64 = '';
+
+    var _this = {};
+
+    var writeEncoded = function(b) {
+      _base64 += String.fromCharCode(encode(b & 0x3f) );
+    };
+
+    var encode = function(n) {
+      if (n < 0) {
+        // error.
+      } else if (n < 26) {
+        return 0x41 + n;
+      } else if (n < 52) {
+        return 0x61 + (n - 26);
+      } else if (n < 62) {
+        return 0x30 + (n - 52);
+      } else if (n == 62) {
+        return 0x2b;
+      } else if (n == 63) {
+        return 0x2f;
+      }
+      throw 'n:' + n;
+    };
+
+    _this.writeByte = function(n) {
+
+      _buffer = (_buffer << 8) | (n & 0xff);
+      _buflen += 8;
+      _length += 1;
+
+      while (_buflen >= 6) {
+        writeEncoded(_buffer >>> (_buflen - 6) );
+        _buflen -= 6;
+      }
+    };
+
+    _this.flush = function() {
+
+      if (_buflen > 0) {
+        writeEncoded(_buffer << (6 - _buflen) );
+        _buffer = 0;
+        _buflen = 0;
+      }
+
+      if (_length % 3 != 0) {
+        // padding
+        var padlen = 3 - _length % 3;
+        for (var i = 0; i < padlen; i += 1) {
+          _base64 += '=';
+        }
+      }
+    };
+
+    _this.toString = function() {
+      return _base64;
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // base64DecodeInputStream
+  //---------------------------------------------------------------------
+
+  var base64DecodeInputStream = function(str) {
+
+    var _str = str;
+    var _pos = 0;
+    var _buffer = 0;
+    var _buflen = 0;
+
+    var _this = {};
+
+    _this.read = function() {
+
+      while (_buflen < 8) {
+
+        if (_pos >= _str.length) {
+          if (_buflen == 0) {
+            return -1;
+          }
+          throw 'unexpected end of file./' + _buflen;
+        }
+
+        var c = _str.charAt(_pos);
+        _pos += 1;
+
+        if (c == '=') {
+          _buflen = 0;
+          return -1;
+        } else if (c.match(/^\s$/) ) {
+          // ignore if whitespace.
+          continue;
+        }
+
+        _buffer = (_buffer << 6) | decode(c.charCodeAt(0) );
+        _buflen += 6;
+      }
+
+      var n = (_buffer >>> (_buflen - 8) ) & 0xff;
+      _buflen -= 8;
+      return n;
+    };
+
+    var decode = function(c) {
+      if (0x41 <= c && c <= 0x5a) {
+        return c - 0x41;
+      } else if (0x61 <= c && c <= 0x7a) {
+        return c - 0x61 + 26;
+      } else if (0x30 <= c && c <= 0x39) {
+        return c - 0x30 + 52;
+      } else if (c == 0x2b) {
+        return 62;
+      } else if (c == 0x2f) {
+        return 63;
+      } else {
+        throw 'c:' + c;
+      }
+    };
+
+    return _this;
+  };
+
+  //---------------------------------------------------------------------
+  // gifImage (B/W)
+  //---------------------------------------------------------------------
+
+  var gifImage = function(width, height) {
+
+    var _width = width;
+    var _height = height;
+    var _data = new Array(width * height);
+
+    var _this = {};
+
+    _this.setPixel = function(x, y, pixel) {
+      _data[y * _width + x] = pixel;
+    };
+
+    _this.write = function(out) {
+
+      //---------------------------------
+      // GIF Signature
+
+      out.writeString('GIF87a');
+
+      //---------------------------------
+      // Screen Descriptor
+
+      out.writeShort(_width);
+      out.writeShort(_height);
+
+      out.writeByte(0x80); // 2bit
+      out.writeByte(0);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Global Color Map
+
+      // black
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+      out.writeByte(0x00);
+
+      // white
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+      out.writeByte(0xff);
+
+      //---------------------------------
+      // Image Descriptor
+
+      out.writeString(',');
+      out.writeShort(0);
+      out.writeShort(0);
+      out.writeShort(_width);
+      out.writeShort(_height);
+      out.writeByte(0);
+
+      //---------------------------------
+      // Local Color Map
+
+      //---------------------------------
+      // Raster Data
+
+      var lzwMinCodeSize = 2;
+      var raster = getLZWRaster(lzwMinCodeSize);
+
+      out.writeByte(lzwMinCodeSize);
+
+      var offset = 0;
+
+      while (raster.length - offset > 255) {
+        out.writeByte(255);
+        out.writeBytes(raster, offset, 255);
+        offset += 255;
+      }
+
+      out.writeByte(raster.length - offset);
+      out.writeBytes(raster, offset, raster.length - offset);
+      out.writeByte(0x00);
+
+      //---------------------------------
+      // GIF Terminator
+      out.writeString(';');
+    };
+
+    var bitOutputStream = function(out) {
+
+      var _out = out;
+      var _bitLength = 0;
+      var _bitBuffer = 0;
+
+      var _this = {};
+
+      _this.write = function(data, length) {
+
+        if ( (data >>> length) != 0) {
+          throw 'length over';
+        }
+
+        while (_bitLength + length >= 8) {
+          _out.writeByte(0xff & ( (data << _bitLength) | _bitBuffer) );
+          length -= (8 - _bitLength);
+          data >>>= (8 - _bitLength);
+          _bitBuffer = 0;
+          _bitLength = 0;
+        }
+
+        _bitBuffer = (data << _bitLength) | _bitBuffer;
+        _bitLength = _bitLength + length;
+      };
+
+      _this.flush = function() {
+        if (_bitLength > 0) {
+          _out.writeByte(_bitBuffer);
+        }
+      };
+
+      return _this;
+    };
+
+    var getLZWRaster = function(lzwMinCodeSize) {
+
+      var clearCode = 1 << lzwMinCodeSize;
+      var endCode = (1 << lzwMinCodeSize) + 1;
+      var bitLength = lzwMinCodeSize + 1;
+
+      // Setup LZWTable
+      var table = lzwTable();
+
+      for (var i = 0; i < clearCode; i += 1) {
+        table.add(String.fromCharCode(i) );
+      }
+      table.add(String.fromCharCode(clearCode) );
+      table.add(String.fromCharCode(endCode) );
+
+      var byteOut = byteArrayOutputStream();
+      var bitOut = bitOutputStream(byteOut);
+
+      // clear code
+      bitOut.write(clearCode, bitLength);
+
+      var dataIndex = 0;
+
+      var s = String.fromCharCode(_data[dataIndex]);
+      dataIndex += 1;
+
+      while (dataIndex < _data.length) {
+
+        var c = String.fromCharCode(_data[dataIndex]);
+        dataIndex += 1;
+
+        if (table.contains(s + c) ) {
+
+          s = s + c;
+
+        } else {
+
+          bitOut.write(table.indexOf(s), bitLength);
+
+          if (table.size() < 0xfff) {
+
+            if (table.size() == (1 << bitLength) ) {
+              bitLength += 1;
+            }
+
+            table.add(s + c);
+          }
+
+          s = c;
+        }
+      }
+
+      bitOut.write(table.indexOf(s), bitLength);
+
+      // end code
+      bitOut.write(endCode, bitLength);
+
+      bitOut.flush();
+
+      return byteOut.toByteArray();
+    };
+
+    var lzwTable = function() {
+
+      var _map = {};
+      var _size = 0;
+
+      var _this = {};
+
+      _this.add = function(key) {
+        if (_this.contains(key) ) {
+          throw 'dup key:' + key;
+        }
+        _map[key] = _size;
+        _size += 1;
+      };
+
+      _this.size = function() {
+        return _size;
+      };
+
+      _this.indexOf = function(key) {
+        return _map[key];
+      };
+
+      _this.contains = function(key) {
+        return typeof _map[key] != 'undefined';
+      };
+
+      return _this;
+    };
+
+    return _this;
+  };
+
+  var createDataURL = function(width, height, getPixel) {
+    var gif = gifImage(width, height);
+    for (var y = 0; y < height; y += 1) {
+      for (var x = 0; x < width; x += 1) {
+        gif.setPixel(x, y, getPixel(x, y) );
+      }
+    }
+
+    var b = byteArrayOutputStream();
+    gif.write(b);
+
+    var base64 = base64EncodeOutputStream();
+    var bytes = b.toByteArray();
+    for (var i = 0; i < bytes.length; i += 1) {
+      base64.writeByte(bytes[i]);
+    }
+    base64.flush();
+
+    return 'data:image/gif;base64,' + base64;
+  };
+
+  //---------------------------------------------------------------------
+  // returns qrcode function.
+
+  return qrcode;
+}();
+
+// multibyte support
+!function() {
+
+  qrcode.stringToBytesFuncs['UTF-8'] = function(s) {
+    // http://stackoverflow.com/questions/18729405/how-to-convert-utf8-string-to-byte-array
+    function toUTF8Array(str) {
+      var utf8 = [];
+      for (var i=0; i < str.length; i++) {
+        var charcode = str.charCodeAt(i);
+        if (charcode < 0x80) utf8.push(charcode);
+        else if (charcode < 0x800) {
+          utf8.push(0xc0 | (charcode >> 6),
+              0x80 | (charcode & 0x3f));
+        }
+        else if (charcode < 0xd800 || charcode >= 0xe000) {
+          utf8.push(0xe0 | (charcode >> 12),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+        // surrogate pair
+        else {
+          i++;
+          // UTF-16 encodes 0x10000-0x10FFFF by
+          // subtracting 0x10000 and splitting the
+          // 20 bits of 0x0-0xFFFFF into two halves
+          charcode = 0x10000 + (((charcode & 0x3ff)<<10)
+            | (str.charCodeAt(i) & 0x3ff));
+          utf8.push(0xf0 | (charcode >>18),
+              0x80 | ((charcode>>12) & 0x3f),
+              0x80 | ((charcode>>6) & 0x3f),
+              0x80 | (charcode & 0x3f));
+        }
+      }
+      return utf8;
+    }
+    return toUTF8Array(s);
+  };
+
+}();
+
+(function (factory) {
+  if (typeof define === 'function' && define.amd) {
+      define([], factory);
+  } else if (typeof exports === 'object') {
+      module.exports = factory();
+  }
+}(function () {
+    return qrcode;
+}));
+</script>
+<script>
+/* SafeFlame AI — admin extras (loaded last in admin/index.html).
+   S1 coupons · S61 referral tiers · S69 social proof · S8 gift wrap price · couriers list for S9/S49
+   S11 + S28 satisfaction insights · S57 recycle bin · S60 mobile layout with swipe actions
+   Stock, serials, shipping and installers are in admin-ops.js, which uses the helpers exported here as window.SFX. */
+(function () {
+  'use strict';
+  var X = window.SFX = {};
+  var $ = function (id) { return document.getElementById(id); };
+  var h = function (s) { return axEsc(s); };
+  X.$ = $; X.h = h; X.inr = axInr;
+  X.toast = function (m, t) { try { showToast(m, t || 'success'); } catch (_) { alert(m); } };
+  X.log = function (a, t, d) { try { axLog(a, t || '', d || ''); } catch (_) {} };
+
+  /* ── tabs ─────────────────────────────────────────────────── */
+  var firstOpen = {};
+  X.addTab = function (key, label, html, beforeKey, onOpen) {
+    var nav = $('tabNav'), before = nav.querySelector('[data-tab="' + beforeKey + '"]');
+    var btn = document.createElement('button'); btn.className = 'tab-btn'; btn.dataset.tab = key; btn.textContent = label;
+    nav.insertBefore(btn, before);
+    var panel = document.createElement('div'); panel.className = 'tab-panel'; panel.id = 'tab-' + key; panel.innerHTML = html;
+    var host = $('tab-site').parentNode; host.insertBefore(panel, $('tab-site'));
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+      document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+      btn.classList.add('active'); panel.classList.add('active');
+      if (onOpen && !firstOpen[key]) { firstOpen[key] = 1; onOpen(); }
+    });
+    return panel;
+  };
+  var siteCache = null;
+  X.site = async function (force) {
+    if (!siteCache || force) { var d = await db.collection('settings').doc('site').get(); siteCache = d.exists ? d.data() : {}; }
+    return siteCache;
+  };
+  X.saveSite = async function (partial, what) {
+    await db.collection('settings').doc('site').set(partial, { merge: true });
+    siteCache = Object.assign(siteCache || {}, partial);
+    try { Object.assign(siteSettings, partial); Object.assign(axCfg, partial); } catch (_) {}
+    X.log('site.update', '', what || Object.keys(partial).join(', '));
+  };
+  var sha = function (code) {
+    return crypto.subtle.digest('SHA-256', new TextEncoder().encode('sf:' + String(code).trim().toUpperCase())).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return x.toString(16).padStart(2, '0'); }).join(''); });
+  };
+
+  /* ═════════ PROMOS TAB ═════════ */
+  var promoHtml =
+    '<div class="panel"><div class="panel-header"><h2>Coupon codes</h2><span class="hint">Checked in the visitor’s browser. Every order records the code, so you can verify it before confirming.</span></div>' +
+    '<div class="ax-line" style="flex-wrap:wrap;gap:.5rem"><input class="search-input" id="cpNewCode" placeholder="CODE e.g. WELCOME10" maxlength="20" style="max-width:190px">' +
+    '<select class="filter-select" id="cpNewType"><option value="pct">% off</option><option value="flat">₹ off</option></select>' +
+    '<input class="search-input" id="cpNewVal" type="number" min="1" placeholder="Amount" style="max-width:100px">' +
+    '<input class="search-input" id="cpNewCap" type="number" min="0" placeholder="Max ₹ off (% only)" style="max-width:150px">' +
+    '<input class="search-input" id="cpNewMin" type="number" min="0" placeholder="Min order ₹" style="max-width:120px">' +
+    '<input class="search-input" id="cpNewUses" type="number" min="0" placeholder="Total uses (0 = no limit)" style="max-width:180px">' +
+    '<label class="hint" style="display:flex;gap:.3rem;align-items:center">Ends <input class="search-input" id="cpNewEnd" type="date"></label></div>' +
+    '<div class="ax-line" style="gap:.8rem;margin-top:.4rem"><span class="hint">Only for tiers (none ticked = all):</span>' +
+    ['base', 'pro', 'elite'].map(function (t) { return '<label class="ax-chk"><input type="checkbox" class="cpTier" value="' + t + '"> ' + t + '</label>'; }).join('') +
+    '<input class="search-input" id="cpNewLabel" placeholder="Note shown to customer (optional)" maxlength="80" style="flex:1;min-width:180px"><button class="btn-small primary" id="cpCreate">Create code</button></div>' +
+    '<div class="table-scroll" style="margin-top:.8rem"><table><thead><tr><th>Code</th><th>Offer</th><th>Rules</th><th>Used</th><th>Status</th><th></th></tr></thead><tbody id="cpBody"></tbody></table></div></div>' +
+
+    '<div class="settings-grid" style="margin-top:1rem">' +
+    '<div class="settings-group"><h3>Referral reward tiers</h3><p class="hint">Customers see these on their account page. The examples below are only a starting point: change them to what you will really honour, then Save.</p><div id="rtRows"></div><div class="ax-line"><button class="btn-small" id="rtAdd" type="button">+ Add tier</button><button class="btn-small primary" id="rtSave" type="button">Save tiers</button><span class="hint" id="rtMsg"></span></div></div>' +
+    '<div class="settings-group"><h3>Social proof on the homepage</h3><div class="field"><label>Number to show (0 hides it)</label><input type="number" min="0" id="spCount"></div><div class="field"><label>Wording after the number</label><input type="text" id="spText" maxlength="60" placeholder="households have pre-booked"></div><div class="ax-line"><button class="btn-small" id="spAuto" type="button">Use my real order count</button><button class="btn-small primary" id="spSave" type="button">Save</button><span class="hint" id="spMsg"></span></div><p class="hint">Only show a number you can stand behind.</p></div>' +
+    '<div class="settings-group"><h3>Gift wrap</h3><label class="ax-chk"><input type="checkbox" id="gwOn"> Offer gift wrap with a printed card</label><div class="field"><label>Price (₹, 0 = free)</label><input type="number" min="0" id="gwPrice"></div><div class="ax-line"><button class="btn-small primary" id="gwSave" type="button">Save</button><span class="hint" id="gwMsg"></span></div></div>' +
+    '<div class="settings-group"><h3>Couriers</h3><p class="hint">Tracking link: use {n} where the tracking number goes, for example https://courier.example/track?no={n}</p><div id="coRows"></div><div class="ax-line"><button class="btn-small" id="coAdd" type="button">+ Add courier</button><button class="btn-small primary" id="coSave" type="button">Save couriers</button><span class="hint" id="coMsg"></span></div></div>' +
+    '</div>';
+
+  var coupons = [];
+  function usedCount(c) { return (typeof prebookData !== 'undefined' ? prebookData : []).filter(function (o) { return o.coupon && o.coupon.h === c.id && String(o.status || 'pending').toLowerCase() !== 'cancelled'; }).length; }
+  function renderCoupons() {
+    var b = $('cpBody'); if (!b) return;
+    b.innerHTML = coupons.length ? coupons.map(function (c) {
+      var rules = [c.min ? 'min ' + axInr(c.min) : '', c.tiers && c.tiers.length ? c.tiers.join('/') : 'all tiers', c.expires ? 'ends ' + c.expires : '', c.maxUses ? 'max ' + c.maxUses + ' uses' : ''].filter(Boolean).join(' · ');
+      var u = usedCount(c), over = c.expires && Date.now() > new Date(c.expires + 'T23:59:59+05:30').getTime();
+      return '<tr><td><b>' + h(c.code) + '</b></td><td>' + (c.type === 'flat' ? axInr(c.value) + ' off' : c.value + '% off' + (c.cap ? ' (max ' + axInr(c.cap) + ')' : '')) + '</td><td>' + h(rules) + '</td><td>' + u + (c.maxUses ? ' / ' + c.maxUses : '') + '</td><td>' + (over ? 'expired' : (c.active === false ? 'paused' : 'live')) + '</td>' +
+        '<td><button class="btn-small" data-cp="toggle" data-id="' + h(c.id) + '">' + (c.active === false ? 'Resume' : 'Pause') + '</button> <button class="btn-small danger" data-cp="del" data-id="' + h(c.id) + '">Delete</button></td></tr>';
+    }).join('') : '<tr><td colspan="6" class="hint">No coupon codes yet.</td></tr>';
+  }
+  async function publishCoupons() {
+    var s = await db.collection('couponCodes').get();
+    var list = s.docs.map(function (d) { var c = d.data(); return { h: d.id, label: c.label || '', type: c.type, value: c.value, cap: c.cap || 0, min: c.min || 0, expires: c.expires || '', maxUses: c.maxUses || 0, tiers: c.tiers || [], active: c.active !== false }; });
+    await X.saveSite({ coupons: list }, 'coupons (' + list.length + ')');
+  }
+  async function startPromos() {
+    db.collection('couponCodes').onSnapshot(function (s) { coupons = s.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }); renderCoupons(); }, function () {});
+    $('cpCreate').onclick = async function () {
+      var code = $('cpNewCode').value.trim().toUpperCase().replace(/\s+/g, ''), val = Number($('cpNewVal').value), type = $('cpNewType').value;
+      if (!/^[A-Z0-9_-]{3,20}$/.test(code)) return X.toast('Use 3 to 20 letters, numbers, - or _ for the code.', 'error');
+      if (!(val > 0) || (type === 'pct' && val > 90)) return X.toast(type === 'pct' ? 'Percent must be between 1 and 90.' : 'Enter an amount.', 'error');
+      var hash = await sha(code); if (coupons.some(function (c) { return c.id === hash; })) return X.toast('That code already exists.', 'error');
+      var def = { code: code, label: $('cpNewLabel').value.trim(), type: type, value: val, cap: type === 'pct' ? (Number($('cpNewCap').value) || 0) : 0, min: Number($('cpNewMin').value) || 0, maxUses: Number($('cpNewUses').value) || 0, expires: $('cpNewEnd').value || '', tiers: Array.prototype.map.call(document.querySelectorAll('.cpTier:checked'), function (x) { return x.value; }), active: true, createdAt: Date.now(), by: axWho() };
+      try { await db.collection('couponCodes').doc(hash).set(def); await publishCoupons(); X.log('coupon.create', code, ''); X.toast('Coupon ' + code + ' is live.'); ['cpNewCode', 'cpNewVal', 'cpNewCap', 'cpNewMin', 'cpNewUses', 'cpNewEnd', 'cpNewLabel'].forEach(function (i) { $(i).value = ''; }); }
+      catch (e) { X.toast('Could not save: ' + (e.message || 'check the Firestore rules'), 'error'); }
+    };
+    $('cpBody').addEventListener('click', async function (e) {
+      var b = e.target.closest('[data-cp]'); if (!b) return; var c = coupons.filter(function (x) { return x.id === b.dataset.id; })[0]; if (!c) return;
+      try {
+        if (b.dataset.cp === 'toggle') await db.collection('couponCodes').doc(c.id).update({ active: c.active === false });
+        else if (confirm('Delete coupon ' + c.code + '? Orders that already used it keep their discount.')) await db.collection('couponCodes').doc(c.id).delete();
+        else return;
+        await publishCoupons(); X.log('coupon.' + b.dataset.cp, c.code, '');
+      } catch (err) { X.toast('Could not update: ' + (err.message || ''), 'error'); }
+    });
+
+    var s = await X.site(true);
+    /* referral tiers */
+    var tiers = (s.referralTiers && s.referralTiers.length ? s.referralTiers : [{ count: 1, name: 'Friend', reward: 'Example: thank-you gift' }, { count: 3, name: 'Champion', reward: 'Example: free spare sensor' }, { count: 5, name: 'Ambassador', reward: 'Example: discount on next order' }]);
+    var drawTiers = function () {
+      $('rtRows').innerHTML = tiers.map(function (t, i) { return '<div class="ax-line"><input class="search-input rt-c" type="number" min="1" value="' + h(t.count) + '" style="max-width:70px" title="Friends needed"><input class="search-input rt-n" value="' + h(t.name) + '" placeholder="Name" style="max-width:130px"><input class="search-input rt-r" value="' + h(t.reward) + '" placeholder="Reward" style="flex:1"><button class="btn-small danger" data-rt="' + i + '" type="button">✕</button></div>'; }).join('');
+    };
+    var readTiers = function () { return Array.prototype.map.call($('rtRows').children, function (r) { return { count: Number(r.querySelector('.rt-c').value) || 0, name: r.querySelector('.rt-n').value.trim(), reward: r.querySelector('.rt-r').value.trim() }; }).filter(function (t) { return t.count > 0 && t.reward; }).sort(function (a, b) { return a.count - b.count; }); };
+    drawTiers();
+    $('rtAdd').onclick = function () { tiers = readTiers().concat([{ count: (tiers.length ? Number(tiers[tiers.length - 1].count) : 0) + 2, name: '', reward: '' }]); drawTiers(); };
+    $('rtRows').addEventListener('click', function (e) { var b = e.target.closest('[data-rt]'); if (b) { tiers = readTiers(); tiers.splice(Number(b.dataset.rt), 1); drawTiers(); } });
+    $('rtSave').onclick = async function () { try { var t = readTiers(); await X.saveSite({ referralTiers: t }, 'referral tiers'); tiers = t; drawTiers(); $('rtMsg').textContent = t.length ? 'Saved. Customers see ' + t.length + ' tier(s).' : 'Saved. Tiers are hidden.'; } catch (e) { $('rtMsg').textContent = 'Could not save.'; } };
+    /* social proof */
+    $('spCount').value = Number(s.socialProofCount) || 0; $('spText').value = s.socialProofText || '';
+    $('spAuto').onclick = function () { var n = (typeof prebookData !== 'undefined' ? prebookData : []).filter(function (o) { return String(o.status || 'pending').toLowerCase() !== 'cancelled'; }).length; $('spCount').value = n; };
+    $('spSave').onclick = async function () { try { await X.saveSite({ socialProofCount: Math.max(0, Math.floor(Number($('spCount').value) || 0)), socialProofText: $('spText').value.trim().slice(0, 60) }, 'social proof'); $('spMsg').textContent = 'Saved.'; } catch (e) { $('spMsg').textContent = 'Could not save.'; } };
+    /* gift wrap */
+    $('gwOn').checked = s.giftWrapOn !== false; $('gwPrice').value = Number(s.giftWrapPrice) || 0;
+    $('gwSave').onclick = async function () { try { await X.saveSite({ giftWrapOn: $('gwOn').checked, giftWrapPrice: Math.max(0, Number($('gwPrice').value) || 0) }, 'gift wrap'); $('gwMsg').textContent = 'Saved.'; } catch (e) { $('gwMsg').textContent = 'Could not save.'; } };
+    /* couriers */
+    var cos = (s.couriers || []).slice();
+    var drawCo = function () { $('coRows').innerHTML = cos.map(function (c, i) { return '<div class="ax-line"><input class="search-input co-n" value="' + h(c.name) + '" placeholder="Courier name" style="max-width:150px"><input class="search-input co-u" value="' + h(c.url) + '" placeholder="https://…{n}" style="flex:1"><button class="btn-small danger" data-co="' + i + '" type="button">✕</button></div>'; }).join(''); };
+    var readCo = function () { return Array.prototype.map.call($('coRows').children, function (r) { return { name: r.querySelector('.co-n').value.trim(), url: r.querySelector('.co-u').value.trim() }; }).filter(function (c) { return c.name && (!c.url || /^https?:\/\//i.test(c.url)); }); };
+    drawCo();
+    $('coAdd').onclick = function () { cos = readCo().concat([{ name: '', url: '' }]); drawCo(); };
+    $('coRows').addEventListener('click', function (e) { var b = e.target.closest('[data-co]'); if (b) { cos = readCo(); cos.splice(Number(b.dataset.co), 1); drawCo(); } });
+    $('coSave').onclick = async function () { try { cos = readCo(); await X.saveSite({ couriers: cos }, 'couriers'); drawCo(); $('coMsg').textContent = 'Saved.'; } catch (e) { $('coMsg').textContent = 'Could not save.'; } };
+  }
+  X.addTab('promo', 'Promos', promoHtml, 'site', startPromos);
+
+  /* ═════════ DATA TAB: satisfaction + recycle bin ═════════ */
+  var dataTab = $('tab-data');
+  if (dataTab) {
+    var sat = document.createElement('div'); sat.className = 'panel'; sat.id = 'sfxSat';
+    sat.innerHTML = '<div class="panel-header"><h2>Customer satisfaction</h2><button class="btn-small" id="satRefresh" type="button">Refresh</button></div><div id="satBody" class="hint">Loading…</div>';
+    var bin = document.createElement('div'); bin.className = 'panel'; bin.id = 'sfxBin';
+    bin.innerHTML = '<div class="panel-header"><h2>Recycle bin</h2><span class="hint">Deleted orders, waitlist entries, customers, ideas and stories are kept here for 30 days.</span></div><div class="table-scroll"><table><thead><tr><th>Deleted</th><th>What</th><th>By</th><th></th></tr></thead><tbody id="binBody"></tbody></table></div>';
+    dataTab.appendChild(sat); dataTab.appendChild(bin);
+
+    var stars = function (n) { return '★'.repeat(Math.round(n)) + '☆'.repeat(5 - Math.round(n)); };
+    var loadSat = async function () {
+      var body = $('satBody'); body.textContent = 'Loading…';
+      try {
+        var ts = (await db.collection('tickets').get()).docs.map(function (d) { return d.data(); });
+        var rated = ts.filter(function (t) { return t.csat && t.csat.rating; }), avg = rated.length ? rated.reduce(function (a, t) { return a + t.csat.rating; }, 0) / rated.length : 0;
+        var dist = [5, 4, 3, 2, 1].map(function (n) { return n + '★ ' + rated.filter(function (t) { return t.csat.rating === n; }).length; }).join(' · ');
+        var low = rated.filter(function (t) { return t.csat.rating <= 2; }).slice(0, 8);
+        var ords = (typeof prebookData !== 'undefined' ? prebookData : []).filter(function (o) { return o.deliveryRating; });
+        var davg = ords.length ? ords.reduce(function (a, o) { return a + o.deliveryRating.rating; }, 0) / ords.length : 0, tagCount = {};
+        ords.forEach(function (o) { (o.deliveryRating.tags || []).forEach(function (t) { tagCount[t] = (tagCount[t] || 0) + 1; }); });
+        var returns = ts.filter(function (t) { return t.category === 'Return / replacement'; });
+        body.innerHTML =
+          '<div class="ax-grid"><div><span>Support rating</span><b>' + (rated.length ? avg.toFixed(1) + ' / 5 ' + stars(avg) : '—') + '</b><div class="hint">' + rated.length + ' of ' + ts.filter(function (t) { return t.status === 'closed'; }).length + ' closed tickets rated</div><div class="hint">' + dist + '</div></div>' +
+          '<div><span>Delivery rating</span><b>' + (ords.length ? davg.toFixed(1) + ' / 5 ' + stars(davg) : '—') + '</b><div class="hint">' + ords.length + ' orders rated</div><div class="hint">' + (Object.keys(tagCount).sort(function (a, b) { return tagCount[b] - tagCount[a]; }).slice(0, 5).map(function (k) { return h(k) + ' ×' + tagCount[k]; }).join(' · ') || '') + '</div></div>' +
+          '<div><span>Return / replacement requests</span><b>' + returns.length + '</b><div class="hint">' + returns.filter(function (t) { return t.status !== 'closed'; }).length + ' still open</div></div></div>' +
+          (low.length ? '<div class="ax-sec">Low support ratings</div>' + low.map(function (t) { return '<div class="ax-row"><span>' + h(t.subject) + ' <small>' + h(t.email) + '</small></span><span>' + stars(t.csat.rating) + (t.csat.comment ? ' · ' + h(t.csat.comment) : '') + '</span></div>'; }).join('') : '');
+      } catch (e) { body.textContent = 'Could not load satisfaction data. Check the Firestore rules.'; }
+    };
+    $('satRefresh').onclick = loadSat;
+    document.querySelector('.tab-btn[data-tab="data"]').addEventListener('click', function () { if (!loadSat.done) { loadSat.done = 1; loadSat(); startBin(); } });
+
+    // keep a copy of anything an admin deletes (order rows, waitlist, customers…)
+    try {
+      var DR = firebase.firestore.DocumentReference, realDelete = DR.prototype.delete, SKIP = /^(recycleBin|emailLog|adminLog|notifications|couponCodes)\b|\/messages\//;
+      DR.prototype.delete = async function () {
+        var path = this.path;
+        if (!SKIP.test(path)) {
+          try { var snap = await this.get(); if (snap.exists) await db.collection('recycleBin').add({ path: path, data: snap.data(), label: String(snap.data().name || snap.data().email || snap.data().title || snap.data().subject || path).slice(0, 80), deletedAt: Date.now(), by: axWho() }); } catch (_) {}
+        }
+        return realDelete.apply(this, arguments);
+      };
+    } catch (_) {}
+    var startBin = function () {
+      db.collection('recycleBin').orderBy('deletedAt', 'desc').limit(100).onSnapshot(function (s) {
+        var cutoff = Date.now() - 30 * 864e5, rows = [];
+        s.docs.forEach(function (d) { var x = d.data(); if (x.deletedAt < cutoff) { d.ref.delete().catch(function () {}); return; } rows.push(Object.assign({ id: d.id }, x)); });
+        $('binBody').innerHTML = rows.length ? rows.map(function (x) { return '<tr><td>' + axDate(x.deletedAt) + '</td><td>' + h(x.label) + ' <small class="hint">' + h(x.path.split('/')[0]) + '</small></td><td>' + h(x.by) + '</td><td><button class="btn-small primary" data-bin="restore" data-id="' + h(x.id) + '">Restore</button> <button class="btn-small danger" data-bin="purge" data-id="' + h(x.id) + '">Delete forever</button></td></tr>'; }).join('') : '<tr><td colspan="4" class="hint">Nothing in the recycle bin.</td></tr>';
+        bin._rows = rows;
+      }, function () { $('binBody').innerHTML = '<tr><td colspan="4" class="hint">Could not read the recycle bin. Publish the updated firestore.rules.</td></tr>'; });
+      bin.addEventListener('click', async function (e) {
+        var b = e.target.closest('[data-bin]'); if (!b) return; var x = (bin._rows || []).filter(function (r) { return r.id === b.dataset.id; })[0]; if (!x) return;
+        try {
+          if (b.dataset.bin === 'restore') {
+            var parts = x.path.split('/'); if (parts.length !== 2) throw new Error('Only top-level records can be restored.');
+            var ex = await db.collection(parts[0]).doc(parts[1]).get(); if (ex.exists && !confirm('A record with this ID already exists. Overwrite it with the deleted copy?')) return;
+            await db.collection(parts[0]).doc(parts[1]).set(x.data); X.log('restore', x.label, x.path);
+            await db.collection('recycleBin').doc(x.id).delete(); X.toast('Restored.');
+          } else if (confirm('Delete this permanently? This cannot be undone.')) { await db.collection('recycleBin').doc(x.id).delete(); }
+        } catch (err) { X.toast('Could not do that: ' + (err.message || ''), 'error'); }
+      });
+    };
+  }
+
+  /* ═════════ MOBILE (S60): sticky scrolling tabs, touch targets, card tables, swipe actions ═════════ */
+  var css = document.createElement('style');
+  css.textContent =
+    '@media (max-width:720px){' +
+    '#tabNav{position:sticky;overflow-x:auto;flex-wrap:nowrap!important;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity;scrollbar-width:none}#tabNav::-webkit-scrollbar{display:none}' +
+    '#tabNav .tab-btn{flex:0 0 auto;min-height:46px;scroll-snap-align:start;white-space:nowrap}' +
+    '.btn-small,.filter-select,.search-input,.status-select{min-height:44px}.btn-small{padding:.55rem .9rem}' +
+    'table.sfx-cards thead{display:none}table.sfx-cards,table.sfx-cards tbody{display:block;width:100%}' +
+    'table.sfx-cards tr{display:block;border:1px solid var(--border);border-radius:12px;margin:.6rem 0;padding:.5rem .8rem;background:var(--surface)}' +
+    'table.sfx-cards td{display:flex;justify-content:space-between;align-items:center;gap:1rem;border:0!important;padding:.35rem 0;text-align:right;white-space:normal;word-break:break-word}' +
+    'table.sfx-cards td::before{content:attr(data-label);color:var(--muted);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;text-align:left;flex:0 0 38%}' +
+    'table.sfx-cards td:empty{display:none}table.sfx-cards td[data-label=""]::before{content:none}' +
+    '.table-scroll{overflow-x:visible}' +
+    '#sfxSwipe{position:fixed;left:0;right:0;bottom:0;z-index:2147480000;background:var(--surface2);border-top:1px solid var(--border);padding:.8rem 1rem calc(.8rem + env(safe-area-inset-bottom,0px));display:none;gap:.6rem;flex-wrap:wrap;box-shadow:0 -10px 30px rgba(0,0,0,.4)}' +
+    '#sfxSwipe .btn-small{flex:1 1 40%}' +
+    '}' +
+    'tr.sfx-swiping{transition:transform .15s}';
+  document.head.appendChild(css);
+
+  var mq = window.matchMedia('(max-width:720px)');
+  function labelTables() {
+    document.querySelectorAll('.table-scroll table').forEach(function (t) {
+      if (!mq.matches) { t.classList.remove('sfx-cards'); return; }
+      var ths = Array.prototype.map.call(t.querySelectorAll('thead th'), function (th) { return th.textContent.trim(); });
+      if (!ths.length) return;
+      t.classList.add('sfx-cards');
+      t.querySelectorAll('tbody tr').forEach(function (tr) { Array.prototype.forEach.call(tr.children, function (td, i) { if (td.tagName === 'TD' && td.dataset.label === undefined) td.dataset.label = ths[i] || ''; }); });
+    });
+  }
+  var mo = new MutationObserver(function () { clearTimeout(labelTables.t); labelTables.t = setTimeout(labelTables, 120); });
+  mo.observe(document.querySelector('main') || document.body, { childList: true, subtree: true });
+  mq.addEventListener ? mq.addEventListener('change', labelTables) : mq.addListener(labelTables);
+  labelTables();
+
+  // swipe a row of the Orders table to the left for quick actions
+  var sheet = document.createElement('div'); sheet.id = 'sfxSwipe'; document.body.appendChild(sheet);
+  var NEXT = { pending: ['confirmed', 'Confirm order'], confirmed: ['shipped', 'Mark shipped'] };
+  function closeSheet() { sheet.style.display = 'none'; sheet.innerHTML = ''; }
+  document.addEventListener('click', function (e) { if (sheet.style.display === 'flex' && !sheet.contains(e.target)) closeSheet(); }, true);
+  var sx = 0, sy = 0, srow = null;
+  document.addEventListener('touchstart', function (e) { var tr = e.target.closest && e.target.closest('#prebookTable tbody tr'); if (!tr || e.target.closest('input,select,button,textarea')) { srow = null; return; } srow = tr; sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+  document.addEventListener('touchmove', function (e) { if (!srow) return; var dx = e.touches[0].clientX - sx, dy = Math.abs(e.touches[0].clientY - sy); if (dy > 30) { srow.style.transform = ''; srow = null; return; } if (dx < 0) srow.style.transform = 'translateX(' + Math.max(dx, -90) + 'px)'; }, { passive: true });
+  document.addEventListener('touchend', function (e) {
+    if (!srow) return; var tr = srow; srow = null; var dx = (e.changedTouches[0].clientX - sx); tr.style.transform = '';
+    if (dx > -70) return;
+    var sel = tr.querySelector('.status-select'); if (!sel) return; var id = sel.dataset.id, o = (typeof prebookData !== 'undefined' ? prebookData : []).filter(function (x) { return x.id === id; })[0]; if (!o) return;
+    var st = String(o.status || 'pending').toLowerCase(), nx = NEXT[st], tel = String(o.phone || '').replace(/[^\d+]/g, '');
+    sheet.innerHTML = '<div style="flex:1 1 100%;font-weight:600">Order #' + h(orderNumberFor(o)) + ' · ' + h(o.name) + ' <span class="hint">(' + h(st) + ')</span></div>' +
+      '<button class="btn-small" data-sw="detail">Details</button>' + (nx ? '<button class="btn-small primary" data-sw="next">' + nx[1] + '</button>' : '') +
+      (tel ? '<a class="btn-small" style="text-align:center;text-decoration:none" href="tel:' + h(tel) + '">Call</a>' : '') +
+      (st !== 'cancelled' && st !== 'shipped' ? '<button class="btn-small danger" data-sw="cancel">Cancel…</button>' : '') + '<button class="btn-small" data-sw="x">Close</button>';
+    sheet.style.display = 'flex';
+    sheet.onclick = async function (ev) {
+      var b = ev.target.closest('[data-sw]'); if (!b) return; var a = b.dataset.sw; closeSheet();
+      try {
+        if (a === 'detail') axOrderDrawer(id);
+        else if (a === 'next') { await changeOrderStatus(o, nx[0], {}); X.toast('Order #' + orderNumberFor(o) + ' is now ' + nx[0] + '.'); }
+        else if (a === 'cancel') { var ok = await changeOrderStatus(o, 'cancelled', {}); if (ok) X.toast('Order cancelled.'); }
+      } catch (err) { X.toast('Could not update: ' + (err.message || ''), 'error'); }
+    };
+  }, { passive: true });
+})();
+</script>
+<script>
+/* SafeFlame AI — admin operations (loaded after admin-extras.js).
+   S47 inventory + supplier reorder · S12 spare-parts catalog and orders · S48 serial generator + QR labels
+   S49 bulk courier labels, courier CSV, gift cards, tracking updates (S9) · S45 installer network */
+(function () {
+  'use strict';
+  var X = window.SFX; if (!X) return;
+  var $ = X.$, h = X.h, inr = X.inr;
+  var DAY = 864e5, ORIGIN = 'https://safeflame.github.io';
+  var field = function (id, label, extra) { return '<div class="field"><label>' + label + '</label><input class="search-input" id="' + id + '" ' + (extra || '') + '></div>'; };
+  var dl = function (name, text, type) { var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: type || 'text/csv' })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000); };
+  var csv = function (rows) { return rows.map(function (r) { return r.map(function (c) { c = String(c == null ? '' : c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\n'); };
+  var orders = function () { return typeof prebookData !== 'undefined' ? prebookData : []; };
+  var stOf = function (o) { return String(o.status || 'pending').toLowerCase(); };
+  var addrOf = function (o) { return o.shipping || { name: o.name, phone: o.phone, line1: o.address || '' }; };
+  var couriers = function () { try { return (siteSettings.couriers || []); } catch (_) { return []; } };
+  function printWin(title, bodyHtml, css) {
+    var w = window.open('', '_blank', 'width=900,height=800'); if (!w) { X.toast('Allow pop-ups to print.', 'error'); return; }
+    w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>' + h(title) + '</title><style>' + (css || '') + '</style></head><body>' + bodyHtml + '</body></html>');
+    w.document.close(); w.focus(); setTimeout(function () { w.print(); }, 400);
+  }
+
+  /* ═════════════════ STOCK TAB ═════════════════ */
+  var stockHtml =
+    '<div class="panel"><div class="panel-header"><h2>Inventory</h2><span class="hint" id="invChip"></span></div>' +
+    '<div class="ax-line"><button class="btn-small primary" id="invAdd" type="button">+ Add item</button><button class="btn-small" id="invReorder" type="button">Reorder message</button></div>' +
+    '<div class="table-scroll" style="margin-top:.6rem"><table><thead><tr><th>Item</th><th>In stock</th><th>Reorder at</th><th>Supplier</th><th>Status</th><th></th></tr></thead><tbody id="invBody"></tbody></table></div></div>' +
+
+    '<div class="panel"><div class="panel-header"><h2>Spare parts for sale</h2><span class="hint">Customers with a shipped order can request these from their account.</span></div>' +
+    '<div id="ptRows"></div><div class="ax-line"><button class="btn-small" id="ptAdd" type="button">+ Add part</button><button class="btn-small primary" id="ptSave" type="button">Save parts</button><span class="hint" id="ptMsg"></span></div>' +
+    '<div class="ax-sec">Parts requests</div><div class="table-scroll"><table><thead><tr><th>Ref</th><th>Customer</th><th>Items</th><th>Goods</th><th>Deliver to</th><th>Status</th></tr></thead><tbody id="poBody"></tbody></table></div></div>' +
+
+    '<div class="panel"><div class="panel-header"><h2>Serial numbers and QR labels</h2><span class="hint">Each label’s QR opens the customer’s device registration with the serial already filled in.</span></div>' +
+    '<div class="ax-line" style="flex-wrap:wrap;gap:.5rem"><select class="filter-select" id="sbTier"><option value="base">4" Base</option><option value="pro">7" Pro</option><option value="elite">9" Elite</option></select>' +
+    '<input class="search-input" id="sbBatch" maxlength="6" placeholder="Batch code" style="max-width:120px" title="Letters or digits, e.g. 2611">' +
+    '<input class="search-input" id="sbCount" type="number" min="1" max="500" value="10" style="max-width:100px" title="How many"><button class="btn-small primary" id="sbGen" type="button">Generate batch</button></div>' +
+    '<div class="table-scroll" style="margin-top:.6rem"><table><thead><tr><th>Batch</th><th>Model</th><th>Serials</th><th>Registered</th><th>Created</th><th></th></tr></thead><tbody id="sbBody"></tbody></table></div></div>';
+
+  var inv = [];
+  var invLow = function (i) { return Number(i.qty) <= Number(i.min || 0); };
+  function renderInv() {
+    var b = $('invBody'); if (!b) return;
+    var low = inv.filter(invLow).length;
+    if ($('invChip')) $('invChip').textContent = low ? low + ' item' + (low === 1 ? '' : 's') + ' at or below reorder level' : (inv.length ? 'All stocked' : '');
+    var tabBtn = document.querySelector('.tab-btn[data-tab="stock"]'); if (tabBtn) tabBtn.innerHTML = 'Stock' + (low ? ' <span class="chat-badge" style="display:inline-block">' + low + '</span>' : '');
+    b.innerHTML = inv.length ? inv.slice().sort(function (a, c) { return (invLow(c) - invLow(a)) || String(a.name).localeCompare(c.name); }).map(function (i) {
+      return '<tr><td><b>' + h(i.name) + '</b>' + (i.note ? '<div class="hint">' + h(i.note) + '</div>' : '') + '</td><td><button class="btn-small" data-inv="dec" data-id="' + h(i.id) + '">−</button> <b style="margin:0 .4rem">' + h(i.qty) + '</b> <button class="btn-small" data-inv="inc" data-id="' + h(i.id) + '">+</button></td><td>' + h(i.min || 0) + '</td><td>' + h(i.supplier || '—') + '</td><td>' + (invLow(i) ? '<span style="color:var(--red);font-weight:600">Reorder</span>' : 'OK') + '</td><td><button class="btn-small" data-inv="edit" data-id="' + h(i.id) + '">Edit</button> <button class="btn-small danger" data-inv="del" data-id="' + h(i.id) + '">Delete</button></td></tr>';
+    }).join('') : '<tr><td colspan="6" class="hint">No items yet. Add the components you stock, such as MQ2 sensors, ESP32 boards, valves and displays.</td></tr>';
+  }
+  function invForm(i) {
+    i = i || {};
+    axOpen('<div class="ax-head"><h2>' + (i.id ? 'Edit item' : 'Add item') + '</h2><button class="btn-small" id="axX">Close</button></div>' +
+      field('ivName', 'Item', 'maxlength="60" value="' + h(i.name || '') + '"') + '<div class="ax-line">' + field('ivQty', 'In stock', 'type="number" min="0" value="' + h(i.qty == null ? 0 : i.qty) + '"') + field('ivMin', 'Reorder when at or below', 'type="number" min="0" value="' + h(i.min == null ? 0 : i.min) + '"') + '</div>' +
+      field('ivSup', 'Supplier', 'maxlength="60" value="' + h(i.supplier || '') + '"') + field('ivCon', 'Supplier contact (phone or email)', 'maxlength="80" value="' + h(i.contact || '') + '"') + field('ivNote', 'Note', 'maxlength="100" value="' + h(i.note || '') + '"') +
+      '<div class="ax-actions"><button class="btn-small primary" id="ivSave">Save</button></div>');
+    $('axX').onclick = axClose;
+    $('ivSave').onclick = async function () {
+      var d = { name: $('ivName').value.trim(), qty: Math.max(0, Math.floor(Number($('ivQty').value) || 0)), min: Math.max(0, Math.floor(Number($('ivMin').value) || 0)), supplier: $('ivSup').value.trim(), contact: $('ivCon').value.trim(), note: $('ivNote').value.trim(), updatedAt: Date.now() };
+      if (!d.name) return X.toast('Give the item a name.', 'error');
+      try { if (i.id) await db.collection('inventory').doc(i.id).update(d); else await db.collection('inventory').add(d); X.log('inventory.' + (i.id ? 'edit' : 'add'), d.name, 'qty ' + d.qty); axClose(); } catch (e) { X.toast('Could not save: ' + (e.message || ''), 'error'); }
+    };
+  }
+  function startInventory() {
+    if (startInventory.on) return; startInventory.on = true;
+    db.collection('inventory').onSnapshot(function (s) { inv = s.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }); renderInv(); }, function () { startInventory.on = false; });
+  }
+  async function stockOpen() {
+    startInventory();
+    $('invAdd').onclick = function () { invForm(); };
+    $('invBody').addEventListener('click', async function (e) {
+      var b = e.target.closest('[data-inv]'); if (!b) return; var i = inv.filter(function (x) { return x.id === b.dataset.id; })[0]; if (!i) return;
+      try {
+        if (b.dataset.inv === 'edit') invForm(i);
+        else if (b.dataset.inv === 'del') { if (confirm('Delete ' + i.name + ' from inventory?')) await db.collection('inventory').doc(i.id).delete(); }
+        else await db.collection('inventory').doc(i.id).update({ qty: Math.max(0, Number(i.qty) + (b.dataset.inv === 'inc' ? 1 : -1)), updatedAt: Date.now() });
+      } catch (err) { X.toast('Could not update: ' + (err.message || ''), 'error'); }
+    });
+    $('invReorder').onclick = function () {
+      var low = inv.filter(invLow); if (!low.length) return X.toast('Nothing is below its reorder level.');
+      var by = {}; low.forEach(function (i) { (by[i.supplier || 'No supplier set'] = by[i.supplier || 'No supplier set'] || []).push(i); });
+      var text = Object.keys(by).map(function (s) { return 'To: ' + s + (by[s][0].contact ? ' (' + by[s][0].contact + ')' : '') + '\nHello, we would like to order:\n' + by[s].map(function (i) { var need = Math.max(Number(i.min) * 2 - Number(i.qty), 1); return '- ' + i.name + ': ' + need + ' (we have ' + i.qty + ')'; }).join('\n') + '\nPlease confirm price and delivery time. Thank you, SafeFlame AI'; }).join('\n\n---\n\n');
+      axOpen('<div class="ax-head"><h2>Reorder message</h2><button class="btn-small" id="axX">Close</button></div><p class="hint">Quantities suggest topping up to twice the reorder level. Adjust before sending.</p><textarea class="search-input" id="roTxt" rows="12" style="width:100%">' + h(text) + '</textarea><div class="ax-actions"><button class="btn-small primary" id="roCopy">Copy</button></div>');
+      $('axX').onclick = axClose; $('roCopy').onclick = function () { try { navigator.clipboard.writeText($('roTxt').value); X.toast('Copied.'); } catch (_) { $('roTxt').select(); } };
+    };
+    /* parts catalog */
+    var s = await X.site(true), parts = (s.parts || []).slice();
+    var draw = function () { $('ptRows').innerHTML = parts.map(function (p, i) { return '<div class="ax-line"><input class="search-input pt-n" value="' + h(p.name) + '" placeholder="Part e.g. MQ2 gas sensor" style="flex:1;min-width:150px"><input class="search-input pt-p" type="number" min="0" value="' + h(p.price) + '" placeholder="₹" style="max-width:100px"><input class="search-input pt-t" value="' + h(p.note || '') + '" placeholder="Note" style="flex:1;min-width:120px"><label class="ax-chk"><input type="checkbox" class="pt-a" ' + (p.available === false ? '' : 'checked') + '> on sale</label><button class="btn-small danger" data-pt="' + i + '" type="button">✕</button></div>'; }).join(''); };
+    var read = function () { return Array.prototype.map.call($('ptRows').children, function (r) { return { name: r.querySelector('.pt-n').value.trim(), price: Number(r.querySelector('.pt-p').value) || 0, note: r.querySelector('.pt-t').value.trim(), available: r.querySelector('.pt-a').checked }; }).filter(function (p) { return p.name && p.price > 0; }); };
+    draw();
+    $('ptAdd').onclick = function () { parts = read().concat([{ name: '', price: 0, note: '', available: true }]); draw(); };
+    $('ptRows').addEventListener('click', function (e) { var b = e.target.closest('[data-pt]'); if (b) { parts = read(); parts.splice(Number(b.dataset.pt), 1); draw(); } });
+    $('ptSave').onclick = async function () { try { parts = read(); await X.saveSite({ parts: parts }, 'spare parts (' + parts.length + ')'); draw(); $('ptMsg').textContent = 'Saved. ' + parts.length + ' part(s) on sale.'; } catch (e) { $('ptMsg').textContent = 'Could not save.'; } };
+    /* parts requests */
+    db.collection('partOrders').orderBy('createdAt', 'desc').limit(100).onSnapshot(function (snap) {
+      var rows = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); });
+      $('poBody').innerHTML = rows.length ? rows.map(function (x) {
+        return '<tr><td><b>' + h(x.ref) + '</b><div class="hint">' + axDate(axMs(x.createdAt)) + '</div></td><td>' + h(x.name) + '<div class="hint">' + h(x.email) + (x.phone ? ' · ' + h(x.phone) : '') + '</div></td><td>' + (x.items || []).map(function (i) { return h(i.name) + ' × ' + i.qty; }).join('<br>') + '</td><td>' + inr(x.goodsTotal) + '</td><td>' + h(x.address || '') + '</td><td><select class="status-select filter-select" data-po="' + h(x.id) + '">' + ['requested', 'confirmed', 'shipped', 'cancelled'].map(function (st) { return '<option' + (x.status === st ? ' selected' : '') + '>' + st + '</option>'; }).join('') + '</select></td></tr>';
+      }).join('') : '<tr><td colspan="6" class="hint">No parts requests yet.</td></tr>';
+      $('poBody')._rows = rows;
+    }, function () {});
+    $('poBody').addEventListener('change', async function (e) {
+      var sel = e.target.closest('[data-po]'); if (!sel) return; var x = ($('poBody')._rows || []).filter(function (r) { return r.id === sel.dataset.po; })[0]; if (!x) return;
+      try { await db.collection('partOrders').doc(x.id).update({ status: sel.value, updatedAt: Date.now() }); axNotify({ email: x.email, uid: x.uid || null, type: 'order', orderId: x.orderId || '', title: 'Spare parts request ' + x.ref + ': ' + sel.value, body: sel.value === 'confirmed' ? 'We have confirmed your spare parts request. We will contact you about payment and shipping.' : sel.value === 'shipped' ? 'Your spare parts are on their way.' : sel.value === 'cancelled' ? 'Your spare parts request was cancelled.' : 'Your request is being processed.' }); X.log('parts.status', x.ref, sel.value); }
+      catch (err) { X.toast('Could not update: ' + (err.message || ''), 'error'); }
+    });
+    /* serial batches */
+    var d = new Date(); $('sbBatch').value = String(d.getFullYear()).slice(2) + String(d.getMonth() + 1).padStart(2, '0');
+    var batches = [], registered = {};
+    var CODE = { base: 'B', pro: 'P', elite: 'E' };
+    var check = function (s) { var n = 0; for (var i = 0; i < s.length; i++) n = (n * 31 + s.charCodeAt(i)) % 1296; return n.toString(36).toUpperCase().padStart(2, '0'); };
+    var serialsOf = function (b) { var out = []; for (var n = b.from; n < b.from + b.count; n++) { var core = 'SF-' + CODE[b.tier] + b.batch + '-' + String(n).padStart(4, '0'); out.push(core + '-' + check(core)); } return out; };
+    var drawBatches = function () {
+      $('sbBody').innerHTML = batches.length ? batches.map(function (b) {
+        var ser = serialsOf(b), reg = ser.filter(function (x) { return registered[x]; }).length;
+        return '<tr><td><b>' + h(CODE[b.tier] + b.batch) + '</b></td><td>' + tierLabelFor(b.tier) + '</td><td>' + h(ser[0]) + ' … ' + h(ser[ser.length - 1]) + ' <span class="hint">(' + b.count + ')</span></td><td>' + reg + ' / ' + b.count + '</td><td>' + axDate(b.createdAt) + '</td><td><button class="btn-small" data-sb="print" data-id="' + h(b.id) + '">Print QR labels</button> <button class="btn-small" data-sb="csv" data-id="' + h(b.id) + '">CSV</button></td></tr>';
+      }).join('') : '<tr><td colspan="6" class="hint">No batches yet.</td></tr>';
+    };
+    db.collection('serialBatches').orderBy('createdAt', 'desc').limit(50).onSnapshot(function (snap) { batches = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }); drawBatches(); }, function () {});
+    db.collection('devices').get().then(function (s) { s.forEach(function (d) { registered[d.id] = 1; }); drawBatches(); }).catch(function () {});
+    $('sbGen').onclick = async function () {
+      var tier = $('sbTier').value, batch = $('sbBatch').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6), count = Math.floor(Number($('sbCount').value) || 0);
+      if (!batch) return X.toast('Enter a batch code.', 'error'); if (count < 1 || count > 500) return X.toast('Count must be 1 to 500.', 'error');
+      var from = 1; batches.filter(function (b) { return b.tier === tier && b.batch === batch; }).forEach(function (b) { from = Math.max(from, b.from + b.count); });
+      if (from + count > 10000) return X.toast('That batch code is full. Use a new one.', 'error');
+      try { await db.collection('serialBatches').add({ tier: tier, batch: batch, from: from, count: count, createdAt: Date.now(), by: axWho() }); X.log('serials.generate', CODE[tier] + batch, count + ' from ' + from); X.toast('Created ' + count + ' serials.'); } catch (e) { X.toast('Could not save: ' + (e.message || ''), 'error'); }
+    };
+    function loadQr() {
+      if (window.qrcode) return Promise.resolve();
+      return new Promise(function (res, rej) { var s = document.createElement('script'); s.src = '/vendor/qrcode.js'; s.onload = res; s.onerror = function () { rej(new Error('QR library did not load')); }; document.head.appendChild(s); });
+    }
+    $('sbBody').addEventListener('click', async function (e) {
+      var btn = e.target.closest('[data-sb]'); if (!btn) return; var b = batches.filter(function (x) { return x.id === btn.dataset.id; })[0]; if (!b) return; var ser = serialsOf(b);
+      if (btn.dataset.sb === 'csv') return dl('safeflame-serials-' + CODE[b.tier] + b.batch + '.csv', csv([['Serial', 'Model', 'Registration link']].concat(ser.map(function (x) { return [x, tierLabelFor(b.tier), ORIGIN + '/account?serial=' + x + '#devices']; }))));
+      axOpen('<div class="ax-head"><h2>Print QR labels</h2><button class="btn-small" id="axX">Close</button></div><p class="hint">' + ser.length + ' labels for batch ' + h(CODE[b.tier] + b.batch) + '.</p><div class="field"><label>Label size</label><select class="filter-select" id="lbSize"><option value="a4">A4 sheet, 3 × 7 labels (63.5 × 38.1 mm)</option><option value="roll">Label roll, one per page (50 × 30 mm)</option></select></div><div class="ax-actions"><button class="btn-small primary" id="lbGo">Open print view</button></div>');
+      $('axX').onclick = axClose;
+      $('lbGo').onclick = async function () {
+        try { await loadQr(); } catch (err) { return X.toast(err.message, 'error'); }
+        var size = $('lbSize').value, labels = ser.map(function (sn) { var q = window.qrcode(0, 'M'); q.addData(ORIGIN + '/account?serial=' + sn + '#devices'); q.make(); return '<div class="l"><div class="q">' + q.createSvgTag({ cellSize: 3, margin: 0, scalable: true }) + '</div><div class="t"><b>SafeFlame AI</b><br><span class="s">' + h(sn) + '</span><br><small>Scan to register and start your warranty</small></div></div>'; }).join('');
+        var css = size === 'a4'
+          ? '@page{size:A4;margin:15mm 7mm}body{margin:0;font-family:Arial,sans-serif}.g{display:grid;grid-template-columns:repeat(3,63.5mm);grid-auto-rows:38.1mm;column-gap:2.5mm}.l{display:flex;align-items:center;gap:3mm;padding:2mm 3mm;box-sizing:border-box;overflow:hidden}.q{width:24mm;height:24mm;flex:none}.q svg{width:100%;height:100%}.t{font-size:8pt;line-height:1.25}.s{font-size:9pt;font-weight:700;letter-spacing:.03em}small{font-size:6.5pt;color:#333}'
+          : '@page{size:50mm 30mm;margin:0}body{margin:0;font-family:Arial,sans-serif}.l{width:50mm;height:30mm;display:flex;align-items:center;gap:2mm;padding:2mm;box-sizing:border-box;page-break-after:always;overflow:hidden}.q{width:22mm;height:22mm;flex:none}.q svg{width:100%;height:100%}.t{font-size:6.5pt;line-height:1.2}.s{font-size:7.5pt;font-weight:700}small{font-size:5.5pt;color:#333}';
+        printWin('QR labels ' + CODE[b.tier] + b.batch, '<div class="g">' + labels + '</div>', css); axClose();
+      };
+    });
+  }
+  X.addTab('stock', 'Stock', stockHtml, 'site', stockOpen);
+  // start the low-stock badge as soon as the admin is signed in
+  try { auth.onAuthStateChanged(function (u) { if (u) setTimeout(startInventory, 1500); }); } catch (_) {}
+
+  /* ═════════════════ SHIPPING TAB ═════════════════ */
+  var shipHtml =
+    '<div class="panel"><div class="panel-header"><h2>Dispatch</h2><span class="hint" id="shChip"></span></div>' +
+    '<div class="ax-line" style="flex-wrap:wrap;gap:.5rem"><select class="filter-select" id="shFilter"><option value="confirmed">Confirmed (ready to ship)</option><option value="pending">Pending</option><option value="shipped">Shipped (in transit)</option></select>' +
+    '<button class="btn-small" id="shAll" type="button">Select all</button><button class="btn-small" id="shLabels" type="button">Print labels</button><button class="btn-small" id="shGift" type="button">Print gift cards</button><button class="btn-small" id="shCsv" type="button">Courier CSV</button><button class="btn-small" id="shSave" type="button">Save courier + tracking</button><button class="btn-small primary" id="shShip" type="button">Mark shipped and notify</button></div>' +
+    '<p class="hint">Live courier booking needs each courier’s own API or a server, so this works from the data you enter: export a CSV for the courier’s bulk upload, paste back the tracking numbers, then mark shipped.</p>' +
+    '<div class="table-scroll"><table><thead><tr><th></th><th>Order</th><th>Customer</th><th>Deliver to</th><th>Qty</th><th>Gift</th><th>Courier</th><th>Tracking</th><th></th></tr></thead><tbody id="shBody"></tbody></table></div></div>' +
+    '<div class="panel"><div class="panel-header"><h2>Installer network</h2><span class="hint">Customers choose an installer when they book installation, then rate them afterwards.</span></div>' +
+    '<div class="ax-line"><button class="btn-small primary" id="inAdd" type="button">+ Add installer</button></div>' +
+    '<div class="table-scroll" style="margin-top:.6rem"><table><thead><tr><th>Installer</th><th>Covers</th><th>Rating</th><th>Jobs</th><th>Status</th><th></th></tr></thead><tbody id="inBody"></tbody></table></div>' +
+    '<div class="ax-sec">Installation requests</div><div class="table-scroll"><table><thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Installer</th><th>Status</th><th></th></tr></thead><tbody id="ijBody"></tbody></table></div></div>';
+
+  var picked = {};
+  function shipRows() { var f = $('shFilter').value; return orders().filter(function (o) { return stOf(o) === f; }).sort(function (a, b) { return axMs(a.createdAt) - axMs(b.createdAt); }); }
+  function courierSelect(sel, id) { var list = couriers().map(function (c) { return c.name; }); if (sel && list.indexOf(sel) < 0) list.push(sel); return '<select class="filter-select sh-co" data-id="' + h(id) + '"><option value="">—</option>' + list.map(function (n) { return '<option' + (n === sel ? ' selected' : '') + '>' + h(n) + '</option>'; }).join('') + '</select>'; }
+  function renderShip() {
+    var body = $('shBody'); if (!body) return; var rows = shipRows();
+    $('shChip').textContent = rows.length + ' order' + (rows.length === 1 ? '' : 's') + ' · ' + Object.keys(picked).filter(function (k) { return picked[k]; }).length + ' selected';
+    body.innerHTML = rows.length ? rows.map(function (o) {
+      var a = addrOf(o), gift = o.gift && (o.gift.message || o.gift.wrap);
+      return '<tr><td><input type="checkbox" class="sh-ck" data-id="' + h(o.id) + '"' + (picked[o.id] ? ' checked' : '') + '></td><td><b>#' + h(orderNumberFor(o)) + '</b>' + (o.coupon ? '<div class="hint">coupon ' + h(o.coupon.code) + '</div>' : '') + '</td><td>' + h(o.name) + '<div class="hint">' + h(o.phone) + '</div></td><td>' + h([a.city, a.state].filter(Boolean).join(', ')) + ' <b>' + h(a.pin || '') + '</b></td><td>' + h(o.quantity || 1) + '</td><td>' + (gift ? (o.gift.wrap ? 'wrap' : '') + (o.gift.message ? ' card' : '') : '') + '</td><td>' + courierSelect(o.courier || '', o.id) + '</td><td><input class="search-input sh-tr" data-id="' + h(o.id) + '" value="' + h(o.tracking || '') + '" placeholder="Tracking no." style="min-width:130px"></td><td><button class="btn-small" data-sh="upd" data-id="' + h(o.id) + '">Updates</button></td></tr>';
+    }).join('') : '<tr><td colspan="9" class="hint">No orders in this state.</td></tr>';
+  }
+  var chosen = function () { var ids = Object.keys(picked).filter(function (k) { return picked[k]; }); return orders().filter(function (o) { return ids.indexOf(o.id) >= 0; }); };
+  var inputs = function (o) { var co = document.querySelector('.sh-co[data-id="' + o.id + '"]'), tr = document.querySelector('.sh-tr[data-id="' + o.id + '"]'); return { courier: co ? co.value : (o.courier || ''), tracking: tr ? tr.value.trim() : (o.tracking || '') }; };
+
+  function updatesModal(o) {
+    var ev = (o.trackEvents || []).slice().sort(function (a, b) { return b.at - a.at; });
+    axOpen('<div class="ax-head"><h2>Courier updates · #' + h(orderNumberFor(o)) + '</h2><button class="btn-small" id="axX">Close</button></div>' +
+      '<div class="ax-line"><div class="field" style="flex:1"><label>Courier</label>' + courierSelect(o.courier || '', 'm') + '</div><div class="field" style="flex:1"><label>Tracking number</label><input class="search-input" id="tuNo" value="' + h(o.tracking || '') + '"></div></div>' +
+      '<div class="field"><label>Add an update the customer will see</label><input class="search-input" id="tuTxt" maxlength="140" placeholder="e.g. Out for delivery, Reached Kochi hub"></div>' +
+      '<div class="ax-sec">Sent so far</div>' + (ev.length ? ev.map(function (e) { return '<div class="ax-row"><span>' + h(e.text) + '</span><span class="hint">' + axDate(e.at) + '</span></div>'; }).join('') : '<div class="hint">No updates yet.</div>') +
+      '<div class="ax-actions"><button class="btn-small primary" id="tuSave">Save</button></div>');
+    $('axX').onclick = axClose;
+    $('tuSave').onclick = async function () {
+      var upd = { courier: document.querySelector('.sh-co[data-id="m"]').value, tracking: $('tuNo').value.trim() }, text = $('tuTxt').value.trim();
+      if (text) upd.trackEvents = firebase.firestore.FieldValue.arrayUnion({ at: Date.now(), text: text, by: axWho() });
+      try { await db.collection('preBookings').doc(o.id).update(upd); if (text) axNotify({ email: o.email, uid: o.uid || null, type: 'order', orderId: o.id, title: 'Delivery update: #' + orderNumberFor(o), body: text }); X.log('order.tracking', '#' + orderNumberFor(o), text || 'courier/tracking'); axClose(); X.toast('Saved.'); } catch (e) { X.toast('Could not save: ' + (e.message || ''), 'error'); }
+    };
+  }
+
+  function shipLabelsHtml(list) {
+    return list.map(function (o) {
+      var a = addrOf(o), x = inputs(o);
+      return '<div class="pg"><div class="b"><div class="k">Ship to</div><div class="n">' + h(a.name) + '</div><div class="a">' + h([a.line1, a.line2].filter(Boolean).join(', ')) + '<br>' + h([a.city, a.state].filter(Boolean).join(', ')) + '<br><b>PIN ' + h(a.pin || '') + '</b></div><div class="a">Phone: ' + h(a.phone || o.phone || '') + '</div></div>' +
+        '<div class="b"><div class="k">Order</div><div class="big">#' + h(orderNumberFor(o)) + '</div><div class="a">' + h(tierLabelFor(o.tier)) + ' × ' + (o.quantity || 1) + (x.courier ? '<br>Courier: ' + h(x.courier) : '') + (x.tracking ? '<br>Tracking: ' + h(x.tracking) : '') + (o.deliveryNotes ? '<br>Note: ' + h(o.deliveryNotes) : '') + (o.gift && o.gift.wrap ? '<br><b>GIFT WRAP</b>' : '') + '</div></div>' +
+        '<div class="b"><div class="k">From</div><div class="a"><b>SafeFlame AI</b><br>safeflame.github.io</div></div></div>';
+    }).join('');
+  }
+  var LABEL_CSS = '@page{size:105mm 148mm;margin:6mm}body{font-family:Arial,sans-serif;margin:0;color:#000}.pg{page-break-after:always}.b{border:2px solid #000;padding:10px;margin-bottom:8px}.k{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#444}.n{font-size:22px;font-weight:700}.a{font-size:16px;line-height:1.4}.big{font-size:30px;font-weight:700}';
+
+  function installersOpen() { /* defined below, called from shipOpen */ }
+
+  async function shipOpen() {
+    $('shFilter').onchange = function () { picked = {}; renderShip(); };
+    renderShip();
+    $('shBody').addEventListener('change', function (e) { var c = e.target.closest('.sh-ck'); if (c) { picked[c.dataset.id] = c.checked; $('shChip').textContent = shipRows().length + ' orders · ' + chosen().length + ' selected'; } });
+    $('shBody').addEventListener('click', function (e) { var b = e.target.closest('[data-sh="upd"]'); if (b) { var o = orders().filter(function (x) { return x.id === b.dataset.id; })[0]; if (o) updatesModal(o); } });
+    $('shAll').onclick = function () { var rows = shipRows(), all = rows.every(function (o) { return picked[o.id]; }); rows.forEach(function (o) { picked[o.id] = !all; }); renderShip(); };
+    var need = function () { var l = chosen(); if (!l.length) X.toast('Tick at least one order first.', 'error'); return l; };
+    $('shLabels').onclick = function () { var l = need(); if (l.length) printWin('Shipping labels', shipLabelsHtml(l), LABEL_CSS); };
+    $('shGift').onclick = function () {
+      var l = need().filter(function (o) { return o.gift && (o.gift.message || o.gift.wrap); }); if (!l.length) return X.toast('None of the ticked orders has a gift message or wrap.', 'error');
+      printWin('Gift cards', l.map(function (o) { return '<div class="pg"><div class="card"><div class="logo">SafeFlame AI</div><div class="for">For ' + h(o.gift.name || '') + '</div><div class="msg">' + h(o.gift.message || 'Wishing you a safe and happy kitchen.') + '</div><div class="from">From ' + h(o.name || '') + '</div></div></div>'; }).join(''),
+        '@page{size:A6;margin:8mm}body{font-family:Georgia,serif;margin:0;color:#111}.pg{page-break-after:always;height:128mm}.card{border:2px solid #ff5722;border-radius:6mm;height:100%;padding:10mm;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;text-align:center}.logo{font:700 16pt Arial,sans-serif;color:#ff5722}.for{font-size:13pt}.msg{font-size:15pt;line-height:1.4;font-style:italic}.from{font-size:12pt}');
+    };
+    $('shCsv').onclick = function () {
+      var l = need(); if (!l.length) return;
+      dl('safeflame-courier-' + new Date().toISOString().slice(0, 10) + '.csv', csv([['Order No', 'Name', 'Phone', 'Address line 1', 'Address line 2', 'City', 'State', 'PIN', 'Quantity', 'Product', 'Delivery notes', 'Courier', 'Tracking']].concat(l.map(function (o) { var a = addrOf(o), x = inputs(o); return [orderNumberFor(o), a.name, a.phone || o.phone, a.line1, a.line2 || '', a.city || '', a.state || '', a.pin || '', o.quantity || 1, tierLabelFor(o.tier), o.deliveryNotes || '', x.courier, x.tracking]; }))));
+    };
+    $('shSave').onclick = async function () {
+      var l = need(); if (!l.length) return; var n = 0;
+      try { for (var i = 0; i < l.length; i++) { var x = inputs(l[i]); if (x.courier !== (l[i].courier || '') || x.tracking !== (l[i].tracking || '')) { await db.collection('preBookings').doc(l[i].id).update(x); n++; } } X.log('order.tracking.bulk', '', n + ' orders'); X.toast(n ? 'Saved ' + n + ' order' + (n === 1 ? '' : 's') + '.' : 'Nothing changed.'); } catch (e) { X.toast('Could not save: ' + (e.message || ''), 'error'); }
+    };
+    $('shShip').onclick = async function () {
+      var l = need().filter(function (o) { return stOf(o) !== 'shipped' && stOf(o) !== 'cancelled'; }); if (!l.length) return X.toast('Nothing to ship in your selection.', 'error');
+      var missing = l.filter(function (o) { return !inputs(o).tracking; }).length;
+      if (!confirm('Mark ' + l.length + ' order(s) as shipped and email/notify the customers?' + (missing ? '\n\n' + missing + ' have no tracking number yet.' : ''))) return;
+      var done = 0;
+      try { for (var i = 0; i < l.length; i++) { var x = inputs(l[i]); await db.collection('preBookings').doc(l[i].id).update(x); if (await changeOrderStatus(Object.assign({}, l[i], x), 'shipped', { bulk: true })) done++; } X.toast(done + ' order(s) marked shipped.'); picked = {}; } catch (e) { X.toast('Stopped after ' + done + ': ' + (e.message || ''), 'error'); }
+      renderShip();
+    };
+    // refresh the table when orders change
+    var last = ''; setInterval(function () { if ($('tab-ship').classList.contains('active')) { var sig = orders().map(function (o) { return o.id + stOf(o) + (o.tracking || '') + (o.courier || ''); }).join('|'); if (sig !== last && !document.activeElement.classList.contains('sh-tr')) { last = sig; renderShip(); renderJobs(); } } }, 1500);
+
+    /* ── installers ── */
+    var ins = [], ratings = [];
+    var jobsOf = function (id) { return orders().filter(function (o) { return o.installation && o.installation.installerId === id; }).length; };
+    var rateOf = function (id) { var r = ratings.filter(function (x) { return x.installerId === id; }); return { n: r.length, avg: r.length ? r.reduce(function (a, x) { return a + x.rating; }, 0) / r.length : 0 }; };
+    var drawIns = function () {
+      $('inBody').innerHTML = ins.length ? ins.map(function (i) { var r = rateOf(i.id); return '<tr><td><b>' + h(i.name) + '</b><div class="hint">' + h(i.phone || '') + '</div></td><td>' + h((i.cities || []).join(', ')) + '<div class="hint">' + h((i.pins || []).join(', ')) + '</div></td><td>' + (r.n ? r.avg.toFixed(1) + ' ★ (' + r.n + ')' : '—') + '</td><td>' + jobsOf(i.id) + '</td><td>' + (i.active === false ? 'hidden' : 'active') + '</td><td><button class="btn-small" data-in="edit" data-id="' + h(i.id) + '">Edit</button> <button class="btn-small danger" data-in="del" data-id="' + h(i.id) + '">Delete</button></td></tr>'; }).join('') : '<tr><td colspan="6" class="hint">No installers yet.</td></tr>';
+    };
+    var syncRatings = async function () {   // keep the public rating summary on each installer up to date
+      ins.forEach(function (i) { var r = rateOf(i.id); if ((i.ratingCount || 0) !== r.n || Math.abs((i.ratingAvg || 0) - r.avg) > 0.01) db.collection('installers').doc(i.id).update({ ratingCount: r.n, ratingAvg: Math.round(r.avg * 10) / 10 }).catch(function () {}); });
+    };
+    db.collection('installers').onSnapshot(function (s) { ins = s.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }); drawIns(); renderJobs(); syncRatings(); }, function () {});
+    db.collection('installerRatings').onSnapshot(function (s) { ratings = s.docs.map(function (d) { return d.data(); }); drawIns(); syncRatings(); }, function () {});
+    $('inAdd').onclick = function () { insForm(); };
+    function insForm(i) {
+      i = i || {};
+      axOpen('<div class="ax-head"><h2>' + (i.id ? 'Edit installer' : 'Add installer') + '</h2><button class="btn-small" id="axX">Close</button></div>' +
+        field('inName', 'Name or company', 'maxlength="60" value="' + h(i.name || '') + '"') + field('inPhone', 'Phone (shown only to you)', 'maxlength="20" value="' + h(i.phone || '') + '"') +
+        field('inCities', 'Cities covered (comma separated)', 'value="' + h((i.cities || []).join(', ')) + '"') + field('inPins', 'PIN codes or PIN prefixes covered (comma separated, e.g. 682, 683101)', 'value="' + h((i.pins || []).join(', ')) + '"') +
+        '<div class="field"><label>Short intro customers will see</label><textarea class="search-input" id="inBio" rows="3" maxlength="240">' + h(i.bio || '') + '</textarea></div><label class="ax-chk"><input type="checkbox" id="inOn" ' + (i.active === false ? '' : 'checked') + '> Visible to customers</label>' +
+        '<div class="ax-actions"><button class="btn-small primary" id="inSave">Save</button></div>');
+      $('axX').onclick = axClose;
+      $('inSave').onclick = async function () {
+        var list = function (id) { return $(id).value.split(',').map(function (x) { return x.trim(); }).filter(Boolean); };
+        var d = { name: $('inName').value.trim(), phone: $('inPhone').value.trim(), cities: list('inCities'), pins: list('inPins').filter(function (p) { return /^\d{3,6}$/.test(p); }), bio: $('inBio').value.trim(), active: $('inOn').checked };
+        if (!d.name) return X.toast('Add a name.', 'error'); if (!d.cities.length && !d.pins.length) return X.toast('Add at least a city or PIN code.', 'error');
+        try { if (i.id) await db.collection('installers').doc(i.id).update(d); else await db.collection('installers').add(Object.assign(d, { ratingAvg: 0, ratingCount: 0, createdAt: Date.now() })); X.log('installer.' + (i.id ? 'edit' : 'add'), d.name, ''); axClose(); } catch (e) { X.toast('Could not save: ' + (e.message || ''), 'error'); }
+      };
+    }
+    $('inBody').addEventListener('click', async function (e) {
+      var b = e.target.closest('[data-in]'); if (!b) return; var i = ins.filter(function (x) { return x.id === b.dataset.id; })[0]; if (!i) return;
+      if (b.dataset.in === 'edit') insForm(i); else if (confirm('Delete installer ' + i.name + '?')) { try { await db.collection('installers').doc(i.id).delete(); } catch (err) { X.toast('Could not delete.', 'error'); } }
+    });
+    /* installation requests: assign + complete */
+    function renderJobs() {
+      var b = $('ijBody'); if (!b) return;
+      var jobs = orders().filter(function (o) { return o.installation && stOf(o) !== 'cancelled'; }).sort(function (a, c) { return String(a.installation.date).localeCompare(String(c.installation.date)); });
+      b.innerHTML = jobs.length ? jobs.map(function (o) {
+        var n = o.installation;
+        return '<tr><td><b>#' + h(orderNumberFor(o)) + '</b></td><td>' + h(o.name) + '<div class="hint">' + h(o.phone) + '</div></td><td>' + h(n.date) + ' · ' + h(n.slot) + '</td><td><select class="filter-select ij-in" data-id="' + h(o.id) + '"><option value="">Unassigned</option>' + ins.filter(function (i) { return i.active !== false || i.id === n.installerId; }).map(function (i) { return '<option value="' + h(i.id) + '"' + (i.id === n.installerId ? ' selected' : '') + '>' + h(i.name) + '</option>'; }).join('') + '</select></td><td>' + h(n.status) + '</td><td><button class="btn-small" data-ij="confirmed" data-id="' + h(o.id) + '">Confirm</button> <button class="btn-small primary" data-ij="completed" data-id="' + h(o.id) + '">Mark completed</button></td></tr>';
+      }).join('') : '<tr><td colspan="6" class="hint">No installation requests.</td></tr>';
+    }
+    $('ijBody').addEventListener('change', async function (e) {
+      var s = e.target.closest('.ij-in'); if (!s) return; var o = orders().filter(function (x) { return x.id === s.dataset.id; })[0]; if (!o) return; var i = ins.filter(function (x) { return x.id === s.value; })[0];
+      try { await db.collection('preBookings').doc(o.id).update({ 'installation.installerId': s.value, 'installation.installerName': i ? i.name : '' }); X.log('install.assign', '#' + orderNumberFor(o), i ? i.name : 'unassigned'); } catch (err) { X.toast('Could not assign.', 'error'); }
+    });
+    $('ijBody').addEventListener('click', async function (e) {
+      var b = e.target.closest('[data-ij]'); if (!b) return; var o = orders().filter(function (x) { return x.id === b.dataset.id; })[0]; if (!o) return; var s = b.dataset.ij;
+      try {
+        await db.collection('preBookings').doc(o.id).update({ 'installation.status': s, statusHistory: firebase.firestore.FieldValue.arrayUnion({ status: stOf(o), at: Date.now(), by: axWho(), note: 'Installation ' + s }) });
+        axNotify({ email: o.email, uid: o.uid || null, type: 'order', orderId: o.id, title: 'Installation ' + s + ': #' + orderNumberFor(o), body: s === 'completed' ? 'Your installation is complete. You can rate your installer from My orders.' : 'Your installation is confirmed' + (o.installation.installerName ? ' with ' + o.installation.installerName : '') + ' for ' + o.installation.date + ', ' + o.installation.slot + '.' });
+        X.log('install.' + s, '#' + orderNumberFor(o), '');
+      } catch (err) { X.toast('Could not update.', 'error'); }
+    });
+    renderJobs();
+  }
+  function renderJobs() { /* replaced once the Shipping tab has opened */ }
+  X.addTab('ship', 'Shipping', shipHtml, 'site', shipOpen);
+})();
+</script>
 </body>
 </html>
