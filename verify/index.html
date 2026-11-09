@@ -411,7 +411,7 @@ const DEFAULT_SETTINGS = {
     { q: 'When will SafeFlame AI ship?', a: 'Pre-bookings ship in launch order. Each order shows an estimated delivery window in your account.' },
     { q: 'Do I pay when I pre-book?', a: 'No. Pre-booking only reserves your unit — nothing is charged now.' },
     { q: 'Can I change or cancel my order?', a: 'Yes, while it is still Pending. Open your account, go to My orders and choose Edit or Cancel.' },
-    { q: 'Which tier should I choose?', a: 'Base suits one kitchen with one camera. Pro adds a second camera and gas-weight display. Elite adds four cameras and multi-room support.' },
+    { q: 'Which tier should I choose?', a: 'Aegis A400 suits one kitchen with one camera. Aegis A700 adds a second camera and gas-weight display. Aegis A900 adds four cameras and multi-room support.' },
     { q: 'How does the safety shut-off work?', a: 'Gas, flame and pressure sensors watch the kitchen. If something is wrong the valve closes automatically and you get an alert.' },
     { q: 'How do I reach a person?', a: 'Open Chat and ask for a human — our team replies in the same window.' }
   ],
@@ -521,7 +521,7 @@ const sanitize = s => String(s || '').replace(/<[^>]*>/g, '').replace(/[<>"'`]/g
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const renderTokens = (str, t) => String(str || '').replace(/\{\{(\w+)\}\}/g, (m, k) => k in t ? t[k] : m);
 const tierPriceFor = t => Number(t === 'elite' ? siteSettings.elitePrice : t === 'pro' ? siteSettings.proPrice : siteSettings.basePrice);
-const tierLabelFor = t => t === 'elite' ? '9" Elite' : t === 'pro' ? '7" Pro' : '4" Base';
+const tierLabelFor = t => t === 'elite' ? 'Aegis A900' : t === 'pro' ? 'Aegis A700' : 'Aegis A400';
 const fmtINR = n => '₹' + Number(n).toLocaleString('en-IN');
 function orderNumberFor(o) {
   if (o.orderNumber) return String(o.orderNumber);
