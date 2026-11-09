@@ -628,7 +628,7 @@ const DEFAULT_SETTINGS = {
     { q: 'When will SafeFlame AI ship?', a: 'Pre-bookings ship in launch order. Each order shows an estimated delivery window in your account.' },
     { q: 'Do I pay when I pre-book?', a: 'No. Pre-booking only reserves your unit — nothing is charged now.' },
     { q: 'Can I change or cancel my order?', a: 'Yes, while it is still Pending. Open your account, go to My orders and choose Edit or Cancel.' },
-    { q: 'Which tier should I choose?', a: 'Base suits one kitchen with one camera. Pro adds a second camera and gas-weight display. Elite adds four cameras and multi-room support.' },
+    { q: 'Which tier should I choose?', a: 'Aegis A400 suits one kitchen with one camera. Aegis A700 adds a second camera and gas-weight display. Aegis A900 adds four cameras and multi-room support.' },
     { q: 'How does the safety shut-off work?', a: 'Gas, flame and pressure sensors watch the kitchen. If something is wrong the valve closes automatically and you get an alert.' },
     { q: 'How do I reach a person?', a: 'Open Chat and ask for a human — our team replies in the same window.' }
   ],
@@ -740,7 +740,7 @@ const sanitize = s => String(s || '').replace(/<[^>]*>/g, '').replace(/[<>"'`]/g
 const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const renderTokens = (str, t) => String(str || '').replace(/\{\{(\w+)\}\}/g, (m, k) => k in t ? t[k] : m);
 const tierPriceFor = t => Number(t === 'elite' ? siteSettings.elitePrice : t === 'pro' ? siteSettings.proPrice : siteSettings.basePrice);
-const tierLabelFor = t => t === 'elite' ? '9" Elite' : t === 'pro' ? '7" Pro' : '4" Base';
+const tierLabelFor = t => t === 'elite' ? 'Aegis A900' : t === 'pro' ? 'Aegis A700' : 'Aegis A400';
 const fmtINR = n => '₹' + Number(n).toLocaleString('en-IN');
 function orderNumberFor(o) {
   if (o.orderNumber) return String(o.orderNumber);
@@ -1044,7 +1044,7 @@ async function loadAll() {
   if (qs('welcome') === '1' && !profile.profileComplete) $('welcome').classList.remove('hidden');
   await loadSiteSettings();
   showSec(location.hash.slice(1) || 'profile');
-  if (qs('serial')) { showSec('devices'); setTimeout(() => { registerDevice(); const el = $('dvSerial'); if (el) el.value = String(qs('serial')).toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 24); history.replaceState(null, '', location.pathname + '#devices'); }, 400); }
+  if (qs('serial')) sfScan(String(qs('serial')));
   if (qs('ticket')) { ticketModal({ category: qs('cat') || undefined, subject: qs('subj') || undefined }); history.replaceState(null, '', location.pathname + '#tickets'); }
   renderAddresses(); renderCompleteness(); renderLinked(); loadOrders(); watchNotifs(); loadChats(); setupReferral(); loadTickets(); loadStories();
   $('pwForm').classList.toggle('hidden', !isPasswordUser()); $('pwGoogle').classList.toggle('hidden', isPasswordUser());
@@ -1137,7 +1137,7 @@ function addrError(a) { if (!a.line1 || !a.city || !a.state) return 'Enter line 
 function editOrder(o) {
   const ship = o.shipping || {}, ao = (siteSettings.addons || []).filter(a => a.enabled);
   openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9a2.8 2.8 0 0 0-4-4L4 16v4Z"/></svg>', 'Edit order #' + esc(orderNumberFor(o)), 'You can change this order while it is pending.') +
-    '<div class="form-row"><div class="field"><label>Tier</label><select id="eTier"><option value="base">4" Base</option><option value="pro">7" Pro</option><option value="elite">9" Elite</option></select></div><div class="field" style="max-width:110px;min-width:90px"><label>Qty</label><input id="eQty" type="number" min="1" max="10" value="' + (Number(o.quantity) || 1) + '"></div></div>' +
+    '<div class="form-row"><div class="field"><label>Tier</label><select id="eTier"><option value="base">Aegis A400</option><option value="pro">Aegis A700</option><option value="elite">Aegis A900</option></select></div><div class="field" style="max-width:110px;min-width:90px"><label>Qty</label><input id="eQty" type="number" min="1" max="10" value="' + (Number(o.quantity) || 1) + '"></div></div>' +
     '<p class="hint" style="margin:-.4rem 0 .8rem">Changing the tier uses today\'s price for that tier.</p>' +
     addrFormHtml(ship, 'e') +
     '<label class="check-row"><input type="checkbox" id="eGift" ' + (o.gift ? 'checked' : '') + '> <svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="9" width="17" height="11" rx="1.5"/><path d="M12 9v11M3.5 13h17M12 9c-1.5-4-5.5-4-5.5-1.3S10 9 12 9Zm0 0c1.5-4 5.5-4 5.5-1.3S14 9 12 9Z"/></svg> Gift / ship to someone else</label><div class="form-row ' + (o.gift ? '' : 'hidden') + '" id="eGiftF"><div class="field"><label>Recipient name</label><input id="eGN" maxlength="80" value="' + esc(o.gift ? o.gift.name : '') + '"></div><div class="field"><label>Recipient mobile</label><input id="eGP" maxlength="16" value="' + esc(o.gift ? o.gift.phone : '') + '"></div></div>' +
@@ -1482,7 +1482,7 @@ $('regDevBtn').onclick = registerDevice;
 $('devList').addEventListener('click', e => {
   if (e.target.id === 'regDevBtn2') return registerDevice();
   const b = e.target.closest('[data-dv]'); if (!b) return; const d = devices.find(x => x.id === b.closest('.t-order-card').dataset.id);
-  if (b.dataset.dv === 'claim') ticketModal({ category: 'Warranty claim', subject: 'Warranty claim — ' + d.serial, orderId: d.orderId });
+  if (b.dataset.dv === 'claim') warrantyClaim(d);
   else { const f = fwList(); openModal(mHead('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.2-4.5L4 8.5M4 4v4.5h4.5M4 13a8 8 0 0 0 14.2 4.5l1.8-2M20 20v-4.5h-4.5"/></svg>', 'Installed firmware', 'Which version is on ' + esc(d.serial) + '?') + '<div class="field"><select id="fwSel"><option value="">Not sure</option>' + f.map(r => '<option value="' + esc(r.version) + '">v' + esc(r.version) + '</option>').join('') + '</select></div><div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Cancel</button><button class="btn-primary" style="flex:1" id="fwGo">Save</button></div>'); $('fwSel').value = d.firmware || ''; $('fwGo').onclick = async () => { await db.collection('devices').doc(d.id).update({ firmware: $('fwSel').value }).catch(() => {}); closeModal(); loadDevices(); }; }
 });
 
@@ -1628,8 +1628,8 @@ window.addEventListener('beforeinstallprompt', e => { e.preventDefault(); _instE
 $('installBtn').onclick = async () => { if (!_instEvt) return; _instEvt.prompt(); await _instEvt.userChoice.catch(() => {}); _instEvt = null; $('installRow').style.display = 'none'; };
 
 auth.onAuthStateChanged(async u => {
-  if (!u) { if (!leaving) go('/login?next=/account'); return; }
-  if (!(await isVerified(u))) { go('/verify?pending=1&next=/account'); return; }
+  if (!u) { if (!leaving) go('/login?next=' + encodeURIComponent('/account' + location.search + location.hash)); return; }
+  if (!(await isVerified(u))) { go('/verify?pending=1&next=' + encodeURIComponent('/account' + location.search + location.hash)); return; }
   if (user && user.uid === u.uid) return; user = u; loadAll();
 });
 </script>
@@ -1772,7 +1772,7 @@ auth.onAuthStateChanged(async u => {
     var ship = o.shipping || {}, addr = fmtAddress(ship) || o.address || '';
     openModal(mHead(ICON.box, 'Order spare parts', 'Sensors, filters and more for your unit.') +
       parts.map(function (p, i) {
-        return '<div class="stat-row" style="align-items:center"><span><b>' + esc(p.name) + '</b><br><small style="color:var(--text3)">' + esc(p.note || '') + '</small></span><span style="display:flex;gap:.5rem;align-items:center">' + inrFmt(p.price) + ' <input type="number" class="prQty" data-i="' + i + '" min="0" max="10" value="0" style="width:64px"></span></div>';
+        return '<div class="stat-row" style="align-items:center"><span><b>' + esc(p.name) + '</b><br><small style="color:var(--text3)">' + esc(p.note || '') + '</small></span><span style="display:flex;gap:.5rem;align-items:center">' + inrFmt(p.price) + ' <input type="number" class="input prQty" data-i="' + i + '" min="0" max="10" value="0" style="width:72px"></span></div>';
       }).join('') +
       '<div class="hint" style="margin:.8rem 0">Delivered to: ' + esc(addr || 'the address on your order') + '. Shipping and GST are added when we confirm the order.</div>' +
       '<div class="stat-row"><span>Items total</span><b id="prTot">₹0</b></div><div class="msg-error" id="prErr"></div>' +
@@ -1888,6 +1888,66 @@ auth.onAuthStateChanged(async u => {
 
   // tickets: make "Return / replacement" a selectable topic (the new-ticket form builds its list from this)
   try { renderOrders(); renderDevices(); } catch (_) {}
+})();
+</script>
+<script>
+/* Warranty claim from a QR scan (or the Claim warranty button on a device) */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var PROBLEMS = ['Gas alarm or false alarms', 'Will not power on', 'Valve not working', 'Display or touchscreen fault', 'Wi-Fi or connectivity', 'Sensor fault', 'Physical damage on arrival', 'Something else'];
+  var ICON = '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3 4 6.5v5.2c0 4.4 3.2 7.6 8 9.3 4.8-1.7 8-4.9 8-9.3V6.5L12 3Z"/><path d="m9 12 2 2 4-4"/></svg>';
+
+  window.warrantyClaim = async function (d) {
+    var w = warrantyOf(d), ok = w.days > 0, order = orders.find(function (o) { return o.id === d.orderId; }) || null, open = null;
+    try { var s = await db.collection('tickets').where('uid', '==', user.uid).get(); open = s.docs.map(function (x) { return Object.assign({ id: x.id }, x.data()); }).filter(function (t) { return t.deviceSerial === d.serial && t.status !== 'closed' && (t.category === 'Warranty claim' || t.inWarranty === false); })[0] || null; } catch (_) {}
+    var head = mHead(ICON, ok ? 'Claim warranty' : 'Warranty ended', esc(d.serial)) +
+      '<div class="t-order-details" style="margin-bottom:.8rem"><div><span>Model</span>' + esc(tierLabelFor(d.tier)) + '</div><div><span>Covered until</span>' + esc(fmtD(w.end.getTime())) + '</div><div><span>Status</span><b style="color:' + (ok ? 'var(--green)' : 'var(--red)') + '">' + (ok ? 'In warranty · ' + w.days + ' days left' : 'Warranty ended') + '</b></div></div>';
+    if (open) {
+      openModal(head + '<p class="page-sub center">You already have an open request for this device (“' + esc(open.subject) + '”). Add details there so we can keep everything together.</p><div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Close</button><button class="btn-primary" style="flex:1" id="wcOpen">Open my request</button></div>');
+      $('wcOpen').onclick = function () { closeModal(); showSec('tickets'); loadTickets().then(function () { openTicket(open.id); }); };
+      return;
+    }
+    openModal(head + (ok ? '' : '<div class="hint" style="margin-bottom:.8rem">The free warranty has ended, but you can still ask support about a repair. We will tell you what it involves before doing anything.</div>') +
+      '<div class="field"><label>What is the problem?</label><select id="wcType">' + PROBLEMS.map(function (x) { return '<option>' + esc(x) + '</option>'; }).join('') + '</select></div>' +
+      '<div class="field"><label>Describe what happens</label><textarea id="wcMsg" rows="4" maxlength="800" class="input" placeholder="When it started, what the display shows, what you have tried"></textarea></div>' +
+      '<div class="field"><label>Photo (optional)</label><input type="file" id="wcImg" accept="image/*"></div><div class="msg-error" id="wcErr"></div>' +
+      '<div style="display:flex;gap:.7rem"><button class="btn-secondary" style="flex:1" onclick="closeModal()">Close</button><button class="btn-primary" style="flex:1" id="wcGo">' + (ok ? 'Submit warranty claim' : 'Contact support') + '</button></div>');
+    $('wcGo').onclick = async function () {
+      var text = sanitize($('wcMsg').value); if (text.length < 5) return ($('wcErr').textContent = 'Please describe the problem.');
+      $('wcGo').disabled = true;
+      try {
+        var image = ''; var f = $('wcImg').files[0]; if (f) image = await shrinkImage(f, 900, 0.7);
+        var type = $('wcType').value, name = profile.displayName || user.displayName || '';
+        var body = 'Device: ' + d.serial + ' (' + tierLabelFor(d.tier) + ')\nWarranty: ' + (ok ? 'in warranty until ' : 'ended on ') + fmtD(w.end.getTime()) + '\nProblem: ' + type + '\n\n' + text;
+        var ref = await db.collection('tickets').add({ uid: user.uid, email: user.email.toLowerCase(), name: name, category: ok ? 'Warranty claim' : 'Technical problem', subject: (ok ? 'Warranty claim' : 'Repair request') + ' — ' + d.serial, orderId: d.orderId || '', orderNumber: order ? String(orderNumberFor(order)) : '', deviceSerial: d.serial, inWarranty: ok, warrantyEnds: w.end.getTime(), status: 'open', priority: ok ? 'high' : 'normal', assignee: '', lastMessage: (type + ': ' + text).slice(0, 120), unreadAdmin: true, unreadUser: false, createdAt: TS(), updatedAt: TS() });
+        await ref.collection('messages').add({ role: 'user', text: body, image: image, by: user.email, createdAt: TS() });
+        closeModal(); showSec('tickets'); await loadTickets(); openTicket(ref.id);
+      } catch (e) { $('wcErr').textContent = 'Could not send: ' + (e.message || 'try again.'); $('wcGo').disabled = false; }
+    };
+  };
+
+  // opened from a QR label: claim if the device is on this account, otherwise register it first
+  window.sfScan = async function (raw) {
+    var serial = String(raw || '').toUpperCase().replace(/[^A-Z0-9-]/g, '').slice(0, 24);
+    if (window.__sfScanBusy) return; window.__sfScanBusy = true; setTimeout(function () { window.__sfScanBusy = false; }, 6000);
+    showSec('devices'); history.replaceState(null, '', location.pathname + '#devices');
+    try { await loadOrders(); await loadDevices(); } catch (_) {}
+    var d = devices.filter(function (x) { return x.serial === serial || x.id === serial; })[0];
+    if (d) return warrantyClaim(d);
+    window.__sfAfterReg = serial;
+    registerDevice();
+    var el = $('dvSerial'); if (el) el.value = serial;
+    var h = document.createElement('div'); h.className = 'hint'; h.style.marginBottom = '.6rem'; h.textContent = 'This device is not on your account yet. Register it and we will take you straight to the warranty claim.';
+    var first = $('mdlCard') && $('mdlCard').querySelector('.field'); if (first) first.parentNode.insertBefore(h, first);
+  };
+  var baseLoad = loadDevices;
+  loadDevices = async function () {
+    await baseLoad.apply(this, arguments);
+    var s = window.__sfAfterReg; if (!s) return;
+    var d = devices.filter(function (x) { return x.serial === s; })[0];
+    if (d) { window.__sfAfterReg = null; setTimeout(function () { warrantyClaim(d); }, 300); }
+  };
 })();
 </script>
 </body>
