@@ -929,6 +929,18 @@
   html[data-admin-theme="light"] .ax-back { background: rgba(30,30,70,.4); }
   html[data-admin-theme="light"] .cm.user { background: #e8eaf4; } html[data-admin-theme="light"] .cm.ai { background: rgba(78,205,196,.18); }
 </style>
+<style id="sfx-layout">
+#tabNav{scrollbar-width:none}#tabNav::-webkit-scrollbar{display:none}
+@media (min-width:901px){
+  body.sfx-side #tabNav{position:fixed;left:0;top:var(--sfx-hdr,61px);bottom:0;width:208px;flex-direction:column;flex-wrap:nowrap;gap:2px;padding:.7rem .55rem;overflow-y:auto;overflow-x:hidden;border-bottom:0;border-right:1px solid var(--border);scrollbar-width:thin;z-index:55}
+  body.sfx-side #tabNav::-webkit-scrollbar{display:block;width:6px}
+  body.sfx-side #tabNav .tab-btn{width:100%;text-align:left;display:flex;align-items:center;gap:.55rem;padding:.65rem .8rem;border:0;border-left:3px solid transparent;border-radius:8px}
+  body.sfx-side #tabNav .tab-btn:hover{background:rgba(255,255,255,.05)}
+  body.sfx-side #tabNav .tab-btn.active{border-left-color:var(--flame);background:rgba(255,107,53,.12)}
+  body.sfx-side #tabNav .chat-badge{margin-left:auto}
+  body.sfx-side main{margin-left:208px}
+}
+</style>
 </head>
 <body>
 
@@ -1241,7 +1253,7 @@
       <div class="panel">
         <div class="panel-header"><h2>Send an email</h2><span class="hint" id="axCount">0 recipients</span></div>
         <div class="ax-grid">
-          <div><span>Audience</span><select class="filter-select" id="axAud" style="width:100%"><option value="waitlist">Waitlist — everyone</option><option value="customers">Customers — everyone</option><option value="tier:base">Customers — Base tier</option><option value="tier:pro">Customers — Pro tier</option><option value="tier:elite">Customers — Elite tier</option><option value="status:pending">Customers — pending orders</option><option value="status:confirmed">Customers — confirmed orders</option><option value="status:shipped">Customers — shipped orders</option><option value="custom">Specific addresses…</option></select></div>
+          <div><span>Audience</span><select class="filter-select" id="axAud" style="width:100%"><option value="waitlist">Waitlist — everyone</option><option value="customers">Customers — everyone</option><option value="tier:base">Customers — Aegis A400</option><option value="tier:pro">Customers — Aegis A700</option><option value="tier:elite">Customers — Aegis A900</option><option value="status:pending">Customers — pending orders</option><option value="status:confirmed">Customers — confirmed orders</option><option value="status:shipped">Customers — shipped orders</option><option value="custom">Specific addresses…</option></select></div>
           <div id="axCustomWrap" style="display:none"><span>Addresses (comma or new line)</span><textarea class="search-input" id="axCustom" rows="2"></textarea></div>
           <div class="wide"><span>Subject</span><input class="search-input" id="axSubj" maxlength="140" placeholder="Subject — you can use {{name}}"></div>
           <div class="wide"><span>Message</span><textarea class="search-input" id="axMsg" rows="6" placeholder="Hi {{name}}, …"></textarea></div>
@@ -1272,7 +1284,7 @@
             <label class="ax-chk"><input type="checkbox" id="siMaintOn"> Show a "Back soon" screen</label>
             <div class="field"><label>Message</label><textarea id="siMaintMsg" rows="3"></textarea></div></div>
           <div class="settings-group"><h3>Estimated delivery</h3>
-            <div class="field"><label>Base</label><input type="text" id="siEtaBase"></div><div class="field"><label>Pro</label><input type="text" id="siEtaPro"></div><div class="field"><label>Elite</label><input type="text" id="siEtaElite"></div>
+            <div class="field"><label>Aegis A400</label><input type="text" id="siEtaBase"></div><div class="field"><label>Aegis A700</label><input type="text" id="siEtaPro"></div><div class="field"><label>Aegis A900</label><input type="text" id="siEtaElite"></div>
             <div class="field"><label>Low-stock alert at (units left)</label><input type="number" id="siLow" min="0"></div></div>
           <div class="settings-group"><h3>Add-ons offered at pre-book</h3><div id="siAddons"></div><button class="btn-small" id="siAddAddon" type="button"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Add add-on</button></div>
           <div class="settings-group"><h3>Chat quick replies</h3><div class="field"><label>One per line</label><textarea id="siCanned" rows="6"></textarea></div></div>
@@ -1365,21 +1377,21 @@
           </div>
 
           <div class="settings-group">
-            <h3>Base Tier — 4" Display</h3>
+            <h3>Aegis A400 — 4" Display</h3>
             <div class="field"><label>Offer Price (₹)</label><input type="number" id="setBasePrice" min="0"></div>
             <div class="field"><label>Original Price (₹) — optional, shown struck through</label><input type="number" id="setBaseOriginal" min="0"></div>
             <div class="field"><label>Stock (units) — leave -1 for unlimited</label><input type="number" id="setBaseStock" min="-1"></div>
           </div>
 
           <div class="settings-group">
-            <h3>Pro Tier — 7" Touchscreen</h3>
+            <h3>Aegis A700 — 7" Touchscreen</h3>
             <div class="field"><label>Offer Price (₹)</label><input type="number" id="setProPrice" min="0"></div>
             <div class="field"><label>Original Price (₹) — optional, shown struck through</label><input type="number" id="setProOriginal" min="0"></div>
             <div class="field"><label>Stock (units) — leave -1 for unlimited</label><input type="number" id="setProStock" min="-1"></div>
           </div>
 
           <div class="settings-group">
-            <h3>Elite Tier — 9" Touchscreen</h3>
+            <h3>Aegis A900 — 9" Touchscreen</h3>
             <div class="field"><label>Offer Price (₹)</label><input type="number" id="setElitePrice" min="0"></div>
             <div class="field"><label>Original Price (₹) — optional, shown struck through</label><input type="number" id="setEliteOriginal" min="0"></div>
             <div class="field"><label>Stock (units) — leave -1 for unlimited</label><input type="number" id="setEliteStock" min="-1"></div>
@@ -1962,9 +1974,9 @@
   }
 
   function tierLabelFor(tier) {
-    if (tier === 'elite') return '9" Elite';
-    if (tier === 'pro') return '7" Pro';
-    return '4" Base';
+    if (tier === 'elite') return 'Aegis A900';
+    if (tier === 'pro') return 'Aegis A700';
+    return 'Aegis A400';
   }
 
   // Human-friendly order number. Falls back to a stable 6-digit number derived
@@ -2510,9 +2522,9 @@
     return `Current SafeFlame AI business snapshot:
 - Total pre-bookings: ${prebookData.length} (Pending: ${byStatus.pending}, Confirmed: ${byStatus.confirmed}, Shipped: ${byStatus.shipped}, Cancelled: ${byStatus.cancelled})
 - Waitlist signups: ${waitlistData.length}
-- Base tier (4", 1 camera) at ₹${siteSettings.basePrice}/unit — ${stockLine('Base', siteSettings.baseStock, baseUnits)}
-- Pro tier (7", 2 cameras, gas weight monitoring) at ₹${siteSettings.proPrice}/unit — ${stockLine('Pro', siteSettings.proStock, proUnits)}
-- Elite tier (9", 4 cameras, gas weight monitoring) at ₹${siteSettings.elitePrice}/unit — ${stockLine('Elite', siteSettings.eliteStock, eliteUnits)}
+- Aegis A400 (4", 1 camera) at ₹${siteSettings.basePrice}/unit — ${stockLine('Aegis A400', siteSettings.baseStock, baseUnits)}
+- Aegis A700 (7", 2 cameras, gas weight monitoring) at ₹${siteSettings.proPrice}/unit — ${stockLine('Aegis A700', siteSettings.proStock, proUnits)}
+- Aegis A900 (9", 4 cameras, gas weight monitoring) at ₹${siteSettings.elitePrice}/unit — ${stockLine('Aegis A900', siteSettings.eliteStock, eliteUnits)}
 - Estimated revenue (excluding cancelled): ₹${revenue.toLocaleString('en-IN')}
 - Launch date: ${siteSettings.launchDate}` + axExtraContext();
   }
@@ -2821,7 +2833,7 @@ function axRenderDash() {
   if (!axRevChart) axRevChart = new Chart($ax('axRevChart'), { type: 'line', data: { labels, datasets: [{ label: 'Revenue', data: rv, borderColor: '#FF6B35', backgroundColor: 'rgba(255,107,53,.15)', fill: true, tension: .3 }] }, options: { animation: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } } });
   else { axRevChart.data.labels = labels; axRevChart.data.datasets[0].data = rv; axRevChart.update('none'); }
   const tv = [tierU.base, tierU.pro, tierU.elite];
-  if (!axTierChart) axTierChart = new Chart($ax('axTierChart'), { type: 'doughnut', data: { labels: ['Base', 'Pro', 'Elite'], datasets: [{ data: tv, backgroundColor: ['#4ECDC4', '#FF6B35', '#E8C547'] }] }, options: { animation: false } });
+  if (!axTierChart) axTierChart = new Chart($ax('axTierChart'), { type: 'doughnut', data: { labels: ['Aegis A400', 'Aegis A700', 'Aegis A900'], datasets: [{ data: tv, backgroundColor: ['#4ECDC4', '#FF6B35', '#E8C547'] }] }, options: { animation: false } });
   else { axTierChart.data.datasets[0].data = tv; axTierChart.update('none'); }
   // low stock
   const thr = Number(siteSettings.lowStockThreshold != null ? siteSettings.lowStockThreshold : axCfg.lowStockThreshold) || 3, sold = { base: 0, pro: 0, elite: 0 };
@@ -2950,12 +2962,12 @@ $ax('axLogFilter').addEventListener('change', axRenderLog);
 $ax('axLogClear').addEventListener('click', async () => { if (!confirm('Clear the email log?')) return; const b = db.batch(); axLogs.forEach(l => b.delete(db.collection('emailLog').doc(l.id))); await b.commit().catch(() => {}); axLog('emaillog.clear', '', axLogs.length + ' entries'); });
 $ax('axTestSend').addEventListener('click', async () => {
   const kind = $ax('axTestKind').value, to = $ax('axTestTo').value.trim(); if (!isValidEmailAx(to)) return showToast('Enter a valid address to send the test to.', 'error');
-  await axLoadCfg(); const t = { name: 'Test', email: to, otp: '123456', link: location.origin + '/verify?token=TEST', order_id: '100000', tier: '7" Pro', quantity: 1, total_price: '₹7,999', unit_price: '₹7,999', tracking: 'TRK123', eta: '2–3 weeks' }; let cfg, subject, message;
+  await axLoadCfg(); const t = { name: 'Test', email: to, otp: '123456', link: location.origin + '/verify?token=TEST', order_id: '100000', tier: 'Aegis A700', quantity: 1, total_price: '₹7,999', unit_price: '₹7,999', tracking: 'TRK123', eta: '2–3 weeks' }; let cfg, subject, message;
   if (kind === 'otp' || kind === 'verify') { cfg = axCfg[kind === 'otp' ? 'otpEmail' : 'verifyEmail']; subject = cfg.subject; message = cfg.message; }
   else if (kind === 'launch') { subject = axCfg.launchEmailSubject || 'SafeFlame AI has launched!'; message = axCfg.launchEmailMessage || 'SafeFlame AI is live!'; cfg = { serviceId: axCfg.launchEmailServiceId, templateId: axCfg.launchEmailTemplateId, publicKey: axCfg.launchEmailPublicKey }; }
   else { cfg = (axCfg.statusEmails || {})[kind] || DEFAULT_SETTINGS.statusEmails[kind] || {}; subject = cfg.subject || 'Order update'; message = cfg.message || 'Your order was updated.'; }
   const b = $ax('axTestSend'); b.disabled = true;
-  try { await axSend(cfg, { to_email: to, to_name: 'Test', name: 'Test', email: to, order_id: t.order_id, subject: '[TEST] ' + axTokens(subject, t), message: axTokens(message, t), otp: t.otp, link: t.link, orders: [{ name: 'SafeFlame AI — 7" Pro', units: 1, price: '7,999' }], cost: { shipping: '0', tax: '0', total: '7,999' }, tier: t.tier, quantity: 1, total_price: t.total_price, status: kind, tracking: t.tracking, eta: t.eta }, 'test-' + kind); showToast('Test email sent to ' + to + '.', 'success'); }
+  try { await axSend(cfg, { to_email: to, to_name: 'Test', name: 'Test', email: to, order_id: t.order_id, subject: '[TEST] ' + axTokens(subject, t), message: axTokens(message, t), otp: t.otp, link: t.link, orders: [{ name: 'SafeFlame AI — Aegis A700', units: 1, price: '7,999' }], cost: { shipping: '0', tax: '0', total: '7,999' }, tier: t.tier, quantity: 1, total_price: t.total_price, status: kind, tracking: t.tracking, eta: t.eta }, 'test-' + kind); showToast('Test email sent to ' + to + '.', 'success'); }
   catch (e) { showToast('Test failed: ' + e.message, 'error'); }
   b.disabled = false;
 });
@@ -5801,7 +5813,7 @@ var qrcode = function() {
 
   /* ═════════ PROMOS TAB ═════════ */
   var promoHtml =
-    '<div class="panel"><div class="panel-header"><h2>Coupon codes</h2><span class="hint">Checked in the visitor’s browser. Every order records the code, so you can verify it before confirming.</span></div>' +
+    '<div class="panel"><div class="panel-header"><h2>Coupon codes</h2><span class="hint">Each customer can use a code once (cancelled orders free it up). Checked in the visitor’s browser, and every order records the code so you can verify it before confirming.</span></div>' +
     '<div class="ax-line" style="flex-wrap:wrap;gap:.5rem"><input class="search-input" id="cpNewCode" placeholder="CODE e.g. WELCOME10" maxlength="20" style="max-width:190px">' +
     '<select class="filter-select" id="cpNewType"><option value="pct">% off</option><option value="flat">₹ off</option></select>' +
     '<input class="search-input" id="cpNewVal" type="number" min="1" placeholder="Amount" style="max-width:100px">' +
@@ -6045,8 +6057,8 @@ var qrcode = function() {
     '<div id="ptRows"></div><div class="ax-line"><button class="btn-small" id="ptAdd" type="button">+ Add part</button><button class="btn-small primary" id="ptSave" type="button">Save parts</button><span class="hint" id="ptMsg"></span></div>' +
     '<div class="ax-sec">Parts requests</div><div class="table-scroll"><table><thead><tr><th>Ref</th><th>Customer</th><th>Items</th><th>Goods</th><th>Deliver to</th><th>Status</th></tr></thead><tbody id="poBody"></tbody></table></div></div>' +
 
-    '<div class="panel"><div class="panel-header"><h2>Serial numbers and QR labels</h2><span class="hint">Each label’s QR opens the customer’s device registration with the serial already filled in.</span></div>' +
-    '<div class="ax-line" style="flex-wrap:wrap;gap:.5rem"><select class="filter-select" id="sbTier"><option value="base">4" Base</option><option value="pro">7" Pro</option><option value="elite">9" Elite</option></select>' +
+    '<div class="panel"><div class="panel-header"><h2>Serial numbers and QR labels</h2><span class="hint">Each label’s QR opens the customer’s account: they register the device, or if it is already theirs, go straight to a warranty claim.</span></div>' +
+    '<div class="ax-line" style="flex-wrap:wrap;gap:.5rem"><select class="filter-select" id="sbTier"><option value="base">Aegis A400</option><option value="pro">Aegis A700</option><option value="elite">Aegis A900</option></select>' +
     '<input class="search-input" id="sbBatch" maxlength="6" placeholder="Batch code" style="max-width:120px" title="Letters or digits, e.g. 2611">' +
     '<input class="search-input" id="sbCount" type="number" min="1" max="500" value="10" style="max-width:100px" title="How many"><button class="btn-small primary" id="sbGen" type="button">Generate batch</button></div>' +
     '<div class="table-scroll" style="margin-top:.6rem"><table><thead><tr><th>Batch</th><th>Model</th><th>Serials</th><th>Registered</th><th>Created</th><th></th></tr></thead><tbody id="sbBody"></tbody></table></div></div>';
@@ -6150,7 +6162,7 @@ var qrcode = function() {
       $('axX').onclick = axClose;
       $('lbGo').onclick = async function () {
         try { await loadQr(); } catch (err) { return X.toast(err.message, 'error'); }
-        var size = $('lbSize').value, labels = ser.map(function (sn) { var q = window.qrcode(0, 'M'); q.addData(ORIGIN + '/account?serial=' + sn + '#devices'); q.make(); return '<div class="l"><div class="q">' + q.createSvgTag({ cellSize: 3, margin: 0, scalable: true }) + '</div><div class="t"><b>SafeFlame AI</b><br><span class="s">' + h(sn) + '</span><br><small>Scan to register and start your warranty</small></div></div>'; }).join('');
+        var size = $('lbSize').value, labels = ser.map(function (sn) { var q = window.qrcode(0, 'M'); q.addData(ORIGIN + '/account?serial=' + sn + '#devices'); q.make(); return '<div class="l"><div class="q">' + q.createSvgTag({ cellSize: 3, margin: 0, scalable: true }) + '</div><div class="t"><b>SafeFlame AI</b><br><span class="s">' + h(sn) + '</span><br><small>Scan to register and claim warranty</small></div></div>'; }).join('');
         var css = size === 'a4'
           ? '@page{size:A4;margin:15mm 7mm}body{margin:0;font-family:Arial,sans-serif}.g{display:grid;grid-template-columns:repeat(3,63.5mm);grid-auto-rows:38.1mm;column-gap:2.5mm}.l{display:flex;align-items:center;gap:3mm;padding:2mm 3mm;box-sizing:border-box;overflow:hidden}.q{width:24mm;height:24mm;flex:none}.q svg{width:100%;height:100%}.t{font-size:8pt;line-height:1.25}.s{font-size:9pt;font-weight:700;letter-spacing:.03em}small{font-size:6.5pt;color:#333}'
           : '@page{size:50mm 30mm;margin:0}body{margin:0;font-family:Arial,sans-serif}.l{width:50mm;height:30mm;display:flex;align-items:center;gap:2mm;padding:2mm;box-sizing:border-box;page-break-after:always;overflow:hidden}.q{width:22mm;height:22mm;flex:none}.q svg{width:100%;height:100%}.t{font-size:6.5pt;line-height:1.2}.s{font-size:7.5pt;font-weight:700}small{font-size:5.5pt;color:#333}';
@@ -6304,6 +6316,18 @@ var qrcode = function() {
   }
   function renderJobs() { /* replaced once the Shipping tab has opened */ }
   X.addTab('ship', 'Shipping', shipHtml, 'site', shipOpen);
+})();
+</script>
+<script>
+/* sidebar: keep it below the sticky header and only show the layout once signed in */
+(function () {
+  var nav = document.getElementById('tabNav'), hdr = document.querySelector('header');
+  function sync() {
+    if (hdr) document.documentElement.style.setProperty('--sfx-hdr', hdr.offsetHeight + 'px');
+    document.body.classList.toggle('sfx-side', !!nav && nav.style.display !== 'none');
+  }
+  if (nav) new MutationObserver(sync).observe(nav, { attributes: true, attributeFilter: ['style'] });
+  window.addEventListener('resize', sync); sync();
 })();
 </script>
 </body>
