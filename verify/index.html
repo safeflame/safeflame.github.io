@@ -634,35 +634,17 @@ applyAppearance();
 
 /* ── verification state ── */
 async function isVerified(user) {
+  // Real verification: Firebase sets emailVerified on its own servers when the emailed link is opened.
+  // It cannot be set from the browser, and the security rules check the same flag.
   if (!user) return false;
-  if (isAdminEmail(user.email)) return true; // admin accounts skip email verification
+  if (isAdminEmail(user.email)) return true;
   if (user.emailVerified) return true;
-  const isPasswordUser = user.providerData.some(p => p.providerId === 'password');
-  if (!isPasswordUser) return true; // Google etc.
-  try {
-    const ud = await db.collection('users').doc(user.uid).get();
-    if (ud.exists && ud.data().emailVerified === true) return true;
-    const q = await db.collection('emailVerifications').where('uid', '==', user.uid).where('verified', '==', true).limit(1).get();
-    if (!q.empty) {
-      await db.collection('users').doc(user.uid).set({ emailVerified: true }, { merge: true });
-      q.docs.forEach(d => d.ref.delete().catch(() => {}));
-      return true;
-    }
-  } catch (e) { console.warn('verify check failed', e); }
-  return false;
+  return !user.providerData.some(p => p.providerId === 'password'); // Google / Apple accounts arrive verified
 }
 function randomToken() { const a = new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); }
 async function createAndSendVerification(user, name) {
-  const token = randomToken();
-  await db.collection('emailVerifications').doc(token).set({ uid: user.uid, email: user.email, verified: false, createdAt: TS(), expiresAt: Date.now() + 24 * 3600 * 1000 });
-  const base = location.origin;
-  const link = base + '/verify?token=' + token;
-  try { await sendVerifyEmail(user.email, name, link); return 'emailjs'; }
-  catch (e) {
-    if (e.message !== 'EMAILJS_NOT_CONFIGURED') throw e;
-    await user.sendEmailVerification({ url: base + '/verify?native=1' }); // fallback: Firebase's own mail
-    return 'firebase';
-  }
+  await user.sendEmailVerification({ url: location.origin + '/verify?native=1' });
+  return 'firebase';
 }
 
 /* ── top bar account button ── */
@@ -793,24 +775,8 @@ async function goNext(user) {
 
 /* ── A) arrived from the link in the email ── */
 async function handleToken() {
-  setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3.2a8.8 8.8 0 0 1 8.8 8.8" stroke-width="2"><animateTransform attributeName="transform" type="rotate" values="0 12 12;360 12 12" dur="1.4s" repeatCount="indefinite"></animateTransform></path><path d="M12 19a7 7 0 0 1-7-7" stroke-width="2" stroke-opacity=".55"><animateTransform attributeName="transform" type="rotate" values="360 12 12;0 12 12" dur="1.05s" repeatCount="indefinite"></animateTransform></path></svg>', 'Verifying your email…', 'One moment.');
-  try {
-    const ref = db.collection('emailVerifications').doc(token);
-    const snap = await ref.get();
-    if (!snap.exists) return setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', 'Link invalid or already used', 'Sign in — if your account is already verified you will go straight through. Otherwise request a new link.', '<a class="btn-primary" href="/login">Go to sign in</a>');
-    const d = snap.data();
-    if (Date.now() > d.expiresAt) return setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.2 2"/></svg>', 'This link has expired', 'Sign in and request a new verification email.', '<a class="btn-primary" href="/login">Go to sign in</a>');
-    await ref.update({ verified: true, verifiedAt: TS() });
-    const u = auth.currentUser || await new Promise(r => { const un = auth.onAuthStateChanged(x => { un(); r(x); }); });
-    if (u && u.uid === d.uid) {
-      await db.collection('users').doc(u.uid).set({ emailVerified: true }, { merge: true });
-      ref.delete().catch(() => {});
-      setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-dasharray="57" stroke-dashoffset="57"><animate attributeName="stroke-dashoffset" values="57;0;0;57" keyTimes="0;0.34;0.84;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></circle><path d="m8 12.2 2.7 2.8L16 9.4" stroke-dasharray="13" stroke-dashoffset="13"><animate attributeName="stroke-dashoffset" values="13;13;0;0;13" keyTimes="0;0.3;0.52;0.82;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></path></svg>', 'Email verified!', 'Taking you to the next step…');
-      setTimeout(() => goNext(u), 1200);
-    } else {
-      setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-dasharray="57" stroke-dashoffset="57"><animate attributeName="stroke-dashoffset" values="57;0;0;57" keyTimes="0;0.34;0.84;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></circle><path d="m8 12.2 2.7 2.8L16 9.4" stroke-dasharray="13" stroke-dashoffset="13"><animate attributeName="stroke-dashoffset" values="13;13;0;0;13" keyTimes="0;0.3;0.52;0.82;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></path></svg>', 'Email verified!', 'Your email is confirmed. Sign in to continue.', '<a class="btn-primary" href="/login?verified=1' + (next ? '&next=' + encodeURIComponent(next) : '') + '">Sign in</a>');
-    }
-  } catch (e) { console.error(e); setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', 'Could not verify', esc(e.message || 'Please try again.'), '<a class="btn-secondary" href="/login">Back to sign in</a>'); }
+  // Links from the old verification system no longer verify anything. Send people to the secure flow.
+  setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4 2.8 19.5h18.4L12 4Z"/><path d="M12 10v4.2M12 17h.01"/></svg>', 'This link is out of date', 'We have moved to a more secure email check. Sign in and we will send you a new verification link.', '<a class="btn-primary" href="/login">Go to sign in</a>');
 }
 
 /* ── B) "check your inbox" waiting page ── */
@@ -822,7 +788,7 @@ async function pending(user) {
     '<p class="hint" style="margin-top:1rem"><span id="resendWrap"><button class="link-btn" id="resendBtn" type="button">Resend email</button></span> · <button class="link-btn" id="outBtn" type="button">Use a different account</button></p>');
   if (failed) { $('err').textContent = 'We could not send the email automatically — tap "Resend email".'; sessionStorage.removeItem('sf_verify_send_failed'); }
   const check = async (manual) => {
-    await user.reload();
+    await user.reload(); try { await auth.currentUser.getIdToken(true); } catch (_) {}
     if (await isVerified(auth.currentUser)) { clearInterval(pollTimer); setView('<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9" stroke-dasharray="57" stroke-dashoffset="57"><animate attributeName="stroke-dashoffset" values="57;0;0;57" keyTimes="0;0.34;0.84;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></circle><path d="m8 12.2 2.7 2.8L16 9.4" stroke-dasharray="13" stroke-dashoffset="13"><animate attributeName="stroke-dashoffset" values="13;13;0;0;13" keyTimes="0;0.3;0.52;0.82;1" dur="3.4s" repeatCount="indefinite" calcMode="spline" keySplines="0 0 1 1;0.35 0 0.15 1;0 0 1 1;0.5 0 0.4 1"></animate></path></svg>', 'Email verified!', 'Taking you to the next step…'); setTimeout(() => goNext(auth.currentUser), 900); }
     else if (manual) { $('err').textContent = 'Not verified yet — open the link in your email first.'; }
   };
