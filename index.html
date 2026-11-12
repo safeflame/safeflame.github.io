@@ -2277,8 +2277,9 @@ body{padding-top:var(--sf-banner-h,0px)}
       <a href="#faq">FAQ</a>
     </div>
   </div>
+  <div class="footer-bottom" style="flex-direction:column;align-items:flex-start;gap:.5rem"><span style="font-size:.78rem;opacity:.8">Gas leak detector in: <a href="/gas-leak-detector-kochi">Kochi</a> · <a href="/gas-leak-detector-thiruvananthapuram">Thiruvananthapuram</a> · <a href="/gas-leak-detector-kozhikode">Kozhikode</a> · <a href="/gas-leak-detector-thrissur">Thrissur</a> · <a href="/gas-leak-detector-kannur">Kannur</a> · <a href="/gas-leak-detector-kollam">Kollam</a> · <a href="/gas-leak-detector-bengaluru">Bengaluru</a> · <a href="/gas-leak-detector-chennai">Chennai</a> · <a href="/gas-leak-detector-hyderabad">Hyderabad</a> · <a href="/gas-leak-detector-mumbai">Mumbai</a> · <a href="/gas-leak-detector-delhi">Delhi</a> · <a href="/gas-leak-detector-pune">Pune</a></span></div>
   <div class="footer-bottom">
-    <span>© 2026 SafeFlame AI. All rights reserved. · <a href="/privacy">Privacy</a> · <a href="/refund">Refunds</a> · <a href="/warranty">Warranty</a> · <a href="/whats-new">What's new</a> · <a href="#" data-cookie-settings>Cookie settings</a></span>
+    <span>© 2026 SafeFlame AI. All rights reserved. · <a href="/privacy">Privacy</a> · <a href="/refund">Refunds</a> · <a href="/warranty">Warranty</a> · <a href="/safety">Safety</a> · <a href="/app">App</a> · <a href="/whats-new">What's new</a> · <a href="#" data-cookie-settings>Cookie settings</a></span>
     <a href="/admin/" style="opacity:.3;font-size:.7rem;">Admin</a>
   </div>
 </footer>
@@ -2972,13 +2973,26 @@ if (!window.SF_APP_NAME && location.pathname.indexOf('/admin') !== 0) { if (docu
     refreshCountdown();
   }
 
+  function isLive() {                      // launch mode: Admin > Promos. "auto" opens when the launch date passes.
+    var st = S(), mode = st.launchMode || 'auto';
+    if (mode === 'live') return true; if (mode === 'prelaunch') return false;
+    return !!(st.launchDate && new Date(st.launchDate) - new Date() <= 0);
+  }
   function refreshCountdown() {
-    var s = S(), label = $('sfLaunchLabel'), proof = $('sfProof'), form = $('sfNotify');
+    var s = S(), label = $('sfLaunchLabel'), proof = $('sfProof'), form = $('sfNotify'), cd = $('sfCd');
     if (!label) return;
-    var live = s.launchDate && new Date(s.launchDate) - new Date() <= 0;
+    var live = isLive();
     label.textContent = live ? 'We’re open' : 'Launch countdown';
     if (form) form.style.display = live ? 'none' : '';
-    var n = Number(s.socialProofCount) || 0;              // set in Admin > Site > Social proof
+    if (cd) cd.style.display = live ? 'none' : '';
+    var cta = $('sfLiveCta');
+    if (live && !cta && cd) {
+      cta = document.createElement('div'); cta.id = 'sfLiveCta'; cta.style.cssText = 'margin:.4rem 0 0';
+      cta.innerHTML = '<p style="margin:0 0 1rem;color:var(--text2)">Pre-bookings are open for all three Aegis models.</p><a class="btn-primary" href="/prebook" style="text-decoration:none;display:inline-block">Pre-book now</a>';
+      cd.parentNode.insertBefore(cta, cd.nextSibling);
+    }
+    if (cta) cta.style.display = live ? '' : 'none';
+    var n = Number(s.socialProofCount) || 0;              // set in Admin > Promos
     if (proof) {
       if (n > 0) { proof.style.display = ''; proof.innerHTML = '<b style="color:var(--flame2)">' + n.toLocaleString('en-IN') + '</b> ' + esc(s.socialProofText || 'households have pre-booked'); }
       else proof.style.display = 'none';
@@ -3115,6 +3129,68 @@ if (!window.SF_APP_NAME && location.pathname.indexOf('/admin') !== 0) { if (docu
     function row(a, b) { return '<div style="display:flex;justify-content:space-between;gap:1rem;padding:.3rem 0;font-size:.9rem"><span style="color:var(--text2)">' + a + '</span><span>' + b + '</span></div>'; }
   }
 
+  /* ── N9 · KITCHEN SAFETY CHECK + REQUIREMENTS REPORT ─────────── */
+  function installCheck() {
+    if ($('sfCheck')) return;
+    var anchor = $('sfCalc') || $('sfCompare') || $('pricing'); if (!anchor) return;
+    var sec = document.createElement('section'); sec.id = 'sfCheck';
+    var Q = [
+      ['kGas', 'What gas do you cook with?', [['lpg', 'LPG cylinder'], ['png', 'Piped gas (PNG)']]],
+      ['kBurn', 'How many burners do you use?', [['2', '1 to 2'], ['4', '3 to 4'], ['5', 'More than 4']]],
+      ['kVent', 'How is the kitchen ventilated?', [['good', 'Window and exhaust fan'], ['some', 'A window or a fan'], ['none', 'Neither, it is closed in']]],
+      ['kCyl', 'Where is the cylinder?', [['out', 'Outside, balcony or utility area'], ['floor', 'Inside the kitchen, next to the stove'], ['cab', 'Inside a cabinet under the counter']]],
+      ['kHose', 'When were the hose and regulator last checked or replaced?', [['recent', 'In the last year'], ['old', 'More than a year ago'], ['unknown', 'I do not know']]],
+      ['kLeave', 'Do you ever leave food cooking while you go to another room?', [['never', 'Never'], ['sometimes', 'Sometimes'], ['often', 'Often']]],
+      ['kFam', 'Are there children or elderly family members at home during the day?', [['no', 'No'], ['yes', 'Yes']]],
+      ['kPower', 'Is there a power socket within about 2 m of where the unit would go?', [['yes', 'Yes'], ['no', 'No']]],
+      ['kWifi', 'Does your Wi-Fi reach the kitchen?', [['yes', 'Yes'], ['no', 'Not reliably']]],
+      ['kRooms', 'How much do you want the unit to cover?', [['1', 'Just the kitchen'], ['2', 'Kitchen plus one more area'], ['4', 'Several rooms']]]
+    ];
+    sec.innerHTML = '<div class="container"><div class="section-label reveal">Know your kitchen</div><h2 class="section-title reveal">Kitchen safety check</h2>' +
+      '<p class="section-sub reveal">Answer ten quick questions. You get a checklist of what to fix today, what you are already doing well, what you will need for installation, and which Aegis model fits. It takes about two minutes.</p>' +
+      '<div style="display:grid;gap:.9rem;max-width:860px;margin:0 auto">' + Q.map(function (q, qi) {
+        return '<fieldset style="border:1px solid var(--border);border-radius:var(--radius2);padding:.9rem 1rem;background:var(--surface)"><legend style="padding:0 .5rem;font-weight:600;font-size:.9rem">' + (qi + 1) + '. ' + q[1] + '</legend><div style="display:flex;gap:.6rem;flex-wrap:wrap">' +
+          q[2].map(function (o) { return '<label class="check-row" style="margin:0;cursor:pointer"><input type="radio" name="' + q[0] + '" value="' + o[0] + '"> ' + o[1] + '</label>'; }).join('') + '</div></fieldset>';
+      }).join('') + '<div style="text-align:center"><button type="button" class="btn-primary" id="kGo">Show my report</button><div id="kErr" role="alert" style="color:var(--red);font-size:.85rem;min-height:1.2em;margin-top:.5rem"></div></div></div>' +
+      '<div id="kReport" style="max-width:860px;margin:1.6rem auto 0"></div></div>';
+    anchor.parentNode.insertBefore(sec, anchor.nextSibling);
+    $('kGo').onclick = function () {
+      var A = {}, miss = 0; Q.forEach(function (q) { A[q[0]] = val(q[0]); if (!A[q[0]]) miss++; });
+      if (miss) { $('kErr').textContent = 'Please answer all ten questions (' + miss + ' left).'; return; }
+      $('kErr').textContent = ''; report(A);
+    };
+  }
+  function report(A) {
+    var fix = [], good = [], need = [], tips = [];
+    if (A.kVent === 'none') fix.push(['Improve ventilation', 'Fit an exhaust fan or a window that can stay open while you cook. Gas can build up in a closed room.']); else if (A.kVent === 'some') tips.push('A window and an exhaust fan together are better than either one alone.'); else good.push('Your kitchen has a window and an exhaust fan.');
+    if (A.kCyl === 'floor') fix.push(['Move the cylinder away from the stove', 'Keep it upright, on a stable base and well away from the flame and heat. Outside the kitchen is safest if you can arrange it.']); else if (A.kCyl === 'cab') fix.push(['Do not keep the cylinder in a closed cabinet', 'A leak in a closed space can build up quickly. Use a ventilated spot.']); else good.push('The cylinder is outside the kitchen.');
+    if (A.kHose !== 'recent') fix.push(['Check the hose and regulator now', 'Brush soapy water on the joints with the regulator on. Bubbles mean a leak. Replace the hose if it is cracked, hard or past the date your gas supplier recommends.']); else good.push('Hose and regulator were checked in the last year.');
+    if (A.kLeave === 'often' || A.kLeave === 'sometimes') fix.push(['Stay with the stove', 'Automatic shutoff helps, but a pot left alone can still boil over, put the flame out and release gas. Switch off the burner when you leave the room.']); else good.push('You stay with the stove while cooking.');
+    tips.push('Turn the regulator off when you are not cooking and every night.');
+    if (A.kFam === 'yes') tips.push('With children or elderly family at home, a loud alarm and a display that is easy to read at a glance matter more.');
+    if (A.kGas === 'png') need.push('The Aegis models are designed for LPG cylinder setups. Piped gas needs a different check, so please message us before ordering.');
+    need.push('A power socket within about 2 m of the unit' + (A.kPower === 'no' ? ' (you do not have one there yet, so plan for a socket or a safe extension)' : '') + '.');
+    need.push('2.4 GHz Wi-Fi that reaches the kitchen' + (A.kWifi === 'no' ? ' (you may need a range extender)' : '') + '. The unit still alarms and shuts the valve if Wi-Fi drops.');
+    need.push('Wall or shelf space near the cylinder, within reach of the gas line, for the unit and its valve actuator.');
+    need.push('A regulator and hose in good condition, since the unit does not replace them.');
+    var cams = Number(A.kRooms), pick = cams >= 4 ? 'elite' : (cams === 2 || A.kFam === 'yes' || Number(A.kBurn) >= 5) ? 'pro' : 'base', t = TIERS[pick];
+    var li = function (a) { return a.map(function (x) { return '<li>' + (Array.isArray(x) ? '<b>' + esc(x[0]) + '.</b> ' + esc(x[1]) : esc(x)) + '</li>'; }).join(''); };
+    var box = function (title, color, items) { return items.length ? '<div style="border-left:3px solid ' + color + ';padding:.2rem 0 .2rem 1rem;margin:1rem 0"><div style="font-weight:700;margin-bottom:.3rem">' + title + '</div><ul style="margin:0;padding-left:1.1rem;color:var(--text2);line-height:1.6">' + li(items) + '</ul></div>' : ''; };
+    var html = '<div style="border:1px solid var(--border2);border-radius:var(--radius);padding:1.4rem;background:var(--surface)" id="kRep"><div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--flame2)">Your kitchen safety report</div>' +
+      '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:1.25rem;font-weight:700;margin:.2rem 0 .4rem">' + fix.length + ' thing' + (fix.length === 1 ? '' : 's') + ' to fix, ' + good.length + ' already good</div>' +
+      '<div class="hint" style="color:var(--text3);font-size:.78rem">This is general safety guidance based on your answers, not an inspection. If you ever smell gas, do not touch any switch, close the cylinder valve, open windows, leave, and call your gas supplier’s emergency line.</div>' +
+      box('Fix these first', 'var(--red)', fix) + box('Already good', 'var(--green)', good) + box('Also worth doing', 'var(--yellow)', tips) + box('What you will need to install an Aegis unit', 'var(--flame)', need) +
+      '<div style="border:1px solid var(--border2);background:rgba(255,87,34,.07);border-radius:var(--radius2);padding:1rem;margin-top:1rem;display:flex;gap:1rem;align-items:center;justify-content:space-between;flex-wrap:wrap"><div><div style="font-size:.75rem;text-transform:uppercase;letter-spacing:.08em;color:var(--flame2)">We suggest</div><b>' + t.name + ' · ' + money(priceOf(pick)) + '</b><div style="color:var(--text2);font-size:.88rem">' + (pick === 'elite' ? 'for covering several rooms' : pick === 'pro' ? 'for a second view and an easy-to-read touchscreen' : 'for one kitchen at the lowest price') + '</div></div><a class="btn-primary" href="/prebook?tier=' + pick + '" style="text-decoration:none">Pre-book ' + t.name + '</a></div>' +
+      '<div style="margin-top:1rem;display:flex;gap:.6rem;flex-wrap:wrap"><button type="button" class="btn-secondary" id="kPrint">Print or save as PDF</button></div></div>';
+    $('kReport').innerHTML = html; $('kReport').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    $('kPrint').onclick = function () {
+      var w = window.open('', '_blank', 'width=800,height=900'); if (!w) return;
+      var plain = function (title, a) { return a.length ? '<h3>' + title + '</h3><ul>' + li(a) + '</ul>' : ''; };
+      w.document.write('<!doctype html><html><head><meta charset="utf-8"><title>Kitchen safety report</title><style>body{font-family:Arial,sans-serif;max-width:720px;margin:2rem auto;padding:0 1rem;color:#111;line-height:1.5}h1{margin:0 0 .2rem}h3{margin:1.2rem 0 .3rem}.n{font-size:.85rem;color:#555}li{margin:.25rem 0}</style></head><body><h1>Kitchen safety report</h1><div class="n">SafeFlame AI · ' + new Date().toLocaleDateString('en-IN') + '</div><p class="n">General safety guidance based on your answers, not an inspection. If you smell gas: do not touch any switch, close the cylinder valve, open windows, leave, and call your gas supplier’s emergency line.</p>' + plain('Fix these first', fix) + plain('Already good', good) + plain('Also worth doing', tips) + plain('What you need to install an Aegis unit', need) + '<h3>Suggested model</h3><p>' + esc(t.name) + '</p></body></html>');
+      w.document.close(); w.focus(); setTimeout(function () { w.print(); }, 300);
+    };
+  }
+
   /* ── S70 · 3D EXPLODED VIEW ─────────────────────────────────── */
   var LAYERS = [
     { n: 'Display and front panel', c: '#26C6DA', d: 'The 4", 7" or 9" screen on the front. It shows live gas, flame, pressure and cylinder weight, and says plainly whether it is safe to leave the kitchen.' },
@@ -3126,7 +3202,7 @@ if (!window.SF_APP_NAME && location.pathname.indexOf('/admin') !== 0) { if (docu
 
   function installExplode() {
     if ($('sfExplode')) return;
-    var anchor = $('sfCalc') || $('pricing'); if (!anchor) return;
+    var anchor = $('sfCheck') || $('sfCalc') || $('pricing'); if (!anchor) return;
     var sec = document.createElement('section');
     sec.id = 'sfExplode';
     sec.innerHTML =
@@ -3185,15 +3261,15 @@ if (!window.SF_APP_NAME && location.pathname.indexOf('/admin') !== 0) { if (docu
   }
 
   function init() {
-    patchPricing(); installCurrency(); installCountdown(); installCompare(); installCalc(); installExplode();
+    patchPricing(); installCurrency(); installCountdown(); installCompare(); installCalc(); installCheck(); installExplode();
     if (typeof window.applySiteSettings === 'function') {
       var orig = window.applySiteSettings;
       window.applySiteSettings = function () { orig.apply(this, arguments); refreshAll(); };
     }
-    refreshAll(); loadRates();
+    refreshAll(); loadRates(); setInterval(refreshCountdown, 30000);
     try { if (typeof window.updateCountdown === 'function') window.updateCountdown(); } catch (_) {}
     // let the page's scroll-reveal pick up the new sections
-    document.querySelectorAll('#sfCompare .reveal,#sfCalc .reveal,#sfExplode .reveal').forEach(function (el) { el.classList.add('visible'); el.classList.add('in'); });
+    document.querySelectorAll('#sfCompare .reveal,#sfCalc .reveal,#sfCheck .reveal,#sfExplode .reveal').forEach(function (el) { el.classList.add('visible'); el.classList.add('in'); });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
