@@ -1,0 +1,22 @@
+Add these <url> lines inside your existing sitemap.xml (before </urlset>):
+
+  <url><loc>https://safeflame.github.io/prebook</loc></url>
+  <url><loc>https://safeflame.github.io/help</loc></url>
+  <url><loc>https://safeflame.github.io/safety</loc></url>
+  <url><loc>https://safeflame.github.io/privacy</loc></url>
+  <url><loc>https://safeflame.github.io/refund</loc></url>
+  <url><loc>https://safeflame.github.io/warranty</loc></url>
+  <url><loc>https://safeflame.github.io/whats-new</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-kochi</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-thiruvananthapuram</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-kozhikode</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-thrissur</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-kannur</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-kollam</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-bengaluru</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-chennai</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-hyderabad</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-mumbai</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-delhi</loc></url>
+  <url><loc>https://safeflame.github.io/gas-leak-detector-pune</loc></url>
+  <url><loc>https://safeflame.github.io/app</loc></url>

@@ -1,0 +1,165 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn() && (
+        request.auth.token.email in ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com']
+        || (exists(/databases/$(database)/documents/settings/admins)
+            && request.auth.token.email in get(/databases/$(database)/documents/settings/admins).data.emails));
+    }
+    // Owners can manage admins, roles and passwords. The first two are fixed here; more can be added as role "Owner" in Admin > Team.
+    function isOwner() {
+      return signedIn() && (
+        request.auth.token.email in ['admin@safeflame.github.io', 'chrisbenmartink24@gmail.com']
+        || (exists(/databases/$(database)/documents/adminRoles/config)
+            && request.auth.token.email in get(/databases/$(database)/documents/adminRoles/config).data.get('owners', [])));
+    }
+    // Real email verification: Firebase sets this flag itself when the emailed link is opened. It cannot be set from the browser.
+    function verified() { return signedIn() && (request.auth.token.email_verified == true || isAdmin()); }
+    function mine(uid) { return signedIn() && request.auth.uid == uid; }
+    function changes(keys) { return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys); }
+
+    match /settings/{doc} {
+      allow read: if doc != 'admins' || isAdmin();
+      allow write: if (doc == 'admins' ? isOwner() : isAdmin()) || doc == 'orderCounter';
+    }
+    match /users/{uid} {
+      allow read: if mine(uid) || isAdmin();
+      allow create: if isAdmin() || (mine(uid) && request.resource.data.get('emailVerified', false) != true);
+      allow update: if isAdmin() || (mine(uid) && request.resource.data.get('emailVerified', false) == resource.data.get('emailVerified', false));
+      allow delete: if isAdmin();
+    }
+
+    match /emailVerifications/{token} {
+      allow create: if signedIn() && request.resource.data.uid == request.auth.uid;
+      allow get: if true;
+      allow update: if changes(['verified', 'verifiedAt']);
+      allow list, delete: if signedIn() && resource.data.uid == request.auth.uid;
+    }
+
+    match /preBookings/{id} {
+      allow read: if signedIn();
+      allow create: if verified() && request.resource.data.uid == request.auth.uid;
+      allow update: if isAdmin()
+        || (mine(resource.data.uid) && resource.data.status == 'pending' && request.resource.data.status == 'pending'
+            && changes(['quantity','tier','unitPrice','shipping','address','gift','addons','addonsTotal','total','deliveryNotes','eta','statusHistory','editedAt']))
+        || (mine(resource.data.uid) && resource.data.status == 'pending' && request.resource.data.status == 'cancelled'
+            && changes(['status','cancelReason','cancelledBy','statusHistory']))
+        || (mine(resource.data.uid) && changes(['reviewed','device','installation','statusHistory','deliveryRating']));
+      allow delete: if isAdmin();
+    }
+    match /waitlist/{id} { allow create: if true; allow read, update, delete: if isAdmin(); }
+
+    match /notifications/{id} {
+      allow create, delete: if isAdmin();
+      allow read: if isAdmin() || (signedIn() && resource.data.email == request.auth.token.email);
+      allow update: if signedIn() && resource.data.email == request.auth.token.email && changes(['read']);
+    }
+    match /releases/{id} { allow read: if true; allow write: if isAdmin(); }
+    match /emailLog/{id} {
+      allow create: if true;
+      allow read: if isAdmin() || (signedIn() && resource.data.to == request.auth.token.email);
+      allow delete: if isAdmin();
+    }
+    match /adminLog/{id} { allow read, write: if isAdmin(); }
+    match /customerMeta/{id} { allow read, write: if isAdmin(); }
+    match /feedback/{id} { allow create: if true; allow read, update, delete: if isAdmin(); }
+
+    match /reviews/{id} {
+      allow create: if verified() && request.resource.data.uid == request.auth.uid;
+      allow read: if isAdmin() || resource.data.featured == true || mine(resource.data.uid);
+      allow update, delete: if isAdmin();
+    }
+    match /stories/{id} {
+      allow create: if verified() && request.resource.data.uid == request.auth.uid && request.resource.data.status == 'pending';
+      allow read: if isAdmin() || resource.data.status == 'approved' || mine(resource.data.uid);
+      allow update, delete: if isAdmin();
+    }
+    match /ideas/{id} {
+      allow read: if true;
+      allow create: if verified() && request.resource.data.uid == request.auth.uid;
+      allow update: if isAdmin() || (signedIn() && changes(['votes', 'voters']));
+      allow delete: if isAdmin();
+    }
+    match /devices/{serial} {
+      allow create: if verified() && request.resource.data.uid == request.auth.uid;
+      allow read: if isAdmin() || mine(resource.data.uid);
+      allow update: if isAdmin() || (mine(resource.data.uid) && changes(['firmware','nickname','kitchen']));
+      allow delete: if isAdmin();
+    }
+    match /inventory/{id} { allow read, write: if isAdmin(); }
+    match /serialBatches/{id} { allow read, write: if isAdmin(); }
+    match /couponCodes/{id} { allow read, write: if isAdmin(); }
+    match /recycleBin/{id} { allow read, write: if isAdmin(); }
+    // public record: name, area, intro, rating. Phone numbers live in installerPrivate (admin only).
+    match /installers/{id} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    match /installerRatings/{id} {
+      allow read: if signedIn();
+      allow create: if verified() && request.resource.data.uid == request.auth.uid && request.resource.data.rating is int
+        && request.resource.data.rating >= 1 && request.resource.data.rating <= 5;
+      allow update, delete: if isAdmin();
+    }
+    match /adminRoles/{d} {
+      allow read: if isAdmin();
+      allow write: if isOwner();
+    }
+    // The Android app download details. Only people with a verified email can read them.
+    match /appRelease/{d} {
+      allow read: if verified();
+      allow write: if isAdmin();
+    }
+    match /installerPrivate/{id} { allow read, write: if isAdmin(); }
+    match /flagReviews/{id} { allow read, write: if isAdmin(); }
+    match /rmas/{id} {
+      allow read: if isAdmin() || mine(resource.data.uid);
+      allow write: if isAdmin();
+    }
+    match /refunds/{id} {
+      allow create: if verified() && request.resource.data.uid == request.auth.uid && request.resource.data.status == 'requested';
+      allow read: if isAdmin() || mine(resource.data.uid);
+      allow update, delete: if isAdmin();
+    }
+    match /voucherRequests/{id} {
+      allow create: if verified() && request.resource.data.uid == request.auth.uid && request.resource.data.status == 'requested'
+        && request.resource.data.amount is int && request.resource.data.amount >= 500 && request.resource.data.amount <= 50000;
+      allow read: if isAdmin() || mine(resource.data.uid);
+      allow update, delete: if isAdmin();
+    }
+    // The document id is the hash of the code, so a code can only be looked up by someone who has it. Nobody but admins can list them.
+    match /vouchers/{h} {
+      allow get: if verified();
+      allow list: if isAdmin();
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin() || (verified()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['balance', 'status', 'lastUsedAt', 'lastUsedBy'])
+        && request.resource.data.balance >= 0
+        && request.resource.data.balance < resource.data.balance);   // from the browser a balance can only go down; admins restore it
+    }
+    match /partOrders/{id} {
+      allow create: if verified() && request.resource.data.uid == request.auth.uid && request.resource.data.status == 'requested';
+      allow read: if isAdmin() || mine(resource.data.uid);
+      allow update, delete: if isAdmin();
+    }
+    match /tickets/{id} {
+      allow create: if verified() && request.resource.data.uid == request.auth.uid;
+      allow read: if isAdmin() || mine(resource.data.uid);
+      allow update: if isAdmin() || (mine(resource.data.uid) && changes(['lastMessage','status','unreadAdmin','unreadUser','updatedAt','csat','csatAt']));
+      allow delete: if isAdmin();
+      match /messages/{m} {
+        allow read: if isAdmin() || (signedIn() && get(/databases/$(database)/documents/tickets/$(id)).data.uid == request.auth.uid);
+        allow create: if isAdmin() || (verified() && get(/databases/$(database)/documents/tickets/$(id)).data.uid == request.auth.uid);
+      }
+    }
+    match /chats/{chatId} {
+      allow create, get, update: if true;          // visitors use their unguessable chat id
+      allow list: if isAdmin() || (signedIn() && resource.data.uid == request.auth.uid);
+      allow delete: if isAdmin();
+      match /messages/{m} { allow read, create: if true; }
+    }
+  }
+}
