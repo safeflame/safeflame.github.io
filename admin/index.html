@@ -1442,6 +1442,7 @@
 <!-- ─── FIREBASE ────────────────────────────────────── -->
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-functions-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
@@ -1476,7 +1477,7 @@
   async function loadAdminList() {
     adminListError = '';
     try { const d = await db.collection('settings').doc('admins').get(); extraAdmins = d.exists ? (d.data().emails || []).map(e => String(e).toLowerCase()) : []; }
-    catch (e) { adminListError = e.code || e.message || 'error'; }
+    catch (e) { adminListError = (e.code === 'permission-denied') ? '' : (e.code || e.message || 'error'); }   // permission-denied simply means: not an admin
   }
   const notAdminMessage = u => adminListError
     ? 'Signed in as ' + u.email + ', but the admin list could not be read (' + adminListError + '). Publish the latest firestore.rules from your download, then try again.'
@@ -5777,6 +5778,7 @@ var qrcode = function() {
   var $ = function (id) { return document.getElementById(id); };
   var h = function (s) { return axEsc(s); };
   X.$ = $; X.h = h; X.inr = axInr;
+  X.icons = {"promo": "<svg class=\"ic\" aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 12.5V4.5h8l9 9-8 8-9-9Z\"/><circle cx=\"8\" cy=\"9\" r=\"1.3\"/></svg>", "stock": "<svg class=\"ic\" aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 20V9l9-5 9 5v11\"/><path d=\"M7 20v-6h10v6M7 14h10M12 14v6\"/></svg>", "ship": "<svg class=\"ic\" aria-hidden=\"true\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 6h11v10H3zM14 9h4l3 3v4h-7\"/><circle cx=\"7\" cy=\"17.5\" r=\"1.8\"/><circle cx=\"17\" cy=\"17.5\" r=\"1.8\"/></svg>"};
   X.toast = function (m, t) { try { showToast(m, t || 'success'); } catch (_) { alert(m); } };
   X.log = function (a, t, d) { try { axLog(a, t || '', d || ''); } catch (_) {} };
 
@@ -5784,7 +5786,7 @@ var qrcode = function() {
   var firstOpen = {};
   X.addTab = function (key, label, html, beforeKey, onOpen) {
     var nav = $('tabNav'), before = nav.querySelector('[data-tab="' + beforeKey + '"]');
-    var btn = document.createElement('button'); btn.className = 'tab-btn'; btn.dataset.tab = key; btn.textContent = label;
+    var btn = document.createElement('button'); btn.className = 'tab-btn'; btn.dataset.tab = key; btn.innerHTML = (X.icons[key] || '') + ' ' + label;
     nav.insertBefore(btn, before);
     var panel = document.createElement('div'); panel.className = 'tab-panel'; panel.id = 'tab-' + key; panel.innerHTML = html;
     var host = $('tab-site').parentNode; host.insertBefore(panel, $('tab-site'));
@@ -6069,7 +6071,7 @@ var qrcode = function() {
     var b = $('invBody'); if (!b) return;
     var low = inv.filter(invLow).length;
     if ($('invChip')) $('invChip').textContent = low ? low + ' item' + (low === 1 ? '' : 's') + ' at or below reorder level' : (inv.length ? 'All stocked' : '');
-    var tabBtn = document.querySelector('.tab-btn[data-tab="stock"]'); if (tabBtn) tabBtn.innerHTML = 'Stock' + (low ? ' <span class="chat-badge" style="display:inline-block">' + low + '</span>' : '');
+    var tabBtn = document.querySelector('.tab-btn[data-tab="stock"]'); if (tabBtn) tabBtn.innerHTML = X.icons.stock + ' Stock' + (low ? ' <span class="chat-badge" style="display:inline-block">' + low + '</span>' : '');
     b.innerHTML = inv.length ? inv.slice().sort(function (a, c) { return (invLow(c) - invLow(a)) || String(a.name).localeCompare(c.name); }).map(function (i) {
       return '<tr><td><b>' + h(i.name) + '</b>' + (i.note ? '<div class="hint">' + h(i.note) + '</div>' : '') + '</td><td><button class="btn-small" data-inv="dec" data-id="' + h(i.id) + '">−</button> <b style="margin:0 .4rem">' + h(i.qty) + '</b> <button class="btn-small" data-inv="inc" data-id="' + h(i.id) + '">+</button></td><td>' + h(i.min || 0) + '</td><td>' + h(i.supplier || '—') + '</td><td>' + (invLow(i) ? '<span style="color:var(--red);font-weight:600">Reorder</span>' : 'OK') + '</td><td><button class="btn-small" data-inv="edit" data-id="' + h(i.id) + '">Edit</button> <button class="btn-small danger" data-inv="del" data-id="' + h(i.id) + '">Delete</button></td></tr>';
     }).join('') : '<tr><td colspan="6" class="hint">No items yet. Add the components you stock, such as MQ2 sensors, ESP32 boards, valves and displays.</td></tr>';
@@ -6260,31 +6262,32 @@ var qrcode = function() {
     var last = ''; setInterval(function () { if ($('tab-ship').classList.contains('active')) { var sig = orders().map(function (o) { return o.id + stOf(o) + (o.tracking || '') + (o.courier || ''); }).join('|'); if (sig !== last && !document.activeElement.classList.contains('sh-tr')) { last = sig; renderShip(); renderJobs(); } } }, 1500);
 
     /* ── installers ── */
-    var ins = [], ratings = [];
+    var ins = [], ratings = [], phones = {};
     var jobsOf = function (id) { return orders().filter(function (o) { return o.installation && o.installation.installerId === id; }).length; };
     var rateOf = function (id) { var r = ratings.filter(function (x) { return x.installerId === id; }); return { n: r.length, avg: r.length ? r.reduce(function (a, x) { return a + x.rating; }, 0) / r.length : 0 }; };
     var drawIns = function () {
-      $('inBody').innerHTML = ins.length ? ins.map(function (i) { var r = rateOf(i.id); return '<tr><td><b>' + h(i.name) + '</b><div class="hint">' + h(i.phone || '') + '</div></td><td>' + h((i.cities || []).join(', ')) + '<div class="hint">' + h((i.pins || []).join(', ')) + '</div></td><td>' + (r.n ? r.avg.toFixed(1) + ' ★ (' + r.n + ')' : '—') + '</td><td>' + jobsOf(i.id) + '</td><td>' + (i.active === false ? 'hidden' : 'active') + '</td><td><button class="btn-small" data-in="edit" data-id="' + h(i.id) + '">Edit</button> <button class="btn-small danger" data-in="del" data-id="' + h(i.id) + '">Delete</button></td></tr>'; }).join('') : '<tr><td colspan="6" class="hint">No installers yet.</td></tr>';
+      $('inBody').innerHTML = ins.length ? ins.map(function (i) { var r = rateOf(i.id); return '<tr><td><b>' + h(i.name) + '</b><div class="hint">' + h(phones[i.id] || '') + '</div></td><td>' + h((i.cities || []).join(', ')) + '<div class="hint">' + h((i.pins || []).join(', ')) + '</div></td><td>' + (r.n ? r.avg.toFixed(1) + ' ★ (' + r.n + ')' : '—') + '</td><td>' + jobsOf(i.id) + '</td><td>' + (i.active === false ? 'hidden' : 'active') + '</td><td><button class="btn-small" data-in="edit" data-id="' + h(i.id) + '">Edit</button> <button class="btn-small danger" data-in="del" data-id="' + h(i.id) + '">Delete</button></td></tr>'; }).join('') : '<tr><td colspan="6" class="hint">No installers yet.</td></tr>';
     };
     var syncRatings = async function () {   // keep the public rating summary on each installer up to date
       ins.forEach(function (i) { var r = rateOf(i.id); if ((i.ratingCount || 0) !== r.n || Math.abs((i.ratingAvg || 0) - r.avg) > 0.01) db.collection('installers').doc(i.id).update({ ratingCount: r.n, ratingAvg: Math.round(r.avg * 10) / 10 }).catch(function () {}); });
     };
     db.collection('installers').onSnapshot(function (s) { ins = s.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }); drawIns(); renderJobs(); syncRatings(); }, function () {});
     db.collection('installerRatings').onSnapshot(function (s) { ratings = s.docs.map(function (d) { return d.data(); }); drawIns(); syncRatings(); }, function () {});
+    db.collection('installerPrivate').onSnapshot(function (s) { phones = {}; s.forEach(function (d) { phones[d.id] = d.data().phone || ''; }); drawIns(); }, function () {});
     $('inAdd').onclick = function () { insForm(); };
     function insForm(i) {
       i = i || {};
       axOpen('<div class="ax-head"><h2>' + (i.id ? 'Edit installer' : 'Add installer') + '</h2><button class="btn-small" id="axX">Close</button></div>' +
-        field('inName', 'Name or company', 'maxlength="60" value="' + h(i.name || '') + '"') + field('inPhone', 'Phone (shown only to you)', 'maxlength="20" value="' + h(i.phone || '') + '"') +
+        field('inName', 'Name or company', 'maxlength="60" value="' + h(i.name || '') + '"') + field('inPhone', 'Phone (kept private, only admins can read it)', 'maxlength="20" value="' + h(phones[i.id] || '') + '"') +
         field('inCities', 'Cities covered (comma separated)', 'value="' + h((i.cities || []).join(', ')) + '"') + field('inPins', 'PIN codes or PIN prefixes covered (comma separated, e.g. 682, 683101)', 'value="' + h((i.pins || []).join(', ')) + '"') +
         '<div class="field"><label>Short intro customers will see</label><textarea class="search-input" id="inBio" rows="3" maxlength="240">' + h(i.bio || '') + '</textarea></div><label class="ax-chk"><input type="checkbox" id="inOn" ' + (i.active === false ? '' : 'checked') + '> Visible to customers</label>' +
         '<div class="ax-actions"><button class="btn-small primary" id="inSave">Save</button></div>');
       $('axX').onclick = axClose;
       $('inSave').onclick = async function () {
         var list = function (id) { return $(id).value.split(',').map(function (x) { return x.trim(); }).filter(Boolean); };
-        var d = { name: $('inName').value.trim(), phone: $('inPhone').value.trim(), cities: list('inCities'), pins: list('inPins').filter(function (p) { return /^\d{3,6}$/.test(p); }), bio: $('inBio').value.trim(), active: $('inOn').checked };
+        var phone = $('inPhone').value.trim(), d = { name: $('inName').value.trim(), cities: list('inCities'), pins: list('inPins').filter(function (p) { return /^\d{3,6}$/.test(p); }), bio: $('inBio').value.trim(), active: $('inOn').checked };
         if (!d.name) return X.toast('Add a name.', 'error'); if (!d.cities.length && !d.pins.length) return X.toast('Add at least a city or PIN code.', 'error');
-        try { if (i.id) await db.collection('installers').doc(i.id).update(d); else await db.collection('installers').add(Object.assign(d, { ratingAvg: 0, ratingCount: 0, createdAt: Date.now() })); X.log('installer.' + (i.id ? 'edit' : 'add'), d.name, ''); axClose(); } catch (e) { X.toast('Could not save: ' + (e.message || ''), 'error'); }
+        try { var iid = i.id; if (iid) await db.collection('installers').doc(iid).update(Object.assign(d, { phone: firebase.firestore.FieldValue.delete() })); else { var ref = await db.collection('installers').add(Object.assign(d, { ratingAvg: 0, ratingCount: 0, createdAt: Date.now() })); iid = ref.id; } await db.collection('installerPrivate').doc(iid).set({ phone: phone }); X.log('installer.' + (i.id ? 'edit' : 'add'), d.name, ''); axClose(); } catch (e) { X.toast('Could not save: ' + (e.message || ''), 'error'); }
       };
     }
     $('inBody').addEventListener('click', async function (e) {
@@ -6316,6 +6319,513 @@ var qrcode = function() {
   }
   function renderJobs() { /* replaced once the Shipping tab has opened */ }
   X.addTab('ship', 'Shipping', shipHtml, 'site', shipOpen);
+})();
+</script>
+<script>
+/* SafeFlame AI admin, part 3: Service tab (warranty RMA, refunds, risk flags), vouchers, certificates + launch mode, order tags and saved views.
+   N6 vouchers (admin) · N7 refunds (admin) · N11 warranty claims dashboard · N12 returns / RMA · N14 risk flags · N18 tags + saved views · N22 launch mode · N24 certificates */
+(function () {
+  'use strict';
+  var X = window.SFX; if (!X) return;
+  var $ = X.$, h = X.h, inr = X.inr;
+  var orders = function () { return typeof prebookData !== 'undefined' ? prebookData : []; };
+  var stOf = function (o) { return String(o.status || 'pending').toLowerCase(); };
+  var ms = function (t) { try { return axMs(t); } catch (_) { return Number(t) || 0; } };
+  var svg = function (d) { return '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
+  X.icons.service = svg('<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>');
+  var field = function (id, label, extra) { return '<div class="field"><label>' + label + '</label><input class="search-input" id="' + id + '" ' + (extra || '') + '></div>'; };
+  var shash = function (str) { var x = 5381; for (var i = 0; i < str.length; i++) x = ((x << 5) + x + str.charCodeAt(i)) | 0; return (x >>> 0).toString(16); };
+  var sha = function (pfx, code) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode(pfx + String(code).trim().toUpperCase())).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return x.toString(16).padStart(2, '0'); }).join(''); }); };
+  var notify = function (to, title, body, orderId) { try { axNotify({ email: to.email, uid: to.uid || null, type: 'order', orderId: orderId || '', title: title, body: body }); } catch (_) {} };
+
+  /* ══════════ N14 risk flags (computed in the browser from the orders you already load) ══════════ */
+  var reviewed = {}, flagCache = { sig: '', data: { byOrder: {}, groups: [] } };
+  var normEmail = function (e) { e = String(e || '').toLowerCase().trim(); var p = e.split('@'); if (p.length !== 2) return e; if (/^(gmail|googlemail)\./.test(p[1])) p[0] = p[0].split('+')[0].replace(/\./g, ''); return p[0] + '@' + p[1].replace('googlemail.com', 'gmail.com'); };
+  var normPhone = function (p) { return String(p || '').replace(/\D/g, '').slice(-10); };
+  var normAddr = function (o) { var a = o.shipping || {}; return (String(a.line1 || o.address || '').toLowerCase().replace(/[^a-z0-9]/g, '') + String(a.pin || '')).slice(0, 80); };
+  function computeFlags() {
+    var list = orders(), sig = list.map(function (o) { return o.id + stOf(o) + (o.phone || '') + (o.email || ''); }).join('|') + Object.keys(reviewed).length;
+    if (sig === flagCache.sig) return flagCache.data;
+    var groups = [], by = {};
+    var add = function (kind, reason, ids) { var key = kind + ':' + ids.slice().sort().join(','); if (reviewed[shash(key)]) return; groups.push({ key: key, reason: reason, ids: ids }); ids.forEach(function (id) { (by[id] = by[id] || []).push(reason); }); };
+    var bucket = function (fn) { var m = {}; list.forEach(function (o) { var k = fn(o); if (k) (m[k] = m[k] || []).push(o); }); return m; };
+    var distinct = function (arr, fn) { var s = {}; arr.forEach(function (o) { s[fn(o)] = 1; }); return Object.keys(s).length; };
+    var phone = bucket(function (o) { var p = normPhone(o.phone); return p.length === 10 ? p : ''; });
+    Object.keys(phone).forEach(function (k) { var g = phone[k]; if (g.length > 1 && distinct(g, function (o) { return normEmail(o.email); }) > 1) add('phone', 'Same phone number on different emails', g.map(function (o) { return o.id; })); });
+    var addr = bucket(function (o) { var a = normAddr(o); return a.length > 8 ? a : ''; });
+    Object.keys(addr).forEach(function (k) { var g = addr[k]; if (g.length > 1 && distinct(g, function (o) { return normEmail(o.email); }) > 1) add('addr', 'Same delivery address on different emails', g.map(function (o) { return o.id; })); });
+    var mail = bucket(function (o) { return normEmail(o.email); });
+    Object.keys(mail).forEach(function (k) { var g = mail[k]; if (g.length > 1 && distinct(g, function (o) { return String(o.email || '').toLowerCase(); }) > 1) add('mail', 'Same Gmail address written in different ways', g.map(function (o) { return o.id; })); });
+    var cp = bucket(function (o) { return o.coupon && o.coupon.h ? o.coupon.h : ''; });
+    Object.keys(cp).forEach(function (k) { var g = cp[k], linked = g.filter(function (o) { var f = by[o.id]; return f && f.length; }); if (linked.length > 1) add('cp', 'Coupon ' + (g[0].coupon.code || '') + ' used by linked accounts', linked.map(function (o) { return o.id; })); });
+    var canc = bucket(function (o) { return stOf(o) === 'cancelled' ? normEmail(o.email) : ''; });
+    Object.keys(canc).forEach(function (k) { if (canc[k].length >= 3) add('canc', 'Three or more cancelled orders from one customer', canc[k].map(function (o) { return o.id; })); });
+    flagCache = { sig: sig, data: { byOrder: by, groups: groups } };
+    return flagCache.data;
+  }
+
+  /* ══════════ N18 tags + saved views ══════════ */
+  var PRESET_TAGS = ['gift', 'needs installer', 'urgent', 'vip', 'call back', 'fraud check'];
+  var tagFilter = '';
+  function chipsFor(o) {
+    var out = '', tags = o.tags || [];
+    out += tags.map(function (t) { return ' <span class="sfx-tag" data-sfx-tag="' + h(t) + '" data-id="' + h(o.id) + '" title="Click to remove" style="display:inline-block;background:rgba(255,87,34,.14);color:var(--flame-light,#ff8a65);border-radius:999px;padding:.05rem .5rem;font-size:.68rem;cursor:pointer">' + h(t) + ' ×</span>'; }).join('');
+    var fl = computeFlags().byOrder[o.id];
+    if (fl && fl.length) out += ' <span class="sfx-flag" data-sfx-flag="' + h(o.id) + '" title="' + h(fl.join('; ')) + '" style="display:inline-block;background:rgba(239,83,80,.16);color:#ef9a9a;border-radius:999px;padding:.05rem .5rem;font-size:.68rem;cursor:pointer">review</span>';
+    out += ' <button type="button" class="sfx-addtag" data-id="' + h(o.id) + '" style="background:none;border:1px dashed var(--border);color:var(--muted);border-radius:999px;font-size:.68rem;padding:.02rem .45rem;cursor:pointer">+ tag</button>';
+    return out;
+  }
+  function decorateRows() {
+    var table = $('prebookTable'); if (!table) return;
+    var ths = Array.prototype.map.call(table.querySelectorAll('thead th'), function (th) { return th.textContent.trim().toLowerCase(); }), ni = ths.findIndex(function (t) { return t.indexOf('name') === 0 || t.indexOf('customer') === 0; }); if (ni < 0) ni = 3;
+    table.querySelectorAll('tbody tr').forEach(function (tr) {
+      var sel = tr.querySelector('.status-select'); if (!sel) return; var o = orders().filter(function (x) { return x.id === sel.dataset.id; })[0]; if (!o) return;
+      var td = tr.children[ni]; if (!td) return;
+      var sig = (o.tags || []).join(',') + '|' + ((computeFlags().byOrder[o.id] || []).length);
+      var box = td.querySelector('.sfx-chips');
+      if (box && box.dataset.sig === sig) return;
+      if (!box) { box = document.createElement('div'); box.className = 'sfx-chips'; box.style.marginTop = '.2rem'; td.appendChild(box); }
+      box.dataset.sig = sig; box.innerHTML = chipsFor(o);
+    });
+  }
+  function tagModal(o) {
+    axOpen('<div class="ax-head"><h2>Tag order #' + h(orderNumberFor(o)) + '</h2><button class="btn-small" id="axX">Close</button></div>' +
+      '<div class="ax-line" style="flex-wrap:wrap;gap:.4rem">' + PRESET_TAGS.map(function (t) { return '<button class="btn-small sfx-preset" data-t="' + h(t) + '" type="button">' + h(t) + '</button>'; }).join('') + '</div>' +
+      field('tgNew', 'Or type your own', 'maxlength="24" placeholder="e.g. kochi hub"') + '<div class="ax-actions"><button class="btn-small primary" id="tgAdd" type="button">Add tag</button></div>');
+    $('axX').onclick = axClose;
+    var add = async function (t) { t = String(t || '').trim().toLowerCase().replace(/[^a-z0-9 \-]/g, '').slice(0, 24); if (!t) return; try { await db.collection('preBookings').doc(o.id).update({ tags: firebase.firestore.FieldValue.arrayUnion(t) }); axClose(); } catch (e) { X.toast('Could not add tag.', 'error'); } };
+    document.querySelectorAll('.sfx-preset').forEach(function (b) { b.onclick = function () { add(b.dataset.t); }; });
+    $('tgAdd').onclick = function () { add($('tgNew').value); };
+  }
+  document.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-sfx-tag]'), a = e.target.closest('.sfx-addtag'), f = e.target.closest('[data-sfx-flag]');
+    if (!t && !a && !f) return; e.stopPropagation();
+    var id = (t || a || f).dataset.id || (f && f.dataset.sfxFlag), o = orders().filter(function (x) { return x.id === id; })[0]; if (!o) return;
+    if (t) db.collection('preBookings').doc(id).update({ tags: firebase.firestore.FieldValue.arrayRemove(t.dataset.sfxTag) }).catch(function () { X.toast('Could not remove tag.', 'error'); });
+    else if (a) tagModal(o);
+    else { document.querySelector('.tab-btn[data-tab="service"]').click(); }
+  }, true);
+  var viewsDocId = function () { return 'adminViews-' + ((auth.currentUser || {}).uid || 'x'); };
+  var views = [];
+  async function loadViews() { try { var d = await db.collection('settings').doc(viewsDocId()).get(); views = d.exists ? (d.data().views || []) : []; } catch (_) { views = []; } drawViews(); }
+  function drawViews() {
+    var sel = $('sfxViews'); if (!sel) return;
+    sel.innerHTML = '<option value="">Saved views</option>' + views.map(function (v, i) { return '<option value="' + i + '">' + h(v.name) + '</option>'; }).join('') + '<option value="__save">Save current view…</option>' + (views.length ? '<option value="__del">Delete a view…</option>' : '');
+  }
+  function applyFilters(v) {
+    $('prebookSearch').value = v.search || ''; $('prebookStatusFilter').value = v.status || 'all'; tagFilter = v.tag || ''; if ($('sfxTagFilter')) $('sfxTagFilter').value = tagFilter;
+    $('prebookSearch').dispatchEvent(new Event('input', { bubbles: true })); $('prebookStatusFilter').dispatchEvent(new Event('change', { bubbles: true })); hideByTag();
+  }
+  function installOrderTools() {
+    var bar = document.querySelector('#tab-orders .panel-actions'); if (!bar || $('sfxTagFilter')) return;
+    var tf = document.createElement('select'); tf.id = 'sfxTagFilter'; tf.className = 'filter-select'; tf.innerHTML = '<option value="">All tags</option>';
+    var vs = document.createElement('select'); vs.id = 'sfxViews'; vs.className = 'filter-select';
+    bar.insertBefore(tf, $('exportPrebooks')); bar.insertBefore(vs, $('exportPrebooks'));
+    tf.onchange = function () { tagFilter = tf.value; hideByTag(); };
+    vs.onchange = async function () {
+      var v = vs.value; vs.value = '';
+      if (v === '__save') { var name = prompt('Name this view (it keeps the current search, status and tag):'); if (!name) return; views = views.filter(function (x) { return x.name !== name.trim(); }).concat([{ name: name.trim().slice(0, 30), search: $('prebookSearch').value, status: $('prebookStatusFilter').value, tag: tagFilter }]).slice(-12); try { await db.collection('settings').doc(viewsDocId()).set({ views: views }); } catch (e) { X.toast('Could not save the view.', 'error'); } drawViews(); }
+      else if (v === '__del') { var n = prompt('Delete which view? Type its name:\n' + views.map(function (x) { return x.name; }).join(', ')); if (!n) return; views = views.filter(function (x) { return x.name !== n.trim(); }); try { await db.collection('settings').doc(viewsDocId()).set({ views: views }); } catch (e) {} drawViews(); }
+      else if (v !== '') applyFilters(views[Number(v)]);
+    };
+    loadViews();
+  }
+  function refreshTagOptions() {
+    var tf = $('sfxTagFilter'); if (!tf) return; var all = {}; orders().forEach(function (o) { (o.tags || []).forEach(function (t) { all[t] = 1; }); });
+    var keys = Object.keys(all).sort(), cur = tagFilter; tf.innerHTML = '<option value="">All tags</option>' + keys.map(function (t) { return '<option' + (t === cur ? ' selected' : '') + ' value="' + h(t) + '">' + h(t) + '</option>'; }).join('');
+  }
+  function hideByTag() {
+    document.querySelectorAll('#prebookTable tbody tr').forEach(function (tr) {
+      if (!tagFilter) { tr.style.display = ''; return; }
+      var sel = tr.querySelector('.status-select'), o = sel && orders().filter(function (x) { return x.id === sel.dataset.id; })[0];
+      tr.style.display = o && (o.tags || []).indexOf(tagFilter) >= 0 ? '' : 'none';
+    });
+  }
+  var mo = new MutationObserver(function () { clearTimeout(mo.t); mo.t = setTimeout(function () { installOrderTools(); decorateRows(); refreshTagOptions(); hideByTag(); }, 150); });
+  mo.observe(document.querySelector('main') || document.body, { childList: true, subtree: true });
+
+  /* ══════════ SERVICE TAB ══════════ */
+  var serviceHtml =
+    '<div class="panel"><div class="panel-header"><h2>Warranty claims and returns (RMA)</h2><span class="hint">Claims arrive from customers as tickets with the device serial. Open an RMA to track the repair or replacement.</span></div>' +
+    '<div class="table-scroll"><table><thead><tr><th>Device</th><th>Customer</th><th>Problem</th><th>Warranty</th><th>Ticket</th><th>RMA stage</th><th></th></tr></thead><tbody id="svBody"></tbody></table></div></div>' +
+    '<div class="panel"><div class="panel-header"><h2>Refund requests</h2><span class="hint" id="rfChip"></span></div><div class="table-scroll"><table><thead><tr><th>Order</th><th>Customer</th><th>Amount</th><th>Reason</th><th>Method</th><th>Status</th><th></th></tr></thead><tbody id="rfBody"></tbody></table></div></div>' +
+    '<div class="panel"><div class="panel-header"><h2>Orders to review</h2><span class="hint">Patterns that can mean duplicate accounts or coupon abuse. These are prompts to look, not proof.</span></div><div class="table-scroll"><table><thead><tr><th>Why it was flagged</th><th>Orders</th><th></th></tr></thead><tbody id="flBody"></tbody></table></div></div>';
+
+  var STAGES = [['requested', 'Requested'], ['awaiting_device', 'Waiting for the device'], ['received', 'Device received'], ['testing', 'Testing'], ['repaired', 'Repaired'], ['replaced', 'Replaced'], ['rejected', 'Not covered'], ['shipped_back', 'Shipped back'], ['closed', 'Closed']];
+  var stageName = function (k) { var s = STAGES.filter(function (x) { return x[0] === k; })[0]; return s ? s[1] : k; };
+  var tickets = [], rmas = {}, refunds = [], inv = [];
+  function claimTickets() { return tickets.filter(function (t) { return t.deviceSerial; }).sort(function (a, b) { return ms(b.createdAt) - ms(a.createdAt); }); }
+  function drawService() {
+    var b = $('svBody'); if (!b) return;
+    var list = claimTickets();
+    b.innerHTML = list.length ? list.map(function (t) {
+      var r = rmas[t.id], left = t.warrantyEnds ? Math.ceil((t.warrantyEnds - Date.now()) / 864e5) : null;
+      return '<tr><td><b>' + h(t.deviceSerial) + '</b></td><td>' + h(t.name) + '<div class="hint">' + h(t.email) + '</div></td><td>' + h(t.lastMessage || t.subject) + '</td><td>' + (t.inWarranty === false || (left !== null && left <= 0) ? '<span style="color:var(--red)">ended</span>' : (left !== null ? left + ' days left' : 'in warranty')) + '</td><td>' + h(t.status) + '</td><td>' + (r ? '<b>' + h(stageName(r.stage)) + '</b><div class="hint">' + h(r.type || '') + '</div>' : '<span class="hint">no RMA yet</span>') + '</td><td><button class="btn-small primary" data-rma="' + h(t.id) + '">' + (r ? 'Manage RMA' : 'Open RMA') + '</button></td></tr>';
+    }).join('') : '<tr><td colspan="7" class="hint">No warranty claims yet.</td></tr>';
+    var rb = $('rfBody'), open = refunds.filter(function (r) { return r.status !== 'refunded' && r.status !== 'rejected'; }).length;
+    $('rfChip').textContent = open ? open + ' open' : (refunds.length ? 'None open' : '');
+    rb.innerHTML = refunds.length ? refunds.sort(function (a, c) { return ms(c.createdAt) - ms(a.createdAt); }).map(function (r) { return '<tr><td><b>#' + h(r.orderNumber) + '</b></td><td>' + h(r.name) + '<div class="hint">' + h(r.email) + '</div></td><td>' + inr(r.amount) + '</td><td>' + h(r.reason) + '<div class="hint">' + h(r.details) + '</div></td><td>' + h(r.method) + '</td><td>' + h(r.status) + '</td><td><button class="btn-small primary" data-rf="' + h(r.id) + '">Update</button></td></tr>'; }).join('') : '<tr><td colspan="7" class="hint">No refund requests.</td></tr>';
+    var fg = computeFlags().groups;
+    $('flBody').innerHTML = fg.length ? fg.map(function (g, i) { return '<tr><td>' + h(g.reason) + '</td><td>' + g.ids.map(function (id) { var o = orders().filter(function (x) { return x.id === id; })[0]; return o ? '<button class="btn-small" data-ord="' + h(id) + '">#' + h(orderNumberFor(o)) + ' ' + h(o.name) + '</button>' : ''; }).join(' ') + '</td><td><button class="btn-small" data-dismiss="' + i + '">Looks fine</button></td></tr>'; }).join('') : '<tr><td colspan="3" class="hint">Nothing to review.</td></tr>';
+    var tb = document.querySelector('.tab-btn[data-tab="service"]'); if (tb) { var n = open + fg.length; tb.innerHTML = X.icons.service + ' Service' + (n ? ' <span class="chat-badge" style="display:inline-block">' + n + '</span>' : ''); }
+  }
+  function rmaModal(t) {
+    var r = rmas[t.id] || {}, parts = r.parts || [];
+    axOpen('<div class="ax-head"><h2>RMA · ' + h(t.deviceSerial) + '</h2><button class="btn-small" id="axX">Close</button></div>' +
+      '<p class="hint">' + h(t.name) + ' · ' + h(t.email) + ' · ' + h(t.subject) + '</p>' +
+      '<div class="ax-line"><div class="field" style="flex:1"><label>Type</label><select class="filter-select" id="rmType"><option value="repair">Repair</option><option value="replace">Replace</option></select></div><div class="field" style="flex:1"><label>Stage</label><select class="filter-select" id="rmStage">' + STAGES.map(function (s) { return '<option value="' + s[0] + '">' + s[1] + '</option>'; }).join('') + '</select></div></div>' +
+      field('rmRep', 'Replacement serial (if replaced)', 'maxlength="24" value="' + h(r.replacementSerial || '') + '"') +
+      '<div class="field"><label>Note the customer will see</label><textarea class="search-input" id="rmPub" rows="2" maxlength="300">' + h(r.publicNote || '') + '</textarea></div>' +
+      '<div class="field"><label>Internal note</label><textarea class="search-input" id="rmInt" rows="2" maxlength="400">' + h(r.internalNote || '') + '</textarea></div>' +
+      '<div class="ax-sec">Parts used</div><div id="rmParts">' + (parts.length ? parts.map(function (p) { return '<div class="ax-row"><span>' + h(p.name) + ' × ' + p.qty + '</span><span class="hint">taken from stock</span></div>'; }).join('') : '<div class="hint">None yet.</div>') + '</div>' +
+      '<div class="ax-line"><select class="filter-select" id="rmPart" style="flex:1"><option value="">Add a part from inventory…</option>' + inv.map(function (i) { return '<option value="' + h(i.id) + '">' + h(i.name) + ' (' + i.qty + ' in stock)</option>'; }).join('') + '</select><input class="search-input" id="rmQty" type="number" min="1" value="1" style="max-width:70px"><button class="btn-small" id="rmAddPart" type="button">Add and deduct</button></div>' +
+      '<div class="ax-actions"><button class="btn-small primary" id="rmSave" type="button">Save RMA</button></div>');
+    $('rmType').value = r.type || 'repair'; $('rmStage').value = r.stage || 'requested'; $('axX').onclick = axClose;
+    $('rmAddPart').onclick = async function () {
+      var id = $('rmPart').value, q = Math.max(1, Math.floor(Number($('rmQty').value) || 1)), it = inv.filter(function (x) { return x.id === id; })[0]; if (!it) return X.toast('Choose a part first.', 'error');
+      if (Number(it.qty) < q && !confirm('Only ' + it.qty + ' in stock. Deduct ' + q + ' anyway?')) return;
+      try {
+        await db.collection('inventory').doc(id).update({ qty: Math.max(0, Number(it.qty) - q), updatedAt: Date.now() });
+        await db.collection('rmas').doc(t.id).set({ parts: firebase.firestore.FieldValue.arrayUnion({ id: id, name: it.name, qty: q, at: Date.now() }), serial: t.deviceSerial, ticketId: t.id, uid: t.uid, email: t.email, updatedAt: Date.now() }, { merge: true });
+        X.log('rma.part', t.deviceSerial, it.name + ' x' + q); X.toast('Added and deducted from inventory.'); axClose();
+      } catch (e) { X.toast('Could not add: ' + (e.message || ''), 'error'); }
+    };
+    $('rmSave').onclick = async function () {
+      var st = $('rmStage').value, d = { serial: t.deviceSerial, ticketId: t.id, orderId: t.orderId || '', uid: t.uid, email: t.email, name: t.name || '', type: $('rmType').value, stage: st, replacementSerial: $('rmRep').value.trim().toUpperCase(), publicNote: $('rmPub').value.trim(), internalNote: $('rmInt').value.trim(), updatedAt: Date.now() };
+      if (!r.createdAt) d.createdAt = Date.now();
+      if (r.stage !== st) d.timeline = firebase.firestore.FieldValue.arrayUnion({ stage: st, at: Date.now(), by: axWho(), note: d.publicNote });
+      try {
+        await db.collection('rmas').doc(t.id).set(d, { merge: true });
+        if (r.stage !== st) notify(t, 'Warranty claim update: ' + stageName(st), d.publicNote || 'Your warranty claim for ' + t.deviceSerial + ' is now: ' + stageName(st) + '.', t.orderId);
+        X.log('rma.' + st, t.deviceSerial, d.type); axClose(); X.toast('RMA saved.');
+      } catch (e) { X.toast('Could not save: ' + (e.message || ''), 'error'); }
+    };
+  }
+  var RF = [['requested', 'Requested'], ['reviewing', 'Under review'], ['approved', 'Approved'], ['refunded', 'Refunded'], ['rejected', 'Not approved']];
+  function refundModal(r) {
+    axOpen('<div class="ax-head"><h2>Refund · order #' + h(r.orderNumber) + '</h2><button class="btn-small" id="axX">Close</button></div><p class="hint">' + inr(r.amount) + ' · ' + h(r.name) + ' · wants: ' + h(r.method) + '</p><p class="hint">' + h(r.reason) + ': ' + h(r.details) + '</p>' +
+      '<div class="field"><label>Status</label><select class="filter-select" id="rfSt">' + RF.map(function (s) { return '<option value="' + s[0] + '">' + s[1] + '</option>'; }).join('') + '</select></div>' +
+      '<div class="field"><label>Note the customer will see</label><textarea class="search-input" id="rfNote" rows="2" maxlength="300"></textarea></div><div class="ax-actions"><button class="btn-small primary" id="rfSave" type="button">Save</button></div>');
+    $('rfSt').value = r.status; $('axX').onclick = axClose;
+    $('rfSave').onclick = async function () {
+      var st = $('rfSt').value, note = $('rfNote').value.trim();
+      try { await db.collection('refunds').doc(r.id).update({ status: st, updatedAt: Date.now(), timeline: firebase.firestore.FieldValue.arrayUnion({ status: st, at: Date.now(), by: axWho(), note: note }) });
+        if (st !== r.status) notify(r, 'Refund ' + (RF.filter(function (x) { return x[0] === st; })[0] || ['', st])[1].toLowerCase() + ': order #' + r.orderNumber, note || 'Your refund request is now: ' + st + '.', r.orderId);
+        X.log('refund.' + st, '#' + r.orderNumber, inr(r.amount)); axClose(); } catch (e) { X.toast('Could not save: ' + (e.message || ''), 'error'); }
+    };
+  }
+  function serviceOpen() {
+    db.collection('tickets').onSnapshot(function (s) { tickets = s.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }); drawService(); }, function () {});
+    db.collection('rmas').onSnapshot(function (s) { rmas = {}; s.forEach(function (d) { rmas[d.id] = Object.assign({ id: d.id }, d.data()); }); drawService(); }, function () {});
+    db.collection('refunds').onSnapshot(function (s) { refunds = s.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }); drawService(); }, function () {});
+    db.collection('inventory').onSnapshot(function (s) { inv = s.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }); }, function () {});
+    db.collection('flagReviews').onSnapshot(function (s) { reviewed = {}; s.forEach(function (d) { reviewed[d.id] = 1; }); drawService(); }, function () {});
+    $('tab-service').addEventListener('click', async function (e) {
+      var a = e.target.closest('[data-rma]'), b = e.target.closest('[data-rf]'), o = e.target.closest('[data-ord]'), d = e.target.closest('[data-dismiss]');
+      if (a) { var t = tickets.filter(function (x) { return x.id === a.dataset.rma; })[0]; if (t) rmaModal(t); }
+      else if (b) { var r = refunds.filter(function (x) { return x.id === b.dataset.rf; })[0]; if (r) refundModal(r); }
+      else if (o) { try { axOrderDrawer(o.dataset.ord); } catch (_) {} }
+      else if (d) { var g = computeFlags().groups[Number(d.dataset.dismiss)]; if (g) try { await db.collection('flagReviews').doc(shash(g.key)).set({ key: g.key, reason: g.reason, by: axWho(), at: Date.now() }); } catch (err) { X.toast('Could not save.', 'error'); } }
+    });
+    setInterval(function () { if ($('tab-service').classList.contains('active')) drawService(); }, 4000);
+  }
+  X.addTab('service', 'Service', serviceHtml, 'site', serviceOpen);
+  // keep the review badge fresh even before the Service tab is opened
+  try { auth.onAuthStateChanged(function (u) { if (u) setTimeout(function () { if (!$('tab-service').dataset.started) { $('tab-service').dataset.started = '1'; db.collection('flagReviews').get().then(function (s) { s.forEach(function (d) { reviewed[d.id] = 1; }); drawService(); }).catch(function () {}); } }, 2500); }); } catch (_) {}
+
+  /* ══════════ PROMOS TAB add-ons: vouchers, certificates, launch mode ══════════ */
+  function randomCode() { var A = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789', b = new Uint8Array(8); crypto.getRandomValues(b); var s = Array.prototype.map.call(b, function (x) { return A[x % A.length]; }).join(''); return 'GV-' + s.slice(0, 4) + '-' + s.slice(4); }
+  var promo = $('tab-promo');
+  var vReqs = [], vouchers = [];
+  var addon = document.createElement('div');
+  addon.innerHTML =
+    '<div class="panel" style="margin-top:1rem"><div class="panel-header"><h2>Gift vouchers</h2><span class="hint">Customers request one, you take payment, then issue the code here.</span></div>' +
+    '<div class="ax-sec">Requests</div><div class="table-scroll"><table><thead><tr><th>From</th><th>Amount</th><th>For</th><th>Status</th><th></th></tr></thead><tbody id="vrBody"></tbody></table></div>' +
+    '<div class="ax-sec">Vouchers</div><div class="ax-line"><button class="btn-small primary" id="vnNew" type="button">+ Create a voucher</button></div>' +
+    '<div class="table-scroll"><table><thead><tr><th>Code</th><th>Balance</th><th>Expires</th><th>Status</th><th></th></tr></thead><tbody id="vcBody"></tbody></table></div></div>' +
+    '<div class="settings-grid" style="margin-top:1rem"><div class="settings-group"><h3>Launch mode</h3><p class="hint">Automatic switches the homepage to “we are open” when the launch date passes (set the date under Site).</p><div class="field"><select class="filter-select" id="lmMode"><option value="auto">Automatic (by launch date)</option><option value="prelaunch">Always show the countdown</option><option value="live">Open now</option></select></div><div class="ax-line"><button class="btn-small primary" id="lmSave" type="button">Save</button><span class="hint" id="lmMsg"></span></div></div>' +
+    '<div class="settings-group"><h3>Certifications and test reports</h3><p class="hint">Shown on the Safety page. Only list what you really hold. Use “in progress” for anything not finished.</p><div id="ctRows"></div><div class="ax-line"><button class="btn-small" id="ctAdd" type="button">+ Add</button><button class="btn-small primary" id="ctSave" type="button">Save</button><span class="hint" id="ctMsg"></span></div></div></div>';
+  promo.appendChild(addon);
+  var voucherMsg = function (code, amount, exp, to) { return 'Hi' + (to ? ' ' + to : '') + ', here is your SafeFlame AI gift voucher.\nCode: ' + code + '\nValue: ' + inr(amount) + (exp ? '\nValid until: ' + axDate(exp) : '') + '\nUse it at checkout on ' + location.origin + '/prebook'; };
+  function drawVouchers() {
+    if (!$('vrBody')) return;
+    $('vrBody').innerHTML = vReqs.length ? vReqs.map(function (r) { return '<tr><td>' + h(r.name) + '<div class="hint">' + h(r.email) + '</div></td><td>' + inr(r.amount) + '</td><td>' + h(r.recipientName || '') + '<div class="hint">' + h(r.recipientEmail || '') + '</div></td><td>' + h(r.status) + (r.issuedCode ? '<div class="hint">' + h(r.issuedCode) + '</div>' : '') + '</td><td>' + (r.status === 'requested' ? '<button class="btn-small primary" data-vi="' + h(r.id) + '">Issue voucher</button> <button class="btn-small danger" data-vx="' + h(r.id) + '">Decline</button>' : '') + '</td></tr>'; }).join('') : '<tr><td colspan="5" class="hint">No requests.</td></tr>';
+    $('vcBody').innerHTML = vouchers.length ? vouchers.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); }).map(function (v) { return '<tr><td><b>' + h(v.code) + '</b><div class="hint">' + h(v.buyerEmail || v.note || '') + '</div></td><td>' + inr(v.balance) + ' <span class="hint">of ' + inr(v.amount) + '</span></td><td>' + (v.expiresAt ? axDate(v.expiresAt) : '-') + '</td><td>' + h(v.status) + '</td><td><button class="btn-small" data-vm="' + h(v.id) + '">Copy message</button> <button class="btn-small" data-va="' + h(v.id) + '">Adjust</button> <button class="btn-small ' + (v.status === 'void' ? '' : 'danger') + '" data-vv="' + h(v.id) + '">' + (v.status === 'void' ? 'Reinstate' : 'Void') + '</button></td></tr>'; }).join('') : '<tr><td colspan="5" class="hint">No vouchers yet.</td></tr>';
+  }
+  async function issue(amount, months, extra) {
+    var code = randomCode(), hash = await sha('sfv:', code), exp = months > 0 ? Date.now() + months * 30 * 864e5 : 0;
+    await db.collection('vouchers').doc(hash).set(Object.assign({ code: code, amount: amount, balance: amount, status: 'active', expiresAt: exp, createdAt: Date.now(), by: axWho() }, extra || {}));
+    X.log('voucher.issue', code, inr(amount)); return { code: code, exp: exp };
+  }
+  function copyModal(title, text) { axOpen('<div class="ax-head"><h2>' + h(title) + '</h2><button class="btn-small" id="axX">Close</button></div><textarea class="search-input" id="cpTxt" rows="6" style="width:100%">' + h(text) + '</textarea><div class="ax-actions"><button class="btn-small primary" id="cpGo" type="button">Copy</button></div>'); $('axX').onclick = axClose; $('cpGo').onclick = function () { try { navigator.clipboard.writeText($('cpTxt').value); X.toast('Copied.'); } catch (_) { $('cpTxt').select(); } }; }
+  function startPromoAddons() {
+    db.collection('voucherRequests').onSnapshot(function (s) { vReqs = s.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }).sort(function (a, b) { return ms(b.createdAt) - ms(a.createdAt); }); drawVouchers(); }, function () {});
+    db.collection('vouchers').onSnapshot(function (s) { vouchers = s.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); }); drawVouchers(); }, function () {});
+    $('vnNew').onclick = function () {
+      axOpen('<div class="ax-head"><h2>Create a voucher</h2><button class="btn-small" id="axX">Close</button></div>' + field('nvAmt', 'Amount (₹)', 'type="number" min="100" value="2500"') + field('nvMon', 'Valid for (months, 0 = no expiry)', 'type="number" min="0" max="36" value="12"') + field('nvNote', 'Note (who it is for)', 'maxlength="60"') + '<div class="ax-actions"><button class="btn-small primary" id="nvGo" type="button">Create</button></div>');
+      $('axX').onclick = axClose;
+      $('nvGo').onclick = async function () { var a = Math.round(Number($('nvAmt').value)); if (!(a >= 100)) return X.toast('Enter an amount.', 'error'); try { var note = $('nvNote').value.trim(), r = await issue(a, Math.max(0, Math.floor(Number($('nvMon').value) || 0)), { note: note }); axClose(); copyModal('Voucher ' + r.code, voucherMsg(r.code, a, r.exp, note)); } catch (e) { X.toast('Could not create: ' + (e.message || ''), 'error'); } };
+    };
+    $('tab-promo').addEventListener('click', async function (e) {
+      var i = e.target.closest('[data-vi]'), x = e.target.closest('[data-vx]'), m = e.target.closest('[data-vm]'), a = e.target.closest('[data-va]'), v = e.target.closest('[data-vv]');
+      try {
+        if (i) { var r = vReqs.filter(function (q) { return q.id === i.dataset.vi; })[0]; if (!r || !confirm('Issue a ' + inr(r.amount) + ' voucher? Only do this once payment is received.')) return;
+          var out = await issue(r.amount, 12, { buyerEmail: r.email, buyerUid: r.uid, requestId: r.id, note: r.recipientName || '' });
+          await db.collection('voucherRequests').doc(r.id).update({ status: 'issued', issuedCode: out.code, issuedAt: Date.now() });
+          notify(r, 'Your gift voucher is ready', 'Your ' + inr(r.amount) + ' gift voucher code is ' + out.code + '. You can also see it under Share and gift in your account.');
+          copyModal('Voucher ' + out.code, voucherMsg(out.code, r.amount, out.exp, r.recipientName)); }
+        else if (x) { var q = vReqs.filter(function (z) { return z.id === x.dataset.vx; })[0]; if (q && confirm('Decline this request?')) await db.collection('voucherRequests').doc(q.id).update({ status: 'declined' }); }
+        else if (m) { var vv = vouchers.filter(function (z) { return z.id === m.dataset.vm; })[0]; if (vv) copyModal('Voucher ' + vv.code, voucherMsg(vv.code, vv.balance, vv.expiresAt, vv.note)); }
+        else if (a) { var w = vouchers.filter(function (z) { return z.id === a.dataset.va; })[0]; if (!w) return; var nb = prompt('New balance for ' + w.code + ' (₹):', w.balance); if (nb === null) return; nb = Math.max(0, Math.round(Number(nb))); if (isNaN(nb)) return; await db.collection('vouchers').doc(w.id).update({ balance: nb, status: nb > 0 ? 'active' : 'used' }); X.log('voucher.adjust', w.code, inr(nb)); }
+        else if (v) { var y = vouchers.filter(function (z) { return z.id === v.dataset.vv; })[0]; if (y) { await db.collection('vouchers').doc(y.id).update({ status: y.status === 'void' ? (y.balance > 0 ? 'active' : 'used') : 'void' }); X.log('voucher.' + (y.status === 'void' ? 'reinstate' : 'void'), y.code, ''); } }
+      } catch (err) { X.toast('Could not do that: ' + (err.message || ''), 'error'); }
+    });
+    X.site(true).then(function (s) {
+      $('lmMode').value = s.launchMode || 'auto';
+      $('lmSave').onclick = async function () { try { await X.saveSite({ launchMode: $('lmMode').value }, 'launch mode'); $('lmMsg').textContent = 'Saved.'; } catch (e) { $('lmMsg').textContent = 'Could not save.'; } };
+      var certs = (s.certs || []).slice();
+      var draw = function () { $('ctRows').innerHTML = certs.map(function (c, i) { return '<div class="ax-line" style="flex-wrap:wrap"><input class="search-input ct-t" placeholder="Title e.g. Gas sensor test report" value="' + h(c.title) + '" style="flex:2;min-width:160px"><input class="search-input ct-i" placeholder="Issued by" value="' + h(c.issuer || '') + '" style="flex:1;min-width:110px"><input class="search-input ct-r" placeholder="Reference no." value="' + h(c.ref || '') + '" style="flex:1;min-width:100px"><input class="search-input ct-d" type="date" value="' + h(c.date || '') + '"><input class="search-input ct-u" placeholder="Link to the document (https://…)" value="' + h(c.url || '') + '" style="flex:2;min-width:160px"><select class="filter-select ct-s"><option value="done"' + (c.status !== 'progress' ? ' selected' : '') + '>Completed</option><option value="progress"' + (c.status === 'progress' ? ' selected' : '') + '>In progress</option></select><button class="btn-small danger" data-ct="' + i + '" type="button">✕</button></div>'; }).join(''); };
+      var read = function () { return Array.prototype.map.call($('ctRows').children, function (r) { return { title: r.querySelector('.ct-t').value.trim(), issuer: r.querySelector('.ct-i').value.trim(), ref: r.querySelector('.ct-r').value.trim(), date: r.querySelector('.ct-d').value, url: r.querySelector('.ct-u').value.trim(), status: r.querySelector('.ct-s').value }; }).filter(function (c) { return c.title && (!c.url || /^https?:\/\//i.test(c.url)); }); };
+      draw();
+      $('ctAdd').onclick = function () { certs = read().concat([{ title: '', status: 'progress' }]); draw(); };
+      $('ctRows').addEventListener('click', function (e) { var b = e.target.closest('[data-ct]'); if (b) { certs = read(); certs.splice(Number(b.dataset.ct), 1); draw(); } });
+      $('ctSave').onclick = async function () { try { certs = read(); await X.saveSite({ certs: certs }, 'certifications'); draw(); $('ctMsg').textContent = 'Saved (' + certs.length + ').'; } catch (e) { $('ctMsg').textContent = 'Could not save.'; } };
+    });
+  }
+  document.querySelector('.tab-btn[data-tab="promo"]').addEventListener('click', function () { if (!startPromoAddons.done) { startPromoAddons.done = 1; startPromoAddons(); } });
+})();
+</script>
+<script>
+/* SafeFlame AI admin, part 4: roles and permissions, owner password tools, admin password change, App tab (APK) */
+(function () {
+  'use strict';
+  var X = window.SFX; if (!X) return;
+  var $ = X.$, h = X.h;
+  var lc = function (s) { return String(s || '').trim().toLowerCase(); };
+  var svg = function (d) { return '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">' + d + '</svg>'; };
+  X.icons.app = svg('<rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/>');
+  var HARD_OWNERS = ADMIN_EMAILS.map(lc);
+  var FLAGS = [['export', 'Export data (CSV downloads)'], ['delete', 'Delete, void or remove records']];
+  var LEVELS = [['none', 'No access'], ['view', 'View only'], ['edit', 'View and edit']];
+  var cfg = { roles: {}, roleDefs: null, owners: [] }, loaded = false;
+  var me = function () { return lc((auth.currentUser || {}).email); };
+  var tabs = function () { return Array.prototype.map.call(document.querySelectorAll('#tabNav .tab-btn'), function (b) { return { key: b.dataset.tab, label: b.textContent.replace(/\d+\s*$/, '').trim() }; }).filter(function (t) { return t.key && t.key !== 'team'; }); };
+  function all(level) { var o = {}; tabs().forEach(function (t) { o[t.key] = level; }); return o; }
+  function defaults() {
+    var sup = Object.assign(all('none'), { overview: 'view', orders: 'view', waitlist: 'view', customers: 'view', chats: 'edit', tickets: 'edit', inbox: 'edit', email: 'edit', service: 'edit' });
+    var ful = Object.assign(all('none'), { overview: 'view', customers: 'view', orders: 'edit', ship: 'edit', stock: 'edit', service: 'view', app: 'view' });
+    var view = Object.assign(all('view'), { settings: 'none', data: 'none', site: 'none', email: 'none' });
+    return {
+      owner: { name: 'Owner', rank: 100, locked: true, perms: all('edit'), flags: { export: true, delete: true } },
+      manager: { name: 'Manager', rank: 80, perms: all('edit'), flags: { export: true, delete: true } },
+      support: { name: 'Support', rank: 50, perms: sup, flags: { export: false, delete: false } },
+      fulfilment: { name: 'Fulfilment', rank: 40, perms: ful, flags: { export: false, delete: false } },
+      viewer: { name: 'Viewer', rank: 10, perms: view, flags: { export: false, delete: false } }
+    };
+  }
+  var defs = function () { return cfg.roleDefs && Object.keys(cfg.roleDefs).length ? cfg.roleDefs : defaults(); };
+  var roleOf = function (email) { email = lc(email); if (HARD_OWNERS.indexOf(email) >= 0) return 'owner'; return (cfg.roles || {})[email] || 'manager'; };
+  var isOwnerMe = function () { return roleOf(me()) === 'owner' || (cfg.owners || []).indexOf(me()) >= 0; };
+  var defOf = function (id) { return defs()[id] || defaults().viewer; };
+  var write = async function (partial) { var ref = db.collection('adminRoles').doc('config'); try { await ref.update(partial); } catch (e) { await ref.set(Object.assign({ roles: {}, owners: [], roleDefs: defs() }, partial)); } Object.assign(cfg, partial); };
+  var toast = X.toast;
+
+  /* ── apply the signed-in admin's permissions ── */
+  var guardOn = false;
+  function applyMine() {
+    var owner = isOwnerMe(), d = defOf(roleOf(me())), first = null;
+    document.body.classList.toggle('sfx-noexp', !owner && !(d.flags && d.flags.export));
+    document.body.classList.toggle('sfx-nodel', !owner && !(d.flags && d.flags.delete));
+    tabs().concat([{ key: 'team' }]).forEach(function (t) {
+      var btn = document.querySelector('#tabNav .tab-btn[data-tab="' + t.key + '"]'), panel = $('tab-' + t.key); if (!btn || !panel) return;
+      var lvl = owner ? 'edit' : (t.key === 'team' ? 'view' : ((d.perms || {})[t.key] || 'none'));
+      btn.style.display = lvl === 'none' ? 'none' : ''; panel.classList.toggle('sfx-ro', lvl === 'view' && !owner);
+      if (lvl !== 'none' && !first) first = btn;
+    });
+    var active = document.querySelector('#tabNav .tab-btn.active');
+    if (active && active.style.display === 'none' && first) first.click();
+    drawTeam(); guardOn = !owner;
+  }
+  var okButton = /^(details|view|close|refresh|open|print|slip|copy|search|clear|show|hide)/i;
+  document.addEventListener('click', function (e) {
+    if (!guardOn) return; var panel = e.target.closest('.tab-panel.sfx-ro'); if (!panel) return;
+    var b = e.target.closest('button, input[type=checkbox], .ax-rm, select.status-select'); if (!b || b.classList.contains('tab-btn') || b.hasAttribute('data-ro-ok')) return;
+    if (b.tagName === 'BUTTON' && okButton.test(b.textContent.trim())) return;
+    e.preventDefault(); e.stopImmediatePropagation(); toast('Your role can view this section but not change it.', 'error');
+  }, true);
+  document.addEventListener('change', function (e) {
+    if (!guardOn) return; var panel = e.target.closest('.tab-panel.sfx-ro'); if (!panel) return;
+    if (e.target.matches('.status-select, textarea, input[type=checkbox], .ax-edit, [data-edit]')) { e.preventDefault(); e.stopImmediatePropagation(); toast('Your role can view this section but not change it.', 'error'); try { if (e.target.dataset.prev !== undefined) e.target.value = e.target.dataset.prev; } catch (_) {} }
+  }, true);
+  var st = document.createElement('style');
+  st.textContent = 'body.sfx-nodel .danger,body.sfx-nodel [data-del]{display:none!important}body.sfx-noexp #exportPrebooks,body.sfx-noexp .sfx-export{display:none!important}.tab-panel.sfx-ro .panel-header::after{content:"View only";margin-left:auto;font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);border:1px solid var(--border);border-radius:999px;padding:.1rem .6rem}';
+  document.head.appendChild(st);
+  function hideExport() { document.querySelectorAll('#tab-data .panel').forEach(function (p) { var t = p.querySelector('h2'); if (t && /export/i.test(t.textContent)) p.classList.add('sfx-export'); }); }
+
+  /* ── Team tab: admins with roles ── */
+  var rankOf = function (id) { return (defOf(id).rank || 0); };
+  function drawTeam() {
+    var list = $('tmList'); if (!list) return;
+    var owner = isOwnerMe(), roleOpts = function (cur) { return Object.keys(defs()).sort(function (a, b) { return rankOf(b) - rankOf(a); }).map(function (id) { return '<option value="' + h(id) + '"' + (id === cur ? ' selected' : '') + '>' + h(defs()[id].name) + ' (rank ' + (defs()[id].rank || 0) + ')</option>'; }).join(''); };
+    var admins = (typeof extraAdmins !== 'undefined' ? extraAdmins : []).filter(function (e) { return HARD_OWNERS.indexOf(lc(e)) < 0; });
+    var row = function (email, locked) {
+      var r = roleOf(email), you = lc(email) === me() ? ' <small>(you)</small>' : '';
+      return '<div class="ax-row" style="flex-wrap:wrap;gap:.5rem"><span>' + h(email) + you + '</span><span style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap">' +
+        (locked ? '<span class="hint">Owner · cannot be removed</span>' : (owner ? '<select class="filter-select tm-role" data-email="' + h(email) + '">' + roleOpts(r) + '</select>' : '<span class="hint">' + h(defOf(r).name) + '</span>')) +
+        (owner && lc(email) !== me() && !(locked && HARD_OWNERS.indexOf(me()) < 0) ? '<button class="btn-small" data-tmpw="' + h(email) + '" type="button">Set password</button>' : '') +
+        (owner && !locked && lc(email) !== me() ? '<button class="btn-small danger" data-rm="' + h(email) + '" type="button">Remove</button>' : '') + '</span></div>';
+    };
+    list.innerHTML = ADMIN_EMAILS.map(function (e) { return row(e, true); }).join('') + admins.map(function (e) { return row(e, false); }).join('');
+    // adding admins and editing roles is owner-only
+    var add = $('tmId') && $('tmId').closest('.ax-line'); if (add) { var grp = [add.previousElementSibling, add, add.nextElementSibling, $('tmErr'), $('tmOk')]; grp.forEach(function (el) { if (el) el.style.display = owner ? '' : 'none'; }); }
+    var rp = $('sfxRoles'); if (rp) rp.style.display = owner ? '' : 'none';
+  }
+  var oldRemove = null;
+  document.addEventListener('change', async function (e) {
+    var s = e.target.closest('.tm-role'); if (!s || !isOwnerMe()) return; e.stopImmediatePropagation();
+    var email = lc(s.dataset.email), roles = Object.assign({}, cfg.roles || {}); roles[email] = s.value;
+    var owners = (cfg.owners || []).filter(function (x) { return x !== email; }); if (s.value === 'owner') owners.push(email);
+    try { await write({ roles: roles, owners: owners }); X.log('admin.role', email, s.value); toast('Role updated.'); applyMine(); } catch (err) { toast('Could not change the role: ' + (err.message || ''), 'error'); }
+  }, true);
+
+  /* ── roles editor (owner only) ── */
+  var team = $('tab-team'), editing = 'manager';
+  var panel = document.createElement('div'); panel.className = 'panel'; panel.id = 'sfxRoles';
+  panel.innerHTML = '<div class="panel-header"><h2>Roles and permissions</h2><span class="hint">Owners always have full access. Changes apply the next time each admin loads the panel.</span></div>' +
+    '<div class="ax-line" style="flex-wrap:wrap;gap:.5rem"><select class="filter-select" id="rlSel"></select><button class="btn-small" id="rlNew" type="button">+ New role</button><button class="btn-small danger" id="rlDel" type="button">Delete role</button></div><div id="rlBody"></div>';
+  var after = team.querySelector('.panel'); after.parentNode.insertBefore(panel, after.nextSibling);
+  function drawRoles() {
+    var d = defs(), sel = $('rlSel'); sel.innerHTML = Object.keys(d).sort(function (a, b) { return (d[b].rank || 0) - (d[a].rank || 0); }).map(function (id) { return '<option value="' + h(id) + '"' + (id === editing ? ' selected' : '') + '>' + h(d[id].name) + '</option>'; }).join('');
+    var r = d[editing] || d.manager, locked = !!r.locked;
+    $('rlDel').style.display = locked || ['manager', 'support', 'fulfilment', 'viewer'].indexOf(editing) >= 0 && false ? 'none' : '';
+    $('rlBody').innerHTML =
+      '<div class="ax-line" style="flex-wrap:wrap;gap:.5rem;margin-top:.6rem"><div class="field" style="flex:2;min-width:160px"><label>Role name</label><input class="search-input" id="rlName" maxlength="24" value="' + h(r.name) + '"' + (locked ? ' disabled' : '') + '></div><div class="field" style="flex:1;min-width:100px"><label>Rank (higher = more senior)</label><input class="search-input" id="rlRank" type="number" min="1" max="99" value="' + h(r.rank || 1) + '"' + (locked ? ' disabled' : '') + '></div></div>' +
+      '<div class="table-scroll"><table><thead><tr><th>Section</th><th>Access</th></tr></thead><tbody>' + tabs().map(function (t) { var lv = locked ? 'edit' : ((r.perms || {})[t.key] || 'none'); return '<tr><td>' + h(t.label) + '</td><td><select class="filter-select rl-perm" data-k="' + h(t.key) + '"' + (locked ? ' disabled' : '') + '>' + LEVELS.map(function (l) { return '<option value="' + l[0] + '"' + (l[0] === lv ? ' selected' : '') + '>' + l[1] + '</option>'; }).join('') + '</select></td></tr>'; }).join('') + '<tr><td>Team (admins, roles, passwords)</td><td class="hint">Owners only</td></tr></tbody></table></div>' +
+      '<div class="ax-line" style="flex-wrap:wrap;gap:1rem;margin:.6rem 0">' + FLAGS.map(function (f) { return '<label class="ax-chk"><input type="checkbox" class="rl-flag" data-f="' + f[0] + '"' + ((locked || (r.flags || {})[f[0]]) ? ' checked' : '') + (locked ? ' disabled' : '') + '> ' + f[1] + '</label>'; }).join('') + '</div>' +
+      (locked ? '<p class="hint">The Owner role cannot be edited.</p>' : '<div class="ax-line"><button class="btn-small primary" id="rlSave" type="button">Save role</button><span class="hint" id="rlMsg"></span></div>') +
+      '<p class="hint" style="margin-top:.6rem">Permissions are enforced in this admin panel. Only the owner-only items (admin list, roles, passwords) are also locked in the database rules.</p>';
+    if (!locked) $('rlSave').onclick = saveRole;
+  }
+  async function saveRole() {
+    var d = Object.assign({}, defs()), r = d[editing];
+    var perms = {}; document.querySelectorAll('.rl-perm').forEach(function (s) { perms[s.dataset.k] = s.value; });
+    var flags = {}; document.querySelectorAll('.rl-flag').forEach(function (c) { flags[c.dataset.f] = c.checked; });
+    var name = $('rlName').value.trim().slice(0, 24); if (!name) return ($('rlMsg').textContent = 'Give the role a name.');
+    d[editing] = { name: name, rank: Math.max(1, Math.min(99, Math.floor(Number($('rlRank').value) || 1))), perms: perms, flags: flags };
+    try { await write({ roleDefs: d }); X.log('role.save', name, ''); $('rlMsg').textContent = 'Saved.'; drawRoles(); drawTeam(); } catch (e) { $('rlMsg').textContent = 'Could not save: ' + (e.message || ''); }
+  }
+  $('rlSel').onchange = function () { editing = $('rlSel').value; drawRoles(); };
+  $('rlNew').onclick = async function () {
+    var name = (prompt('Name for the new role:') || '').trim().slice(0, 24); if (!name) return;
+    var id = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || ('role' + Date.now().toString(36)); var d = Object.assign({}, defs());
+    if (d[id]) return toast('A role with that name already exists.', 'error');
+    var from = defOf(editing); d[id] = { name: name, rank: Math.max(1, (from.rank || 10) - 1), perms: Object.assign({}, from.perms), flags: Object.assign({}, from.flags) };
+    try { await write({ roleDefs: d }); editing = id; X.log('role.create', name, ''); drawRoles(); } catch (e) { toast('Could not create: ' + (e.message || ''), 'error'); }
+  };
+  $('rlDel').onclick = async function () {
+    var d = Object.assign({}, defs()); if (editing === 'owner') return;
+    var users = Object.keys(cfg.roles || {}).filter(function (k) { return cfg.roles[k] === editing; });
+    if (users.length) return toast('Move these people to another role first: ' + users.join(', '), 'error');
+    if (!confirm('Delete the role “' + d[editing].name + '”?')) return; delete d[editing];
+    try { await write({ roleDefs: d }); editing = 'manager'; X.log('role.delete', '', ''); drawRoles(); } catch (e) { toast('Could not delete: ' + (e.message || ''), 'error'); }
+  };
+
+  /* ── owner: set another admin's password (needs the adminSetPassword Cloud Function) ── */
+  team.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-tmpw]'); if (!b || !isOwnerMe()) return; var email = b.dataset.tmpw;
+    axOpen('<div class="ax-head"><h2>Set password for ' + h(email) + '</h2><button class="btn-small" id="axX">Close</button></div>' +
+      '<div class="field"><label>New password (min 8, a letter and a number)</label><input class="search-input" id="spPw" type="password" autocomplete="new-password"></div><div class="field"><label>Confirm</label><input class="search-input" id="spPw2" type="password" autocomplete="new-password"></div>' +
+      '<p class="hint">This changes the password directly and signs that admin out everywhere. It uses a small Cloud Function, see the README (Firebase Blaze plan needed). If admin emails are real inboxes you can also send a reset email.</p><div class="msg-error" id="spErr" style="color:var(--red);min-height:1.2em"></div>' +
+      '<div class="ax-actions"><button class="btn-small" id="spMail" type="button">Send reset email instead</button><button class="btn-small primary" id="spGo" type="button">Set password</button></div>');
+    $('axX').onclick = axClose;
+    $('spMail').onclick = async function () { try { await auth.sendPasswordResetEmail(email); axClose(); toast('Reset email sent to ' + email + '. This only works if that address can receive mail.'); X.log('admin.resetmail', email, ''); } catch (err) { $('spErr').textContent = 'Could not send: ' + (err.message || ''); } };
+    $('spGo').onclick = async function () {
+      var a = $('spPw').value, c = $('spPw2').value; if (a.length < 8 || !/[A-Za-z]/.test(a) || !/\d/.test(a)) return ($('spErr').textContent = 'Use at least 8 characters with a letter and a number.'); if (a !== c) return ($('spErr').textContent = 'The two passwords do not match.');
+      $('spGo').disabled = true;
+      try { var fn = firebase.functions().httpsCallable('adminSetPassword'); await fn({ email: email, password: a }); axClose(); toast('Password changed for ' + email + '.'); X.log('admin.setpw', email, ''); }
+      catch (err) { $('spErr').textContent = (err.code === 'functions/not-found' || err.code === 'functions/internal' || /not.?found|404|CORS|Failed to fetch/i.test(err.message || '')) ? 'The Cloud Function is not deployed yet. Follow the README steps (functions folder), or use “Send reset email instead”.' : (err.message || 'Could not change the password.'); $('spGo').disabled = false; }
+    };
+  });
+
+  /* ── admins change their own password without typing the current one ── */
+  (function () {
+    var btn = $('cpBtn'); if (!btn) return; var nb = btn.cloneNode(true); btn.parentNode.replaceChild(nb, btn);
+    var cur = $('cpCur'), msg = $('cpMsg'); cur.style.display = 'none';
+    var hint = document.createElement('div'); hint.className = 'hint'; hint.textContent = 'You are signed in, so you do not need to type your current password. If your sign-in is very old, Firebase may ask for it once.'; msg.parentNode.insertBefore(hint, msg);
+    nb.addEventListener('click', async function () {
+      var u = auth.currentUser, nw = $('cpNew').value; msg.style.color = 'var(--red)'; msg.textContent = '';
+      if (!u) return; if (nw.length < 8 || !/[A-Za-z]/.test(nw) || !/\d/.test(nw)) return (msg.textContent = 'Use at least 8 characters with a letter and a number.');
+      nb.disabled = true;
+      try {
+        try { await u.updatePassword(nw); }
+        catch (e) {
+          if (e.code !== 'auth/requires-recent-login') throw e;
+          if (u.providerData.some(function (p) { return p.providerId === 'password'; }) && cur.style.display === 'none') { cur.style.display = ''; msg.textContent = 'Firebase needs a fresh sign-in for this change. Type your current password once, then press Update again.'; nb.disabled = false; return; }
+          if (!cur.value) { msg.textContent = 'Type your current password.'; nb.disabled = false; return; }
+          await u.reauthenticateWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, cur.value)); await u.updatePassword(nw);
+        }
+        msg.style.color = 'var(--green)'; msg.textContent = 'Password updated.'; $('cpNew').value = ''; cur.value = ''; cur.style.display = 'none'; X.log('admin.password', '', 'own password');
+      } catch (e) { msg.textContent = ({ 'auth/wrong-password': 'That current password is not right.', 'auth/invalid-credential': 'That current password is not right.', 'auth/weak-password': 'Choose a stronger password.' })[e.code] || (e.message || 'Could not update the password.'); }
+      nb.disabled = false;
+    });
+  })();
+
+  /* ── App tab (APK for booked customers) ── */
+  var appHtml = '<div class="panel"><div class="panel-header"><h2>Android app (APK)</h2><span class="hint">Customers who book see this on their account and on the /app page.</span></div>' +
+    '<label class="ax-chk"><input type="checkbox" id="apOn"> Published (customers can download)</label>' +
+    '<div class="ax-line" style="flex-wrap:wrap;gap:.5rem"><div class="field" style="flex:1;min-width:120px"><label>Version</label><input class="search-input" id="apVer" placeholder="1.0.0" maxlength="20"></div><div class="field" style="flex:1;min-width:120px"><label>Size (MB)</label><input class="search-input" id="apSize" type="number" min="0" step="0.1"></div><div class="field" style="flex:1;min-width:120px"><label>Android needed</label><input class="search-input" id="apMin" placeholder="8.0 or newer" maxlength="20"></div></div>' +
+    '<div class="field"><label>APK download link (https). A GitHub Release asset works well.</label><input class="search-input" id="apUrl" placeholder="https://github.com/…/releases/download/v1.0.0/aegis.apk"></div>' +
+    '<div class="field"><label>SHA-256 checksum (so customers can verify the file)</label><input class="search-input" id="apSha" maxlength="64" placeholder="64 hex characters"></div>' +
+    '<div class="field"><label>What is new</label><textarea class="search-input" id="apNotes" rows="3" maxlength="500"></textarea></div>' +
+    '<div class="ax-line"><button class="btn-small primary" id="apSave" type="button">Save and publish</button><span class="hint" id="apMsg"></span></div></div>' +
+    '<div class="panel"><div class="panel-header"><h2>Who has installed it</h2><span class="hint" id="apChip"></span></div><div class="table-scroll"><table><thead><tr><th>Customer</th><th>Orders</th><th>App</th></tr></thead><tbody id="apBody"></tbody></table></div></div>';
+  function appOpen() {
+    db.collection('appRelease').doc('current').get().then(function (d) {
+      var r = d.exists ? d.data() : {}; $('apOn').checked = !!r.enabled; $('apVer').value = r.version || ''; $('apSize').value = r.sizeMB || ''; $('apMin').value = r.minAndroid || ''; $('apUrl').value = r.apkUrl || ''; $('apSha').value = r.sha256 || ''; $('apNotes').value = r.notes || '';
+    }).catch(function () {});
+    $('apSave').onclick = async function () {
+      var url = $('apUrl').value.trim(), sha = $('apSha').value.trim().toLowerCase(), msg = $('apMsg');
+      if ($('apOn').checked && !/^https:\/\//i.test(url)) return (msg.textContent = 'Add an https link to the APK first.');
+      if (sha && !/^[0-9a-f]{64}$/.test(sha)) return (msg.textContent = 'The checksum should be 64 hex characters.');
+      if ($('apOn').checked && !$('apVer').value.trim()) return (msg.textContent = 'Add a version number.');
+      try { await db.collection('appRelease').doc('current').set({ enabled: $('apOn').checked, version: $('apVer').value.trim(), sizeMB: Number($('apSize').value) || 0, minAndroid: $('apMin').value.trim(), apkUrl: url, sha256: sha, notes: $('apNotes').value.trim(), updatedAt: Date.now(), by: lc(me()) }); X.log('app.release', $('apVer').value.trim(), $('apOn').checked ? 'published' : 'unpublished'); msg.textContent = 'Saved.'; drawInstalls(); }
+      catch (e) { msg.textContent = 'Could not save: ' + (e.message || ''); }
+    };
+    drawInstalls(); setInterval(function () { if ($('tab-app').classList.contains('active')) drawInstalls(); }, 6000);
+  }
+  var usersByEmail = {};
+  async function drawInstalls() {
+    try { var s = await db.collection('users').get(); usersByEmail = {}; s.forEach(function (d) { var u = d.data(); if (u.email) usersByEmail[lc(u.email)] = u; }); } catch (_) {}
+    var byEmail = {}; (typeof prebookData !== 'undefined' ? prebookData : []).forEach(function (o) { if (String(o.status || 'pending').toLowerCase() === 'cancelled') return; var k = lc(o.email); (byEmail[k] = byEmail[k] || []).push(o); });
+    var emails = Object.keys(byEmail), inst = emails.filter(function (e) { return usersByEmail[e] && usersByEmail[e].appInstalledAt; }).length;
+    $('apChip').textContent = emails.length ? inst + ' of ' + emails.length + ' customers installed' : '';
+    $('apBody').innerHTML = emails.length ? emails.sort(function (a, b) { return (usersByEmail[a] && usersByEmail[a].appInstalledAt ? 1 : 0) - (usersByEmail[b] && usersByEmail[b].appInstalledAt ? 1 : 0); }).map(function (e) { var u = usersByEmail[e] || {}; return '<tr><td>' + h(byEmail[e][0].name) + '<div class="hint">' + h(e) + '</div></td><td>' + byEmail[e].map(function (o) { return '#' + h(orderNumberFor(o)); }).join(', ') + '</td><td>' + (u.appInstalledAt ? '<span style="color:var(--green)">Installed' + (u.appVersion ? ' v' + h(u.appVersion) : '') + '</span>' : '<span class="hint">Not yet</span>') + '</td></tr>'; }).join('') : '<tr><td colspan="3" class="hint">No customers yet.</td></tr>';
+  }
+  X.addTab('app', 'App', appHtml, 'site', appOpen);
+
+  /* ── choose a role when adding an admin ── */
+  (function () {
+    var add = $('tmId') && $('tmId').closest('.ax-line'); if (!add || $('tmRole')) return;
+    var sel = document.createElement('select'); sel.className = 'filter-select'; sel.id = 'tmRole'; sel.title = 'Role for the new admin'; add.insertBefore(sel, $('tmAdd'));
+    var fill = function () { sel.innerHTML = Object.keys(defs()).filter(function (k) { return k !== 'owner'; }).sort(function (a, b) { return rankOf(a) - rankOf(b); }).map(function (id) { return '<option value="' + h(id) + '"' + (id === 'viewer' ? ' selected' : '') + '>' + h(defs()[id].name) + '</option>'; }).join(''); };
+    fill(); setInterval(fill, 5000);
+    $('tmAdd').addEventListener('click', function () {
+      var id = lc($('tmId').value); if (!id) return; if (id.indexOf('@') < 0) id += '@' + ADMIN_DOMAIN; var role = sel.value, tries = 0;
+      var timer = setInterval(async function () {
+        tries++; if (typeof extraAdmins !== 'undefined' && extraAdmins.indexOf(id) >= 0) { clearInterval(timer); var roles = Object.assign({}, cfg.roles || {}); roles[id] = role; try { await write({ roles: roles }); applyMine(); } catch (_) {} } else if (tries > 40) clearInterval(timer);
+      }, 500);
+    });
+  })();
+
+  /* ── load the role config, then apply ── */
+  function start() {
+    if (loaded) return; loaded = true;
+    db.collection('adminRoles').doc('config').onSnapshot(function (d) { var x = d.exists ? d.data() : {}; cfg = { roles: x.roles || {}, roleDefs: x.roleDefs || null, owners: x.owners || [] }; if (!defs()[editing]) editing = 'manager'; drawRoles(); applyMine(); hideExport(); }, function () { drawRoles(); applyMine(); });
+  }
+  var t = setInterval(function () { if ((auth.currentUser) && document.getElementById('tabNav').style.display !== 'none') { clearInterval(t); start(); } }, 500);
+  // keep the team list in step with the page's own admin list
+  var base = typeof axRenderAdmins === 'function' ? axRenderAdmins : null; if (base) axRenderAdmins = function () { try { base(); } catch (_) {} drawTeam(); };
+  drawRoles();
 })();
 </script>
 <script>
