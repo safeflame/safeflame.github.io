@@ -659,35 +659,17 @@ applyAppearance();
 
 /* ── verification state ── */
 async function isVerified(user) {
+  // Real verification: Firebase sets emailVerified on its own servers when the emailed link is opened.
+  // It cannot be set from the browser, and the security rules check the same flag.
   if (!user) return false;
-  if (isAdminEmail(user.email)) return true; // admin accounts skip email verification
+  if (isAdminEmail(user.email)) return true;
   if (user.emailVerified) return true;
-  const isPasswordUser = user.providerData.some(p => p.providerId === 'password');
-  if (!isPasswordUser) return true; // Google etc.
-  try {
-    const ud = await db.collection('users').doc(user.uid).get();
-    if (ud.exists && ud.data().emailVerified === true) return true;
-    const q = await db.collection('emailVerifications').where('uid', '==', user.uid).where('verified', '==', true).limit(1).get();
-    if (!q.empty) {
-      await db.collection('users').doc(user.uid).set({ emailVerified: true }, { merge: true });
-      q.docs.forEach(d => d.ref.delete().catch(() => {}));
-      return true;
-    }
-  } catch (e) { console.warn('verify check failed', e); }
-  return false;
+  return !user.providerData.some(p => p.providerId === 'password'); // Google / Apple accounts arrive verified
 }
 function randomToken() { const a = new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); }
 async function createAndSendVerification(user, name) {
-  const token = randomToken();
-  await db.collection('emailVerifications').doc(token).set({ uid: user.uid, email: user.email, verified: false, createdAt: TS(), expiresAt: Date.now() + 24 * 3600 * 1000 });
-  const base = location.origin;
-  const link = base + '/verify?token=' + token;
-  try { await sendVerifyEmail(user.email, name, link); return 'emailjs'; }
-  catch (e) {
-    if (e.message !== 'EMAILJS_NOT_CONFIGURED') throw e;
-    await user.sendEmailVerification({ url: base + '/verify?native=1' }); // fallback: Firebase's own mail
-    return 'firebase';
-  }
+  await user.sendEmailVerification({ url: location.origin + '/verify?native=1' });
+  return 'firebase';
 }
 
 /* ── top bar account button ── */
@@ -821,8 +803,51 @@ $('tabIn').onclick = () => showTab(false); $('tabUp').onclick = () => showTab(tr
 if (qs('mode') === 'register') showTab(true);
 if (qs('verified')) $('ok').textContent = 'Email verified! Sign in to continue.';
 
+
+/* ── Password gate: people who sign in with Google or Apple must also create a password ── */
+function sfNeedsPassword(u) { return !!u && !!u.email && !u.providerData.some(p => p.providerId === 'password'); }
+function sfPasswordGate(u, onDone) {
+  if (document.getElementById('sfPw')) return;
+  const st = document.createElement('style');
+  st.textContent = '#sfPw{position:fixed;inset:0;z-index:2147483000;background:rgba(5,5,12,.88);display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(6px)}#sfPw .b{background:var(--bg2,#0d0d1a);color:var(--text,#f0f0f8);border:1px solid var(--border,rgba(255,255,255,.14));border-radius:18px;padding:1.6rem;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.5)}#sfPw h2{margin:0 0 .3rem;font-size:1.3rem}#sfPw p{color:var(--text2,#a0a0b8);font-size:.88rem;margin:.2rem 0 1rem;line-height:1.5}#sfPw label{display:block;font-size:.8rem;color:var(--text2,#a0a0b8);margin:.7rem 0 .25rem}#sfPw input[type=password],#sfPw input[type=text]{width:100%;box-sizing:border-box;padding:.7rem .8rem;border-radius:10px;border:1px solid var(--border,rgba(255,255,255,.2));background:var(--surface,rgba(255,255,255,.06));color:inherit;font:inherit}#sfPw ul{list-style:none;margin:.7rem 0 0;padding:0;font-size:.8rem;color:var(--text3,#7a7a95)}#sfPw li.ok{color:var(--green,#66BB6A)}#sfPw li::before{content:"○ "}#sfPw li.ok::before{content:"✓ "}#sfPw .e{color:var(--red,#EF5350);font-size:.84rem;min-height:1.2em;margin-top:.6rem}#sfPw button.go{width:100%;margin-top:.8rem;padding:.8rem;border:0;border-radius:10px;background:var(--flame,#FF5722);color:#fff;font:600 .95rem inherit;cursor:pointer}#sfPw button.go:disabled{opacity:.6}#sfPw .lnk{background:none;border:0;color:var(--text3,#7a7a95);text-decoration:underline;cursor:pointer;font:inherit;font-size:.8rem;margin-top:.7rem}';
+  document.head.appendChild(st);
+  const prov = (u.providerData[0] || {}).providerId === 'apple.com' ? 'Apple' : 'Google';
+  const d = document.createElement('div'); d.id = 'sfPw'; d.setAttribute('role', 'dialog'); d.setAttribute('aria-modal', 'true');
+  d.innerHTML = '<div class="b"><h2>Create a password</h2><p>You signed in with ' + prov + '. To make sure you can always get into your account, even without that ' + prov + ' account, please create a password for <b>' + String(u.email).replace(/[<>&"]/g, '') + '</b>. You can keep using ' + prov + ' too.</p>' +
+    '<label for="sfPw1">New password</label><input type="password" id="sfPw1" autocomplete="new-password" maxlength="64">' +
+    '<label for="sfPw2">Confirm password</label><input type="password" id="sfPw2" autocomplete="new-password" maxlength="64">' +
+    '<label style="display:flex;gap:.4rem;align-items:center;margin-top:.6rem"><input type="checkbox" id="sfPwShow"> Show passwords</label>' +
+    '<ul><li id="sfR1">At least 8 characters</li><li id="sfR2">A letter and a number</li><li id="sfR3">Both passwords match</li></ul>' +
+    '<div class="e" id="sfPwErr" role="alert"></div><button class="go" id="sfPwGo" type="button" disabled>Save password and continue</button><button class="lnk" id="sfPwOut" type="button">Sign out</button></div>';
+  document.body.appendChild(d);
+  const $g = id => document.getElementById(id), p1 = $g('sfPw1'), p2 = $g('sfPw2');
+  const rules = () => { const a = p1.value.length >= 8, b = /[A-Za-z]/.test(p1.value) && /\d/.test(p1.value), c = p1.value !== '' && p1.value === p2.value;
+    $g('sfR1').className = a ? 'ok' : ''; $g('sfR2').className = b ? 'ok' : ''; $g('sfR3').className = c ? 'ok' : ''; $g('sfPwGo').disabled = !(a && b && c); };
+  p1.addEventListener('input', rules); p2.addEventListener('input', rules);
+  $g('sfPwShow').onchange = e => { p1.type = p2.type = e.target.checked ? 'text' : 'password'; };
+  $g('sfPwOut').onclick = async () => { try { await auth.signOut(); } catch (_) {} location.href = '/login'; };
+  const link = async () => u.linkWithCredential(firebase.auth.EmailAuthProvider.credential(u.email, p1.value));
+  $g('sfPwGo').onclick = async () => {
+    const btn = $g('sfPwGo'), err = $g('sfPwErr'); btn.disabled = true; err.textContent = '';
+    try {
+      try { await link(); }
+      catch (e) {
+        if (e.code !== 'auth/requires-recent-login') throw e;
+        const id = (u.providerData[0] || {}).providerId, p = id === 'apple.com' ? new firebase.auth.OAuthProvider('apple.com') : new firebase.auth.GoogleAuthProvider();
+        err.textContent = 'For your security, confirm it is you…'; await u.reauthenticateWithPopup(p); err.textContent = ''; await link();
+      }
+      try { await db.collection('users').doc(u.uid).set({ hasPassword: true }, { merge: true }); } catch (_) {}
+      d.remove(); onDone && onDone();
+    } catch (e) {
+      err.textContent = ({ 'auth/weak-password': 'Choose a stronger password.', 'auth/provider-already-linked': 'This account already has a password. Sign in with it instead.', 'auth/credential-already-in-use': 'That email already has a separate account with a password. Sign in with that one.', 'auth/email-already-in-use': 'That email already has a separate account with a password. Sign in with that one.', 'auth/popup-closed-by-user': 'Confirmation was cancelled. Try again.' })[e.code] || ('Could not save the password: ' + (e.message || 'try again.'));
+      btn.disabled = false; rules();
+    }
+  };
+  p1.focus();
+}
 async function afterLogin(user, isNew) {
   if (!(await isVerified(user))) { go('/verify?pending=1' + (next ? '&next=' + encodeURIComponent(next) : '')); return; }
+  if (sfNeedsPassword(user)) { sfPasswordGate(user, () => afterLogin(auth.currentUser)); return; }
   let complete = false;
   try { const d = await db.collection('users').doc(user.uid).get(); complete = d.exists && d.data().profileComplete; } catch (_) {}
   go(next || (complete ? '/' : '/account?welcome=1'));
