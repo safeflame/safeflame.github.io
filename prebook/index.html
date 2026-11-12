@@ -580,7 +580,8 @@ function computeCharges(goods, shipState, discount) {
   const shipping = (n(c.freeShippingAbove) > 0 && gross >= n(c.freeShippingAbove)) ? 0 : n(c.shipping), handling = n(c.handling);
   const taxable = goods + (c.taxShipping ? shipping + handling : 0), inter = !!(norm(c.sellerState) && norm(shipState) && norm(shipState) !== norm(c.sellerState));
   const cgst = inter ? 0 : Math.round(taxable * n(c.cgst) / 100), sgst = inter ? 0 : Math.round(taxable * n(c.sgst) / 100), igst = inter ? Math.round(taxable * n(c.igst) / 100) : 0;
-  return { discount: disc, couponCode: disc ? ((window.sfCouponCode && window.sfCouponCode()) || '') : '', shipping, handling, taxable, cgst, sgst, igst, inter, rates: { cgst: n(c.cgst), sgst: n(c.sgst), igst: n(c.igst) }, total: goods + shipping + handling + cgst + sgst + igst };
+  const pre = goods + shipping + handling + cgst + sgst + igst, credit = Math.max(0, Math.min(Math.round((window.sfVoucherCredit && window.sfVoucherCredit(pre)) || 0), pre));
+  return { voucher: credit, voucherCode: credit ? ((window.sfVoucherCode && window.sfVoucherCode()) || '') : '', discount: disc, couponCode: disc ? ((window.sfCouponCode && window.sfCouponCode()) || '') : '', shipping, handling, taxable, cgst, sgst, igst, inter, rates: { cgst: n(c.cgst), sgst: n(c.sgst), igst: n(c.igst) }, total: pre - credit };
 }
 /* the lines shown under an order's subtotal: [label, amount] */
 function chargeLines(ch) {
@@ -591,6 +592,7 @@ function chargeLines(ch) {
   if (Number(ch.cgst)) L.push(['CGST @ ' + ((ch.rates || {}).cgst || '') + '%', ch.cgst]);
   if (Number(ch.sgst)) L.push(['SGST @ ' + ((ch.rates || {}).sgst || '') + '%', ch.sgst]);
   if (Number(ch.igst)) L.push(['IGST @ ' + ((ch.rates || {}).igst || '') + '%', ch.igst]);
+  if (Number(ch.voucher)) L.push(['Gift voucher' + (ch.voucherCode ? ' (' + ch.voucherCode + ')' : ''), '-₹' + Number(ch.voucher).toLocaleString('en-IN')]);
   return L;
 }
 function fmtAddress(a) { return a ? [a.name, a.line1, a.line2, [a.city, a.state].filter(Boolean).join(', '), a.pin, a.phone && ('Ph: ' + a.phone)].filter(Boolean).join(', ') : ''; }
@@ -720,35 +722,17 @@ applyAppearance();
 
 /* ── verification state ── */
 async function isVerified(user) {
+  // Real verification: Firebase sets emailVerified on its own servers when the emailed link is opened.
+  // It cannot be set from the browser, and the security rules check the same flag.
   if (!user) return false;
-  if (isAdminEmail(user.email)) return true; // admin accounts skip email verification
+  if (isAdminEmail(user.email)) return true;
   if (user.emailVerified) return true;
-  const isPasswordUser = user.providerData.some(p => p.providerId === 'password');
-  if (!isPasswordUser) return true; // Google etc.
-  try {
-    const ud = await db.collection('users').doc(user.uid).get();
-    if (ud.exists && ud.data().emailVerified === true) return true;
-    const q = await db.collection('emailVerifications').where('uid', '==', user.uid).where('verified', '==', true).limit(1).get();
-    if (!q.empty) {
-      await db.collection('users').doc(user.uid).set({ emailVerified: true }, { merge: true });
-      q.docs.forEach(d => d.ref.delete().catch(() => {}));
-      return true;
-    }
-  } catch (e) { console.warn('verify check failed', e); }
-  return false;
+  return !user.providerData.some(p => p.providerId === 'password'); // Google / Apple accounts arrive verified
 }
 function randomToken() { const a = new Uint8Array(32); crypto.getRandomValues(a); return Array.from(a, b => b.toString(16).padStart(2, '0')).join(''); }
 async function createAndSendVerification(user, name) {
-  const token = randomToken();
-  await db.collection('emailVerifications').doc(token).set({ uid: user.uid, email: user.email, verified: false, createdAt: TS(), expiresAt: Date.now() + 24 * 3600 * 1000 });
-  const base = location.origin;
-  const link = base + '/verify?token=' + token;
-  try { await sendVerifyEmail(user.email, name, link); return 'emailjs'; }
-  catch (e) {
-    if (e.message !== 'EMAILJS_NOT_CONFIGURED') throw e;
-    await user.sendEmailVerification({ url: base + '/verify?native=1' }); // fallback: Firebase's own mail
-    return 'firebase';
-  }
+  await user.sendEmailVerification({ url: location.origin + '/verify?native=1' });
+  return 'firebase';
 }
 
 /* ── top bar account button ── */
@@ -939,6 +923,7 @@ init();
 auth.onAuthStateChanged(async u => {
   if (!u) { go('/login?next=' + encodeURIComponent('/prebook' + location.search)); return; }
   if (!(await isVerified(u))) { go('/verify?pending=1&next=' + encodeURIComponent('/prebook' + location.search)); return; }
+  if (u.email && !u.providerData.some(x => x.providerId === 'password')) { go('/account?setpw=1&next=' + encodeURIComponent('/prebook' + location.search)); return; }
   $('email').readOnly = true; $('email').title = 'Orders are linked to your account email';
   let name = u.displayName || '', phone = '';
   try { const d = await db.collection('users').doc(u.uid).get(); if (d.exists) { name = d.data().displayName || name; phone = d.data().phone || ''; } } catch (_) {}
@@ -998,11 +983,12 @@ $('form').addEventListener('submit', async e => {
   if (!line1 || !city || !state) { btn.disabled = false; btn.textContent = label; return err.textContent = 'Please enter your delivery address (line 1, city and state).'; }
   if (!/^\d{6}$/.test(pin)) { btn.disabled = false; btn.textContent = label; return err.textContent = 'Enter a valid 6-digit PIN code.'; }
   if (gift && (!gName || !gPhone)) { btn.disabled = false; btn.textContent = label; return err.textContent = 'Enter the recipient\'s name and mobile number.'; }
+  if (window.sfVoucherRecheck) { const vm = await window.sfVoucherRecheck(); if (vm) { btn.disabled = false; btn.textContent = label; return err.textContent = vm; } }
   if (window.sfCouponRecheck) { const cm = await window.sfCouponRecheck(); if (cm) { btn.disabled = false; btn.textContent = label; return err.textContent = cm; } }
   const ao = selectedAddons(), aoT = ao.reduce((x, a) => x + a.price, 0), unitPrice = tierPriceFor(selectedTier);
   const shipping = { name: gift ? gName : name, phone: gift ? gPhone : phone, line1, line2, city, state, pin };
   const charges = computeCharges(unitPrice * quantity + aoT, state, window.sfDiscount ? window.sfDiscount(unitPrice * quantity + aoT) : 0);
-  pending = { name, email, phone, quantity, tier: selectedTier, unitPrice, otpChannel: 'email', charges, uid: auth.currentUser ? auth.currentUser.uid : null, shipping, address: fmtAddress(shipping), gift: gift ? { name: gName, phone: gPhone, ...(window.sfGiftExtra ? window.sfGiftExtra() : {}) } : null, coupon: window.sfCouponInfo ? window.sfCouponInfo() : null, addons: ao, addonsTotal: aoT, total: charges.total, deliveryNotes: dNotes, eta: (siteSettings.eta || {})[selectedTier] || '', referredBy: referral(), saveAddr: !gift && !$('saveAddrRow').classList.contains('hidden') && $('saveAddr').checked };
+  pending = { name, email, phone, quantity, tier: selectedTier, unitPrice, otpChannel: 'email', charges, uid: auth.currentUser ? auth.currentUser.uid : null, shipping, address: fmtAddress(shipping), gift: gift ? { name: gName, phone: gPhone, ...(window.sfGiftExtra ? window.sfGiftExtra() : {}) } : null, coupon: window.sfCouponInfo ? window.sfCouponInfo() : null, voucher: window.sfVoucherInfo ? window.sfVoucherInfo() : null, addons: ao, addonsTotal: aoT, total: charges.total, deliveryNotes: dNotes, eta: (siteSettings.eta || {})[selectedTier] || '', referredBy: referral(), saveAddr: !gift && !$('saveAddrRow').classList.contains('hidden') && $('saveAddr').checked };
   btn.textContent = 'Sending OTP…';
   try { await sendOtp(); }
   catch (x) { console.warn(x); err.textContent = sendErrMsg(x); btn.disabled = false; btn.textContent = label; resetCaptcha(); return; }
@@ -1049,7 +1035,8 @@ $('verifyBtn').onclick = async () => {
     const orderNumber = await getNextOrderNumber();
     const { saveAddr, ...base } = pending;
     const order = { ...base, orderNumber, status: 'pending', statusHistory: [{ status: 'pending', at: Date.now() }], createdAt: TS() };
-    const ref = await db.collection('preBookings').add(order);
+    if (order.voucher && window.sfVoucherRedeem) await window.sfVoucherRedeem(order.voucher);
+    let ref; try { ref = await db.collection('preBookings').add(order); } catch (e) { if (order.voucher) throw new Error('Your order could not be saved, but voucher ' + order.voucher.code + ' was already used. Please contact us and we will restore it. (' + (e.message || 'error') + ')'); throw e; }
     sendOrderConfirmationEmail({ ...order, id: ref.id });
     if (saveAddr && auth.currentUser) { try { const uref = db.collection('users').doc(auth.currentUser.uid), cur = ((await uref.get()).data() || {}).addresses || []; await uref.set({ addresses: cur.concat([{ id: 'a' + Date.now().toString(36), label: 'Home', isDefault: !cur.length, ...order.shipping }]) }, { merge: true }); } catch (_) {} }
     rlBump(pending.email); clearInterval(resendInt);
@@ -1225,6 +1212,67 @@ $('verifyBtn').onclick = async () => {
   // settings arrive asynchronously: rebuild the gift-wrap row once they have
   var t = setInterval(function () { try { if (siteSettings && (siteSettings.giftWrapOn === false || siteSettings.giftWrapPrice !== undefined || siteSettings.coupons)) { clearInterval(t); var e = $('giftExtra'); if (e) { e.remove(); } var c = $('cpBox'); if (c) c.remove(); install(); renderTotals(); } } catch (_) {} }, 400);
   setTimeout(function () { clearInterval(t); }, 8000);
+})();
+</script>
+<script>
+/* Gift voucher redemption at checkout (N6). Voucher codes are stored under the hash of the code, so they cannot be listed. */
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var E = function (s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); };
+  var inr = function (n) { return '₹' + Number(n || 0).toLocaleString('en-IN'); };
+  var applied = null;                       // { code, h, balance }
+  var sha = function (code) { return crypto.subtle.digest('SHA-256', new TextEncoder().encode('sfv:' + String(code).trim().toUpperCase())).then(function (b) { return Array.prototype.map.call(new Uint8Array(b), function (x) { return x.toString(16).padStart(2, '0'); }).join(''); }); };
+  var check = function (v) { if (!v || v.status === 'void') return 'That voucher code was not found.'; if (v.expiresAt && Date.now() > v.expiresAt) return 'That voucher has expired.'; if (!(Number(v.balance) > 0)) return 'That voucher has no balance left.'; return ''; };
+  window.sfVoucherCredit = function (pre) { return applied ? Math.min(applied.balance, pre) : 0; };
+  window.sfVoucherCode = function () { return applied ? applied.code : ''; };
+  window.sfVoucherInfo = function () {
+    if (!applied) return null;
+    var ch = computeCharges(currentGoods().goods, $('aState').value, window.sfDiscount ? window.sfDiscount(currentGoods().goods) : 0);
+    return ch.voucher > 0 ? { code: applied.code, h: applied.h, amount: ch.voucher } : null;
+  };
+  window.sfVoucherRecheck = async function () {
+    if (!applied) return '';
+    try { var s = await db.collection('vouchers').doc(applied.h).get(), v = s.exists ? s.data() : null, why = check(v);
+      if (why) { applied = null; draw(); renderTotals(); return why + ' Your total has been updated, please review it and try again.'; }
+      applied.balance = Number(v.balance); renderTotals(); return '';
+    } catch (e) { return 'We could not check your voucher right now. Please try again.'; }
+  };
+  window.sfVoucherRedeem = async function (info) {
+    var ref = db.collection('vouchers').doc(info.h);
+    await db.runTransaction(async function (tx) {
+      var s = await tx.get(ref), v = s.exists ? s.data() : null, why = check(v);
+      if (why) throw new Error(why);
+      if (Number(v.balance) < info.amount) throw new Error('The voucher balance changed. Please review your total and try again.');
+      var left = Number(v.balance) - info.amount;
+      tx.update(ref, { balance: left, status: left <= 0 ? 'used' : 'active', lastUsedAt: Date.now(), lastUsedBy: (auth.currentUser || {}).email || '' });
+    });
+  };
+  function draw(msg) {
+    var box = $('vcBox'); if (!box) return;
+    if (applied) {
+      var credit = computeCharges(currentGoods().goods, $('aState').value, window.sfDiscount ? window.sfDiscount(currentGoods().goods) : 0).voucher;
+      box.innerHTML = '<div class="check-row" style="justify-content:space-between;margin:0"><span>Voucher <b>' + E(applied.code) + '</b> · balance ' + inr(applied.balance) + (credit ? ' · using ' + inr(credit) : '') + '</span><button type="button" class="btn-secondary" id="vcRm" style="padding:.3rem .7rem">Remove</button></div>';
+      $('vcRm').onclick = function () { applied = null; draw(); renderTotals(); };
+    } else {
+      box.innerHTML = '<div style="display:flex;gap:.5rem"><input id="vcCode" class="input" placeholder="Gift voucher code" maxlength="20" autocomplete="off" autocapitalize="characters" style="flex:1"><button type="button" class="btn-secondary" id="vcApply">Apply</button></div><div class="hint" style="margin-top:.3rem;min-height:1em;color:var(--red)">' + E(msg || '') + '</div>';
+      $('vcApply').onclick = apply; $('vcCode').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); apply(); } });
+    }
+  }
+  async function apply() {
+    var code = $('vcCode').value.trim().toUpperCase(); if (!code) return; $('vcApply').disabled = true;
+    try { var h = await sha(code), s = await db.collection('vouchers').doc(h).get(), v = s.exists ? s.data() : null, why = check(v);
+      if (why) return draw(why);
+      applied = { code: code, h: h, balance: Number(v.balance) }; draw(); renderTotals();
+    } catch (e) { draw('Could not check that code right now. Please try again.'); }
+  }
+  function install() {
+    if ($('vcBox') || !$('totals')) return;
+    var box = document.createElement('div'); box.id = 'vcBox'; box.style.cssText = 'margin:.4rem 0 .8rem';
+    var anchor = $('cpBox') || $('totals'); anchor.parentNode.insertBefore(box, anchor === $('cpBox') ? anchor.nextSibling : anchor); draw();
+    ['qty', 'aState'].forEach(function (id) { var el = $(id); if (el) el.addEventListener('input', function () { if (applied) draw(); }); });
+  }
+  (function wait(n) { if ($('totals') && typeof renderTotals === 'function') { setTimeout(install, 600); return; } if (n < 60) setTimeout(function () { wait(n + 1); }, 150); })(0);
 })();
 </script>
 </body>
