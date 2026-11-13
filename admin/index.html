@@ -6771,25 +6771,33 @@ var qrcode = function() {
   })();
 
   /* ── App tab (APK for booked customers) ── */
-  var appHtml = '<div class="panel"><div class="panel-header"><h2>Android app (APK)</h2><span class="hint">Customers who book see this on their account and on the /app page.</span></div>' +
+  var appHtml = '<div class="panel"><div class="panel-header"><h2>SafeConnect app (Android APK)</h2><span class="hint">Customers who book see this on their account and on the /app page. The APK file is served from your site at /downloads/SafeConnect.apk.</span></div>' +
     '<label class="ax-chk"><input type="checkbox" id="apOn"> Published (customers can download)</label>' +
     '<div class="ax-line" style="flex-wrap:wrap;gap:.5rem"><div class="field" style="flex:1;min-width:120px"><label>Version</label><input class="search-input" id="apVer" placeholder="1.0.0" maxlength="20"></div><div class="field" style="flex:1;min-width:120px"><label>Size (MB)</label><input class="search-input" id="apSize" type="number" min="0" step="0.1"></div><div class="field" style="flex:1;min-width:120px"><label>Android needed</label><input class="search-input" id="apMin" placeholder="8.0 or newer" maxlength="20"></div></div>' +
-    '<div class="field"><label>APK download link (https). A GitHub Release asset works well.</label><input class="search-input" id="apUrl" placeholder="https://github.com/…/releases/download/v1.0.0/aegis.apk"></div>' +
+    '<div class="field"><label>APK file location (leave as is to use the file on this site)</label><input class="search-input" id="apUrl" placeholder="/downloads/SafeConnect.apk"></div>' +
     '<div class="field"><label>SHA-256 checksum (so customers can verify the file)</label><input class="search-input" id="apSha" maxlength="64" placeholder="64 hex characters"></div>' +
     '<div class="field"><label>What is new</label><textarea class="search-input" id="apNotes" rows="3" maxlength="500"></textarea></div>' +
-    '<div class="ax-line"><button class="btn-small primary" id="apSave" type="button">Save and publish</button><span class="hint" id="apMsg"></span></div></div>' +
+    '<div class="ax-line"><button class="btn-small" id="apRead" type="button">Read size and checksum from the site file</button><button class="btn-small primary" id="apSave" type="button">Save and publish</button><span class="hint" id="apMsg"></span></div></div>' +
     '<div class="panel"><div class="panel-header"><h2>Who has installed it</h2><span class="hint" id="apChip"></span></div><div class="table-scroll"><table><thead><tr><th>Customer</th><th>Orders</th><th>App</th></tr></thead><tbody id="apBody"></tbody></table></div></div>';
   function appOpen() {
     db.collection('appRelease').doc('current').get().then(function (d) {
-      var r = d.exists ? d.data() : {}; $('apOn').checked = !!r.enabled; $('apVer').value = r.version || ''; $('apSize').value = r.sizeMB || ''; $('apMin').value = r.minAndroid || ''; $('apUrl').value = r.apkUrl || ''; $('apSha').value = r.sha256 || ''; $('apNotes').value = r.notes || '';
+      var r = d.exists ? d.data() : { enabled: true, version: '1.0', sizeMB: 7.2, minAndroid: '7.0 or newer', apkUrl: '/downloads/SafeConnect.apk', sha256: 'd9e2cf153555dc0db129c273884a6e6709a587d0ec3c808aef0a65d61f72cb0d' }; $('apOn').checked = !!r.enabled; $('apVer').value = r.version || ''; $('apSize').value = r.sizeMB || ''; $('apMin').value = r.minAndroid || ''; $('apUrl').value = r.apkUrl || '/downloads/SafeConnect.apk'; $('apSha').value = r.sha256 || ''; $('apNotes').value = r.notes || '';
     }).catch(function () {});
     $('apSave').onclick = async function () {
-      var url = $('apUrl').value.trim(), sha = $('apSha').value.trim().toLowerCase(), msg = $('apMsg');
-      if ($('apOn').checked && !/^https:\/\//i.test(url)) return (msg.textContent = 'Add an https link to the APK first.');
+      var url = $('apUrl').value.trim() || '/downloads/SafeConnect.apk', sha = $('apSha').value.trim().toLowerCase(), msg = $('apMsg');
+      if (!url) url = '/downloads/SafeConnect.apk'; if ($('apOn').checked && !(/^https:\/\//i.test(url) || /^\/[^\/]/.test(url))) return (msg.textContent = 'Use a site path like /downloads/SafeConnect.apk or an https link.');
       if (sha && !/^[0-9a-f]{64}$/.test(sha)) return (msg.textContent = 'The checksum should be 64 hex characters.');
       if ($('apOn').checked && !$('apVer').value.trim()) return (msg.textContent = 'Add a version number.');
       try { await db.collection('appRelease').doc('current').set({ enabled: $('apOn').checked, version: $('apVer').value.trim(), sizeMB: Number($('apSize').value) || 0, minAndroid: $('apMin').value.trim(), apkUrl: url, sha256: sha, notes: $('apNotes').value.trim(), updatedAt: Date.now(), by: lc(me()) }); X.log('app.release', $('apVer').value.trim(), $('apOn').checked ? 'published' : 'unpublished'); msg.textContent = 'Saved.'; drawInstalls(); }
       catch (e) { msg.textContent = 'Could not save: ' + (e.message || ''); }
+    };
+    $('apRead').onclick = async function () {
+      var u = $('apUrl').value.trim() || '/downloads/SafeConnect.apk', msg = $('apMsg'); msg.textContent = 'Reading the file…';
+      try {
+        var res = await fetch(u, { cache: 'no-store' }); if (!res.ok) throw new Error('HTTP ' + res.status); var buf = await res.arrayBuffer();
+        var dig = await crypto.subtle.digest('SHA-256', buf); $('apSha').value = Array.prototype.map.call(new Uint8Array(dig), function (x) { return x.toString(16).padStart(2, '0'); }).join('');
+        $('apSize').value = (buf.byteLength / 1e6).toFixed(1); msg.textContent = 'Done. Size and checksum filled in. Press Save to publish.';
+      } catch (e) { msg.textContent = 'Could not read the file (' + (e.message || 'error') + '). Is it uploaded at ' + u + '?'; }
     };
     drawInstalls(); setInterval(function () { if ($('tab-app').classList.contains('active')) drawInstalls(); }, 6000);
   }
