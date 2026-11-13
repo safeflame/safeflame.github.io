@@ -4448,12 +4448,14 @@ var qrcode = function() {
 window.sfVoucherCredit = function (pre) { return Math.min(window.__editVoucher || 0, pre); };
 </script>
 <script>
-/* Account: "Install the Aegis app" card for customers who have booked */
+/* Account: "Install the SafeConnect app" card for customers who have booked */
 (function () {
   'use strict';
   var $ = function (id) { return document.getElementById(id); };
+  var DEFAULT_REL = { enabled: true, version: '1.0', apkUrl: '/downloads/SafeConnect.apk', sizeMB: 7.2, minAndroid: '7.0 or newer', sha256: 'd9e2cf153555dc0db129c273884a6e6709a587d0ec3c808aef0a65d61f72cb0d', notes: '', updatedAt: new Date('2026-11-12').getTime() };
+  var okUrl = function (u) { return /^https:\/\//i.test(u || '') || /^\/[^\/]/.test(u || ''); };
   var rel = null, fetched = false;
-  async function load() { if (fetched) return; fetched = true; try { var d = await db.collection('appRelease').doc('current').get(); rel = d.exists ? d.data() : null; } catch (_) { rel = null; } }
+  async function load() { if (fetched) return; fetched = true; try { var d = await db.collection('appRelease').doc('current').get(); rel = Object.assign({}, DEFAULT_REL, d.exists ? d.data() : {}); if (!rel.apkUrl) rel.apkUrl = DEFAULT_REL.apkUrl; } catch (_) { rel = Object.assign({}, DEFAULT_REL); } }
   async function render() {
     var host = $('orders'); if (!host || typeof orders === 'undefined') return;
     var has = orders.some(function (o) { return o.uid === user.uid && String(o.status || 'pending').toLowerCase() !== 'cancelled'; });
@@ -4461,13 +4463,13 @@ window.sfVoucherCredit = function (pre) { return Math.min(window.__editVoucher |
     if (!has) { if (card) card.remove(); return; }
     await load();
     if (!card) { card = document.createElement('div'); card.id = 'appCard'; card.className = 'card'; card.style.marginBottom = '1rem'; host.parentNode.insertBefore(card, host); }
-    var live = rel && rel.enabled && /^https:\/\//i.test(rel.apkUrl || ''), installed = !!(profile && profile.appInstalledAt), update = installed && live && profile.appVersion && profile.appVersion !== rel.version;
+    var live = rel && rel.enabled && okUrl(rel.apkUrl), installed = !!(profile && profile.appInstalledAt), update = installed && live && profile.appVersion && profile.appVersion !== rel.version;
     var phone = '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="2.5" width="10" height="19" rx="2"/><path d="M11 18.5h2"/></svg>';
-    if (!live) { card.innerHTML = '<div class="section-title">' + phone + ' Aegis app</div><p class="page-sub" style="margin:0">You will use the Aegis Android app to control your unit. It is not ready to download yet. We will email you when it is, and it will appear here.</p>'; return; }
-    card.innerHTML = '<div class="section-title">' + phone + ' Install the Aegis app</div>' +
+    if (!live) { card.innerHTML = '<div class="section-title">' + phone + ' SafeConnect app</div><p class="page-sub" style="margin:0">You will use the SafeConnect Android app to control your unit. It is not ready to download yet. We will email you when it is, and it will appear here.</p>'; return; }
+    card.innerHTML = '<div style="display:flex;gap:.8rem;align-items:center;margin-bottom:.6rem"><span style="background:#fff;border-radius:12px;padding:5px;display:inline-flex"><img src="/SafeConnect-logo.png" alt="" width="44" height="44"></span><div class="section-title" style="margin:0">Install the SafeConnect app</div></div>' +
       (installed && !update ? '<p class="page-sub" style="margin:0 0 .6rem"><span style="color:var(--green)">Installed' + (profile.appVersion ? ' (v' + esc(profile.appVersion) + ')' : '') + '.</span> Your unit is controlled from the app.</p>'
         : '<p class="page-sub" style="margin:0 0 .8rem">' + (update ? 'An update is available: v' + esc(rel.version) + '.' : 'To control your Aegis unit you need the Android app. Download it, install it, and sign in with this email.') + '</p>') +
-      '<div style="display:flex;gap:.6rem;flex-wrap:wrap"><a class="btn-primary" href="' + esc(rel.apkUrl) + '" rel="noopener" style="text-decoration:none">' + (installed && !update ? 'Download again' : 'Download v' + esc(rel.version)) + '</a>' + (installed && !update ? '' : '<button class="btn-secondary" id="appDone" type="button">I have installed it</button>') + '<a class="btn-secondary" href="/app" style="text-decoration:none">Install steps</a></div>' +
+      '<div style="display:flex;gap:.6rem;flex-wrap:wrap"><a class="btn-primary" href="' + esc(rel.apkUrl) + '" download="SafeConnect.apk" rel="noopener" style="text-decoration:none">' + (installed && !update ? 'Download again' : 'Download v' + esc(rel.version)) + '</a>' + (installed && !update ? '' : '<button class="btn-secondary" id="appDone" type="button">I have installed it</button>') + '<a class="btn-secondary" href="/app" style="text-decoration:none">Install steps</a></div>' +
       '<div class="hint" style="margin-top:.6rem">Android only for now' + (rel.minAndroid ? ' · Android ' + esc(rel.minAndroid) : '') + (rel.sizeMB ? ' · ' + esc(rel.sizeMB) + ' MB' : '') + '</div>';
     var done = $('appDone'); if (done) done.onclick = async function () { try { await db.collection('users').doc(user.uid).set({ appInstalledAt: Date.now(), appVersion: rel.version }, { merge: true }); profile.appInstalledAt = Date.now(); profile.appVersion = rel.version; render(); } catch (e) { done.textContent = 'Could not save, try again'; } };
   }
